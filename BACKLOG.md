@@ -1,7 +1,13 @@
-# DPDP POC — Pre-Review Backlog
+# Compliance Pack Accelerator — Backlog
 
-Working list of items to complete before the POC goes for external review next week.
-Source: colleague's gap-analysis (2026-04-24) + three-path ingestion demo scope expansion.
+Working list of items in flight. Originally seeded by the colleague's
+DPDP-pack gap-analysis (2026-04-24) and the three-path ingestion demo
+scope expansion; now also tracks ADR-0001 implementation milestones
+(M1 Foundation → M2 UK GDPR pack → M3 UI surfaces → M4 Tests + docs).
+
+> **For the multi-jurisdiction work**, the binding plan is
+> [`docs/adr/0001-multi-jurisdiction-data-subject-routing.md`](docs/adr/0001-multi-jurisdiction-data-subject-routing.md).
+> This backlog mirrors its M1–M4 milestones; if there's a conflict, the ADR wins.
 
 Legend: `[ ]` open · `[x]` done · `[-]` dropped/subsumed
 
