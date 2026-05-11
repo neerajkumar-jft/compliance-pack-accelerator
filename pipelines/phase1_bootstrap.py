@@ -587,6 +587,17 @@ from governance_core.pack_loader import loaded_packs  # noqa: E402
 _packs = loaded_packs()
 print(f"Loaded {len(_packs)} regulation pack(s): {[p.code for p in _packs]}")
 
+# Primary-pack alias: used by the notices / consent-purpose / retention /
+# residency code paths below that haven't been refactored to multi-pack yet.
+# ADR-0001 defers per-pack notice rendering + residency union to a later
+# phase; rules + gaps are the multi-pack surfaces M2-M4 deliver.
+_pack = _packs[0] if _packs else None
+if _pack is None:
+    raise RuntimeError(
+        "No regulation packs found under regulations/. At least one pack "
+        "(e.g., regulations/dpdp_2023/) must be present for phase1_bootstrap."
+    )
+
 ALL_RULES: list[tuple[dict, str]] = []
 for _p in _packs:
     rules_in_pack = _p.rules()
@@ -615,16 +626,19 @@ rules_df = spark.createDataFrame([
     for r, pack_code in ALL_RULES
 ], schema=_rules_schema)
 
-# MERGE for idempotency — rule_id is unique within a pack but two packs
-# could theoretically reuse the same rule_id (DPDP doesn't with UK GDPR, but
-# defensive); merge on the (rule_id, regulation_pack) composite.
+# ADR-0001 M4 cutover: on the first multi-pack deploy, an existing dpdp-only
+# bronze.compliance_rules table has rows with regulation_pack=NULL (added by
+# ALTER TABLE). A composite-key MERGE on (rule_id, regulation_pack) wouldn't
+# match those NULL-tagged rows to the new dpdp_2023-tagged source rows and
+# would create duplicates. TRUNCATE + INSERT below is safe because rules are
+# pure data — the pack YAMLs are the source of truth, this table is just
+# their materialisation.
+spark.sql(f"TRUNCATE TABLE {CATALOG}.bronze.compliance_rules")
+
 rules_df.createOrReplaceTempView("_rules_src")
 spark.sql(f"""
-MERGE INTO {CATALOG}.bronze.compliance_rules t
-USING _rules_src s
-  ON t.rule_id = s.rule_id AND t.regulation_pack = s.regulation_pack
-WHEN MATCHED THEN UPDATE SET *
-WHEN NOT MATCHED THEN INSERT *
+INSERT INTO {CATALOG}.bronze.compliance_rules
+SELECT * FROM _rules_src
 """)
 print(f"✓ {spark.table(f'{CATALOG}.bronze.compliance_rules').count()} compliance rules loaded (multi-pack)")
 

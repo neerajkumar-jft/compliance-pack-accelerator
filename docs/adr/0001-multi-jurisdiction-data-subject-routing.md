@@ -1,8 +1,34 @@
 # ADR-0001 — Multi-jurisdiction data-subject routing
 
-**Status:** Accepted
-**Date:** 2026-05-08
-**Implementation:** M1 + M2 complete (commits `58c4e7e` foundation, `ac866d4` UK GDPR pack + 70/25/5 synthetic mix + multi-pack rule/gap routing) · M3 in progress (UI surfaces) · M4 pending (live deploy + tests)
+**Status:** Accepted · **Implementation: Complete**
+**Date:** 2026-05-08 (decision); 2026-05-11 (M4 cut-over to live workspace)
+**Implementation:** Complete. Milestone log:
+  - **M1 Foundation** (commit `58c4e7e`): multi-pack loader (`loaded_packs`,
+    `pack_for(jurisdiction)`, `derive_jurisdiction`), `jurisdiction` column
+    on the four customer-level silver tables, unit-tested.
+  - **M2 UK GDPR pack** (commit `ac866d4`): authored `regulations/uk_gdpr/`
+    (12 rules, 8 rights, 5 UK PII patterns, en-GB notice, Art. 35 DPIA
+    template). Synthetic generators emit 70/25/5 IN/GB/unmapped mix.
+    `phase1_bootstrap.py` loads every pack and tags rules+gaps with their
+    source pack.
+  - **M3 UI surfaces** (commit `3110e59`): Genie `text_instructions`
+    auto-composed from loaded packs (with `auto_compose: false`
+    hand-authored override path), DPIA template merging per activity scope,
+    dashboard jurisdiction filter on the Executive Overview page.
+  - **M4 cut-over** (this commit): live deploy of compliance-pack-accelerator
+    bundle to the workspace, full medallion + phase1_bootstrap rebuild
+    against the new mixed-jurisdiction synthetic data, baseline counts
+    refreshed (`tests/_baseline.json`), new `test_multi_jurisdiction_smoke.py`
+    asserts per-row routing on the live workspace.
+
+**Live-workspace evidence (M4 smoke, 2026-05-11):**
+- silver.customers_tagged: 3,503 IN principals + 1,258 GB principals.
+- bronze.compliance_rules: 9 DPDP + 12 UK GDPR = 21 multi-pack rules.
+- silver.compliance_gaps: 164 dpdp_2023 + 298 uk_gdpr = 462 total, tagged
+  with `regulation_pack` source.
+- `pack_for('IN').retention_default('marketing_email')` = 730 days;
+  `pack_for('GB').retention_default('marketing_email')` = 90 days — the
+  exact per-jurisdiction divergence this ADR was designed to preserve.
 
 ## Context
 

@@ -155,4 +155,18 @@ Tracked separately because these *are* worth doing pre-review:
 3. `python3 tests/test_dsr_e2e.py` — DSR chain (11 checks; not part of deploy_all)
 4. Open the dashboard, query each persona's Genie, run a DSR walkthrough on `customer_04217`
 
-Expected end state: 36 PII findings, 164 compliance gaps, 10 silver objects, 37 column masks, 4 working Genie agents, productionised DPIA generator (quarterly cron + Review App + first draft seeded on deploy). Smoke + DSR + Agent Bricks + baseline-counts suites currently green.
+Expected end state (post-M4 multi-jurisdiction cut-over, 2026-05-11):
+- **36 PII findings** across 10 silver objects (universal patterns from
+  governance_core/ matched on the silver tables).
+- **462 compliance gaps**, tagged by source pack: **164 DPDP** + **298 UK GDPR**.
+  Multi-pack rule routing is live (ADR-0001 M2).
+- **21 compliance rules** loaded: 9 DPDP + 12 UK GDPR.
+- **37 column masks** across silver + federation_mock.
+- **Mixed-jurisdiction customer base** in `silver.customers_tagged`:
+  3,503 IN + 1,258 GB principals; same per-row routing across the other
+  customer-level tables (employees, users, patients).
+- **4 working Genie agents** (CCO/GC/CMO/CFO), with `text_instructions`
+  auto-composed from both loaded packs.
+- **Productionised DPIA generator** with quarterly cron + Review App +
+  Art. 35 / DPDP §10 multi-regulator citations.
+- All 11 regression suites green; M4 mixed-jurisdiction smoke 11/11.
