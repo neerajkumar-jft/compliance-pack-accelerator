@@ -109,13 +109,21 @@ def build_serialized_space(persona: str, cfg: dict[str, Any], tables: list[str])
 
     instructions: dict[str, Any] = {}
 
-    if cfg.get("text_instructions"):
+    # ADR-0001 M3: pack-aware composition. compose_for_persona() returns the
+    # hand-authored text_instructions augmented with a Loaded-regulations
+    # block and multi-jurisdiction routing guidance whenever 2+ packs are
+    # loaded; degrades to a single-pack header (or to the verbatim base
+    # text if `auto_compose: false` is set in the persona YAML).
+    from governance_core.genie_instructions import compose_for_persona  # noqa: E402
+    composed_text = compose_for_persona(cfg)
+
+    if composed_text:
         instructions["text_instructions"] = _by_id([{
             "id": stable_id(persona, "text", "general"),
             # Each paragraph becomes one element so Genie can present
             # long instruction blocks cleanly; splitting on blank lines
             # keeps authored markdown intact.
-            "content": [p.strip() for p in cfg["text_instructions"].split("\n\n") if p.strip()],
+            "content": [p.strip() for p in composed_text.split("\n\n") if p.strip()],
         }])
 
     eqs = cfg.get("example_queries") or []

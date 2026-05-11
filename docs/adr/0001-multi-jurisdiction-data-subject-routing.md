@@ -2,7 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-05-08
-**Implementation:** Pending — scoped under the UK GDPR pack work (M1)
+**Implementation:** M1 + M2 complete (commits `58c4e7e` foundation, `ac866d4` UK GDPR pack + 70/25/5 synthetic mix + multi-pack rule/gap routing) · M3 in progress (UI surfaces) · M4 pending (live deploy + tests)
 
 ## Context
 
