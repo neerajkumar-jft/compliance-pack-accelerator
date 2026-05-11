@@ -57,7 +57,7 @@ def main() -> int:
     # Check 1 — each classified source table present in pii_findings
     rows = rows_or_raise(
         "SELECT table_name, COUNT(*) "
-        "FROM dpdp_poc.silver.pii_findings "
+        "FROM compliance_pack.silver.pii_findings "
         "GROUP BY table_name"
     )
     seen = {r[0]: int(r[1]) for r in rows}
@@ -84,7 +84,7 @@ def main() -> int:
     # Check 3 — register view is populated
     rv = rows_or_raise(
         "SELECT COUNT(*), COUNT(DISTINCT source_table) "
-        "FROM dpdp_poc.compliance.personal_data_register"
+        "FROM compliance_pack.compliance.personal_data_register"
     )
     register_rows = int(rv[0][0]) if rv else 0
     register_tables = int(rv[0][1]) if rv else 0

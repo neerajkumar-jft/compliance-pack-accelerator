@@ -56,7 +56,7 @@ def main() -> int:
     rows = rows_or_raise(
         f"SELECT language, SUBSTR(notice_text, 1, 30) AS preamble, "
         f"LENGTH(notice_text) AS chars, notice_text "
-        f"FROM dpdp_poc.compliance.notice_versions "
+        f"FROM compliance_pack.compliance.notice_versions "
         f"WHERE notice_id = '{NOTICE_ID}' AND version_number = {VERSION}"
     )
     by_lang: dict[str, tuple[str, int, str]] = {

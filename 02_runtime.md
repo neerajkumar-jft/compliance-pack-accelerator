@@ -45,7 +45,7 @@ Do not use ML Runtime unless a specific task requires it; the standard runtime i
 Create the following Unity Catalog structure on Day 1. Every table, view, and function in the POC lives under this hierarchy:
 
 ```
-dpdp_poc/                           (top-level catalog)
+compliance_pack/                           (top-level catalog)
 ├── bronze/                         (raw ingested data)
 │   ├── source_employees            (mirrors source file 1:1)
 │   ├── source_customers
@@ -76,16 +76,16 @@ Each schema has a specific purpose; do not cross boundaries. Bronze is write-onc
 Grant the service principal (see §2.6) the following at the catalog level:
 
 ```sql
-GRANT USE CATALOG ON CATALOG dpdp_poc TO `<service-principal-name>`;
-GRANT USE SCHEMA ON SCHEMA dpdp_poc.bronze TO `<service-principal-name>`;
-GRANT USE SCHEMA ON SCHEMA dpdp_poc.silver TO `<service-principal-name>`;
-GRANT USE SCHEMA ON SCHEMA dpdp_poc.gold TO `<service-principal-name>`;
-GRANT USE SCHEMA ON SCHEMA dpdp_poc.compliance TO `<service-principal-name>`;
-GRANT CREATE TABLE, CREATE VIEW, MODIFY ON SCHEMA dpdp_poc.bronze TO `<service-principal-name>`;
-GRANT CREATE TABLE, CREATE VIEW, MODIFY ON SCHEMA dpdp_poc.silver TO `<service-principal-name>`;
-GRANT CREATE TABLE, CREATE VIEW, MODIFY ON SCHEMA dpdp_poc.gold TO `<service-principal-name>`;
-GRANT CREATE VIEW, MODIFY ON SCHEMA dpdp_poc.compliance TO `<service-principal-name>`;
-GRANT APPLY TAG ON CATALOG dpdp_poc TO `<service-principal-name>`;
+GRANT USE CATALOG ON CATALOG compliance_pack TO `<service-principal-name>`;
+GRANT USE SCHEMA ON SCHEMA compliance_pack.bronze TO `<service-principal-name>`;
+GRANT USE SCHEMA ON SCHEMA compliance_pack.silver TO `<service-principal-name>`;
+GRANT USE SCHEMA ON SCHEMA compliance_pack.gold TO `<service-principal-name>`;
+GRANT USE SCHEMA ON SCHEMA compliance_pack.compliance TO `<service-principal-name>`;
+GRANT CREATE TABLE, CREATE VIEW, MODIFY ON SCHEMA compliance_pack.bronze TO `<service-principal-name>`;
+GRANT CREATE TABLE, CREATE VIEW, MODIFY ON SCHEMA compliance_pack.silver TO `<service-principal-name>`;
+GRANT CREATE TABLE, CREATE VIEW, MODIFY ON SCHEMA compliance_pack.gold TO `<service-principal-name>`;
+GRANT CREATE VIEW, MODIFY ON SCHEMA compliance_pack.compliance TO `<service-principal-name>`;
+GRANT APPLY TAG ON CATALOG compliance_pack TO `<service-principal-name>`;
 ```
 
 The `APPLY TAG` privilege is what lets the classification job call `ALTER TABLE ... SET TAGS` to annotate columns with PII metadata. Without it, tagging fails silently with a confusing permission error.
@@ -96,7 +96,7 @@ Create a Lakebase instance for the consent OLTP tier:
 
 - Instance name: `dpdp-poc-consent`
 - Size: smallest available tier (trial workspace; this is a demo, not a load test)
-- Database name: `dpdp_poc_consent`
+- Database name: `compliance_pack_consent`
 - Initial schema: `public`
 - Connection method: Databricks SQL connection (uses the workspace's integrated auth; do not create a separate JDBC URL and password)
 
@@ -107,7 +107,7 @@ Tables to create in Lakebase on Day 8 (DDL in `schemas/consent_events.sql` and `
 - `data_principals` — the minimal principal registry (id, created_at, age_verification_status)
 - `dsr_requests` — intake queue for data subject rights requests
 
-Set up a Lakebase→Delta sync table for `consent_events` and `dsr_requests` with a 60-second refresh interval. The Delta copies live at `dpdp_poc.compliance.consent_events_log` and `dpdp_poc.compliance.dsr_requests` respectively. Schema in `schemas/consent_events_delta.sql`.
+Set up a Lakebase→Delta sync table for `consent_events` and `dsr_requests` with a 60-second refresh interval. The Delta copies live at `compliance_pack.compliance.consent_events_log` and `compliance_pack.compliance.dsr_requests` respectively. Schema in `schemas/consent_events_delta.sql`.
 
 ## 2.5 · AI functions and Agent Bricks
 
@@ -188,7 +188,7 @@ Do not create separate clusters for different tasks. Do not use autoscaling. Do 
 Synthetic source data (generated per §6) is written as CSV files to a workspace volume:
 
 ```
-/Volumes/dpdp_poc/bronze/landing/
+/Volumes/compliance_pack/bronze/landing/
 ├── employees/      (employees_YYYYMMDD.csv.gz)
 ├── customers/
 ├── patients/
@@ -199,7 +199,7 @@ Synthetic source data (generated per §6) is written as CSV files to a workspace
 Auto Loader reads from these volume paths into Bronze Delta tables. The volume must exist before Day 1 ingestion starts; create it via:
 
 ```sql
-CREATE VOLUME IF NOT EXISTS dpdp_poc.bronze.landing;
+CREATE VOLUME IF NOT EXISTS compliance_pack.bronze.landing;
 ```
 
 Grant `READ VOLUME` and `WRITE VOLUME` to the service principal.
@@ -209,11 +209,11 @@ Grant `READ VOLUME` and `WRITE VOLUME` to the service principal.
 Before starting Day 1 work, run the environment verification script at `tests/verify_environment.md`. It checks:
 
 - Workspace reachable via the configured auth
-- Catalog `dpdp_poc` exists and has the expected schemas
+- Catalog `compliance_pack` exists and has the expected schemas
 - Service principal has expected grants
 - Lakebase instance reachable
 - Required Python packages installed on the cluster
-- Volume `/Volumes/dpdp_poc/bronze/landing/` exists and is writable
+- Volume `/Volumes/compliance_pack/bronze/landing/` exists and is writable
 - `ai_classify` and `ai_extract` functions callable
 
 If any check fails, fix the environment before starting build work. Do not start Day 1 against a partially-configured environment; the failure modes are confusing and waste hours.

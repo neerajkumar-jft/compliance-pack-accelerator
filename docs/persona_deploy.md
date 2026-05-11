@@ -151,10 +151,10 @@ python3 generate_synthetic_data.py --output-dir /tmp/dpdp_landing
 
 # 3. Upload CSVs into the landing volume (one subfolder per source table)
 for tbl in employees customers patients transactions users; do
-  databricks fs mkdir "dbfs:/Volumes/dpdp_poc/bronze/landing/${tbl}" 2>/dev/null || true
+  databricks fs mkdir "dbfs:/Volumes/compliance_pack/bronze/landing/${tbl}" 2>/dev/null || true
   databricks fs cp --recursive --overwrite \
     "/tmp/dpdp_landing/${tbl}/" \
-    "dbfs:/Volumes/dpdp_poc/bronze/landing/${tbl}/"
+    "dbfs:/Volumes/compliance_pack/bronze/landing/${tbl}/"
 done
 
 # 4. Run the medallion DLT pipeline — Bronze (Auto Loader) → Silver
@@ -181,10 +181,10 @@ python3 scripts/seed_data_sources.py
 #    producing empty findings; (b) SF + federation silvers aren't
 #    DLT-managed, so DLT skips pii_findings on incremental updates.
 PIPELINE_ID=$(databricks pipelines list-pipelines -o json | \
-  jq -r '.[] | select(.name | endswith("dpdp_poc_medallion")) | .pipeline_id')
+  jq -r '.[] | select(.name | endswith("compliance_pack_medallion")) | .pipeline_id')
 
 databricks api post "/api/2.0/pipelines/${PIPELINE_ID}/updates" --json \
-  '{"full_refresh_selection":["dpdp_poc.silver.pii_findings"]}'
+  '{"full_refresh_selection":["compliance_pack.silver.pii_findings"]}'
 # Wait until the update reaches COMPLETED (check in the UI, or
 # `databricks pipelines list-pipeline-events $PIPELINE_ID`, or use the
 # poll loop in scripts/deploy_all.sh:do_refresh).

@@ -39,7 +39,7 @@ If you find yourself wanting to build something in the non-scope list, stop and 
 ## 0.3 · Repository layout
 
 ```
-dpdp_poc_spec/
+compliance_pack_spec/
 ├── SPEC.md                          ← you are here
 ├── README.md                        ← onboarding + quickstart for DAB deploy
 ├── databricks.yml                   ← DAB root — deploy entry point

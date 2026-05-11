@@ -144,7 +144,7 @@ If a new column is added to the source CSV, Auto Loader will not pick it up auto
 
 ### 9.3.3 · Checkpoint corruption
 
-If Auto Loader's checkpoint directory is manually deleted or partially modified, the stream may start re-ingesting files or may silently skip new ones. **Never** delete anything from `/Volumes/dpdp_poc/bronze/_checkpoints/` manually.
+If Auto Loader's checkpoint directory is manually deleted or partially modified, the stream may start re-ingesting files or may silently skip new ones. **Never** delete anything from `/Volumes/compliance_pack/bronze/_checkpoints/` manually.
 
 **Mitigation**: if you need to reset ingestion, truncate the target Bronze table AND delete the checkpoint directory together, in that order.
 

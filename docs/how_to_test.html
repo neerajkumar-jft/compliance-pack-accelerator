@@ -163,11 +163,11 @@
   <table>
     <tr><td><strong>Workspace URL</strong></td><td>Your workspace (auto-detected by <code>databricks current-user me</code>)</td></tr>
     <tr><td><strong>SQL Warehouse</strong></td><td>Serverless Starter Warehouse (auto-starts on query)</td></tr>
-    <tr><td><strong>Catalog</strong></td><td><code>dpdp_poc</code></td></tr>
+    <tr><td><strong>Catalog</strong></td><td><code>compliance_pack</code></td></tr>
     <tr><td><strong>Master dashboard</strong></td><td>DPDP Compliance Platform (full-estate visibility, admin-only)</td></tr>
     <tr><td><strong>Persona dashboards</strong></td><td>DPDP — CCO View · DPDP — GC View · DPDP — CMO View · DPDP — CFO View</td></tr>
     <tr><td><strong>Persona Genie spaces</strong></td><td>DPDP — CCO Agent · GC · CMO · CFO Agent (scoped per persona)</td></tr>
-    <tr><td><strong>Notebooks</strong></td><td><code>/Workspace/Users/.../dpdp_poc/</code></td></tr>
+    <tr><td><strong>Notebooks</strong></td><td><code>/Workspace/Users/.../compliance_pack/</code></td></tr>
   </table>
   <p style="margin-top: 12px; margin-bottom: 0;">All tests below can be run in the <strong>SQL Editor</strong> (Cmd+Enter to execute) or in a <strong>notebook</strong>. No cluster setup needed — the serverless warehouse handles everything. Test 8 (persona governance boundary) is run partly in the SQL editor and partly by logging in as a persona user via incognito window.</p>
 </div>
@@ -189,7 +189,7 @@
   <h3><span class="test-id tid-blue">T1.1</span> Register exists and has findings</h3>
   <pre><span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(*) <span class="keyword">AS</span> total_findings,
        <span class="keyword">COUNT</span>(<span class="keyword">DISTINCT</span> source_table) <span class="keyword">AS</span> tables_scanned
-<span class="keyword">FROM</span> dpdp_poc.compliance.personal_data_register;
+<span class="keyword">FROM</span> compliance_pack.compliance.personal_data_register;
 
 <span class="comment">-- Expected: total_findings >= 36, tables_scanned = 10 (8 base + SF tables + 2 federation views)</span></pre>
   <div class="success"><strong>Pass criteria:</strong> At least 36 PII findings across 10 silver objects: 5 Auto Loader tables (employees, customers, patients, transactions, users) + 3 Lakeflow Connect tables (sf_leads, sf_contacts, sf_accounts) + 2 federation views (federation_lead_scoring, federation_campaign_response).</div>
@@ -199,7 +199,7 @@
 <div class="test-card">
   <h3><span class="test-id tid-blue">T1.2</span> Sensitivity breakdown</h3>
   <pre><span class="keyword">SELECT</span> sensitivity_tier, <span class="keyword">COUNT</span>(*) <span class="keyword">AS</span> columns
-<span class="keyword">FROM</span> dpdp_poc.compliance.personal_data_register
+<span class="keyword">FROM</span> compliance_pack.compliance.personal_data_register
 <span class="keyword">GROUP BY</span> sensitivity_tier
 <span class="keyword">ORDER BY CASE</span> sensitivity_tier
     <span class="keyword">WHEN</span> <span class="string">'critical'</span> <span class="keyword">THEN</span> <span class="number">1</span>
@@ -218,7 +218,7 @@
   <pre><span class="keyword">SELECT</span> source_table, source_column, pii_type, sensitivity_tier,
        <span class="keyword">ROUND</span>(classification_confidence * <span class="number">100</span>, <span class="number">1</span>) <span class="keyword">AS</span> confidence_pct,
        classifier_source
-<span class="keyword">FROM</span> dpdp_poc.compliance.personal_data_register
+<span class="keyword">FROM</span> compliance_pack.compliance.personal_data_register
 <span class="keyword">WHERE</span> classification_confidence >= <span class="number">0.85</span>
 <span class="keyword">ORDER BY</span> sensitivity_tier, source_table;
 
@@ -230,7 +230,7 @@
   <h3><span class="test-id tid-blue">T1.4</span> Unity Catalog column tags are applied</h3>
   <pre><span class="keyword">SELECT</span> table_name, column_name, tag_name, tag_value
 <span class="keyword">FROM</span> system.information_schema.column_tags
-<span class="keyword">WHERE</span> catalog_name = <span class="string">'dpdp_poc'</span>
+<span class="keyword">WHERE</span> catalog_name = <span class="string">'compliance_pack'</span>
   <span class="keyword">AND</span> schema_name = <span class="string">'silver'</span>
   <span class="keyword">AND</span> tag_name <span class="keyword">IN</span> (<span class="string">'pii_type'</span>, <span class="string">'sensitivity'</span>, <span class="string">'pii_category'</span>)
 <span class="keyword">ORDER BY</span> table_name, column_name;
@@ -238,7 +238,7 @@
 <span class="comment">-- Expected: tags on 36 distinct columns (one per pii_findings row).
 --   apply_uc_tags.py reads pii_findings and sets pii_type/pii_category/sensitivity
 --   on every (table, column) pair the classifier flagged.</span></pre>
-  <div class="info"><strong>Tip:</strong> You can also see tags visually in <strong>Catalog Explorer</strong> — navigate to dpdp_poc → silver → employees_tagged → click any column → see the Tags section.</div>
+  <div class="info"><strong>Tip:</strong> You can also see tags visually in <strong>Catalog Explorer</strong> — navigate to compliance_pack → silver → employees_tagged → click any column → see the Tags section.</div>
 </div>
 
 <div class="test-card">
@@ -246,7 +246,7 @@
   <p>Open <strong>Catalog Explorer</strong> in the Databricks UI:</p>
   <div class="step">
     <span class="step-num">1</span>
-    <div class="step-content">Navigate to <code>dpdp_poc</code> → <code>silver</code> → <code>employees_tagged</code></div>
+    <div class="step-content">Navigate to <code>compliance_pack</code> → <code>silver</code> → <code>employees_tagged</code></div>
   </div>
   <div class="step">
     <span class="step-num">2</span>
@@ -254,7 +254,7 @@
   </div>
   <div class="step">
     <span class="step-num">3</span>
-    <div class="step-content">Verify the upstream chain: <code>silver.employees_tagged</code> ← <code>silver.source_employees</code> (raw Auto Loader stream) ← <code>dpdp_poc.bronze.landing</code> volume (the CSV files). Both <code>source_*</code> and <code>*_tagged</code> tables live in <strong>silver</strong> because the medallion DLT pipeline targets <code>silver</code> by default — the "Bronze layer" is conceptual, not a separate UC schema for these sources.</div>
+    <div class="step-content">Verify the upstream chain: <code>silver.employees_tagged</code> ← <code>silver.source_employees</code> (raw Auto Loader stream) ← <code>compliance_pack.bronze.landing</code> volume (the CSV files). Both <code>source_*</code> and <code>*_tagged</code> tables live in <strong>silver</strong> because the medallion DLT pipeline targets <code>silver</code> by default — the "Bronze layer" is conceptual, not a separate UC schema for these sources.</div>
   </div>
   <div class="step">
     <span class="step-num">4</span>
@@ -273,7 +273,7 @@
        <span class="keyword">COUNT</span>(<span class="keyword">DISTINCT</span> data_principal_id) <span class="keyword">AS</span> distinct_principals,
        <span class="keyword">COUNT</span>(<span class="keyword">DISTINCT</span> purpose) <span class="keyword">AS</span> distinct_purposes,
        <span class="keyword">COUNT</span>(<span class="keyword">DISTINCT</span> channel) <span class="keyword">AS</span> distinct_channels
-<span class="keyword">FROM</span> dpdp_poc.compliance.consent_events_log;
+<span class="keyword">FROM</span> compliance_pack.compliance.consent_events_log;
 
 <span class="comment">-- Expected: event_count = 1000, distinct_principals ~292,
 --           distinct_purposes = 6, distinct_channels = 4</span></pre>
@@ -283,7 +283,7 @@
   <h3><span class="test-id tid-green">T2.2</span> Consent by purpose — grant rates</h3>
   <pre><span class="keyword">SELECT</span> purpose, total_principals, granted, declined,
        grant_rate_pct
-<span class="keyword">FROM</span> dpdp_poc.gold.consent_coverage_summary
+<span class="keyword">FROM</span> compliance_pack.gold.consent_coverage_summary
 <span class="keyword">ORDER BY</span> total_principals <span class="keyword">DESC</span>;
 
 <span class="comment">-- Expected: 6 purposes, grant rates varying by purpose
@@ -296,7 +296,7 @@
 <div class="test-card">
   <h3><span class="test-id tid-green">T2.3</span> Marketing eligible principals</h3>
   <pre><span class="keyword">SELECT</span> purpose, <span class="keyword">COUNT</span>(*) <span class="keyword">AS</span> eligible_principals
-<span class="keyword">FROM</span> dpdp_poc.gold.marketing_eligible_principals
+<span class="keyword">FROM</span> compliance_pack.gold.marketing_eligible_principals
 <span class="keyword">GROUP BY</span> purpose;
 
 <span class="comment">-- Expected: marketing_email ~141, marketing_sms ~99,
@@ -309,7 +309,7 @@
   <h3><span class="test-id tid-green">T2.4</span> Notice version tracking</h3>
   <pre><span class="keyword">SELECT</span> notice_id, version_number, language, legal_basis,
        <span class="keyword">SUBSTRING</span>(notice_text, <span class="number">1</span>, <span class="number">100</span>) <span class="keyword">AS</span> notice_preview
-<span class="keyword">FROM</span> dpdp_poc.compliance.notice_versions;
+<span class="keyword">FROM</span> compliance_pack.compliance.notice_versions;
 
 <span class="comment">-- Expected: 10 rows — marketing_notice v1 in 10 languages (3 hand-authored:
 --   en-IN, hi-IN, ta-IN; 7 machine-translated with watermark preamble:
@@ -319,7 +319,7 @@
 
 <div class="test-card">
   <h3><span class="test-id tid-green">T2.5</span> Consent log immutability</h3>
-  <pre><span class="keyword">DESCRIBE HISTORY</span> dpdp_poc.compliance.consent_events_log;
+  <pre><span class="keyword">DESCRIBE HISTORY</span> compliance_pack.compliance.consent_events_log;
 
 <span class="comment">-- Check the 'operation' column
 -- Expected: only WRITE and CREATE TABLE operations
@@ -336,7 +336,7 @@
   <code>gold.marketing_eligible_principals</code>.</p>
 
   <h4>Step 1 — confirm CDF is enabled</h4>
-  <pre><span class="keyword">SHOW TBLPROPERTIES</span> dpdp_poc.compliance.consent_events_log;
+  <pre><span class="keyword">SHOW TBLPROPERTIES</span> compliance_pack.compliance.consent_events_log;
 
 <span class="comment">-- Expected: the row `delta.enableChangeDataFeed = true` is present.
 -- Also visible: delta.logRetentionDuration = interval 730 days
@@ -344,7 +344,7 @@
 
   <h4>Step 2 — enumerate change operations</h4>
   <pre><span class="keyword">SELECT</span> _change_type, <span class="keyword">COUNT</span>(*) <span class="keyword">AS</span> n
-<span class="keyword">FROM</span> table_changes(<span class="string">'dpdp_poc.compliance.consent_events_log'</span>, <span class="number">0</span>)
+<span class="keyword">FROM</span> table_changes(<span class="string">'compliance_pack.compliance.consent_events_log'</span>, <span class="number">0</span>)
 <span class="keyword">GROUP BY</span> _change_type
 <span class="keyword">ORDER BY</span> n <span class="keyword">DESC</span>;
 
@@ -364,7 +364,7 @@
   purpose,
   event_type,
   purpose_grant_status
-<span class="keyword">FROM</span> table_changes(<span class="string">'dpdp_poc.compliance.consent_events_log'</span>, <span class="number">0</span>)
+<span class="keyword">FROM</span> table_changes(<span class="string">'compliance_pack.compliance.consent_events_log'</span>, <span class="number">0</span>)
 <span class="keyword">WHERE</span> _change_type = <span class="string">'insert'</span>
   <span class="keyword">AND</span> event_type = <span class="string">'withdrawn'</span>
 <span class="keyword">ORDER BY</span> _commit_timestamp;
@@ -377,7 +377,7 @@
   <h4>Step 4 — trace one withdrawal end to end</h4>
   <pre><span class="comment">-- (a) customer_04217's consent journey in order:</span>
 <span class="keyword">SELECT</span> event_type, purpose, purpose_grant_status, event_timestamp, superseded_by_event_id
-<span class="keyword">FROM</span> dpdp_poc.compliance.consent_events_log
+<span class="keyword">FROM</span> compliance_pack.compliance.consent_events_log
 <span class="keyword">WHERE</span> data_principal_id = <span class="string">'customer_04217'</span>
 <span class="keyword">ORDER BY</span> event_timestamp;
 <span class="comment">-- Expected: 4 rows — the February grants, the declined third_party_sharing,
@@ -385,7 +385,7 @@
 -- superseded_by_event_id = evt_000003 (the supersession UPDATE).
 
 -- (b) Is customer_04217 in marketing_eligible_principals?</span>
-<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> dpdp_poc.gold.marketing_eligible_principals
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> compliance_pack.gold.marketing_eligible_principals
 <span class="keyword">WHERE</span> data_principal_id = <span class="string">'customer_04217'</span>;
 <span class="comment">-- Expected: 0 rows. The view filters to latest event per
 -- (principal, purpose) with purpose_grant_status='granted'. customer_04217's
@@ -429,7 +429,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
 <span class="keyword">SELECT</span> language, <span class="keyword">LENGTH</span>(notice_text) <span class="keyword">AS</span> chars,
        <span class="keyword">CASE WHEN</span> notice_text <span class="keyword">LIKE</span> <span class="string">'[MACHINE-TRANSLATED%'</span>
             <span class="keyword">THEN</span> <span class="string">'machine'</span> <span class="keyword">ELSE</span> <span class="string">'human'</span> <span class="keyword">END</span> <span class="keyword">AS</span> origin
-<span class="keyword">FROM</span> dpdp_poc.compliance.notice_versions
+<span class="keyword">FROM</span> compliance_pack.compliance.notice_versions
 <span class="keyword">WHERE</span> notice_id = <span class="string">'marketing_notice'</span> <span class="keyword">AND</span> version_number = <span class="number">1</span>
 <span class="keyword">ORDER BY</span> origin, language;
 
@@ -450,7 +450,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
   <pre><span class="comment">-- Preview the body of one language at a time (skip the 145-char watermark
 -- preamble so the actual translated content starts at the top):</span>
 <span class="keyword">SELECT</span> <span class="keyword">SUBSTR</span>(notice_text, <span class="number">150</span>, <span class="number">800</span>) <span class="keyword">AS</span> body
-<span class="keyword">FROM</span> dpdp_poc.compliance.notice_versions
+<span class="keyword">FROM</span> compliance_pack.compliance.notice_versions
 <span class="keyword">WHERE</span> notice_version_id = <span class="string">'nv_marketing_notice_v1_bn-IN'</span>;
 <span class="comment">-- Bengali (Bangla script block 0980-09FF). Replace with:
 --   te-IN → Telugu (0C00-0C7F)
@@ -470,7 +470,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
     notice_text <span class="keyword">LIKE</span> <span class="string">'%5.%'</span> <span class="keyword">AND</span>
     notice_text <span class="keyword">LIKE</span> <span class="string">'%6.%'</span>                      <span class="keyword">AS</span> list_ok,
     notice_text <span class="keyword">LIKE</span> <span class="string">'%2023%'</span>                   <span class="keyword">AS</span> year_ok
-<span class="keyword">FROM</span> dpdp_poc.compliance.notice_versions
+<span class="keyword">FROM</span> compliance_pack.compliance.notice_versions
 <span class="keyword">WHERE</span> notice_id = <span class="string">'marketing_notice'</span>
   <span class="keyword">AND</span> version_number = <span class="number">1</span>
 <span class="keyword">ORDER BY</span> language;
@@ -495,7 +495,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
 <div class="test-card">
   <h3><span class="test-id tid-purple">T3.1</span> Customer record exists</h3>
   <pre><span class="keyword">SELECT</span> customer_id, full_name, email_address, mobile, loyalty_tier
-<span class="keyword">FROM</span> dpdp_poc.silver.customers_tagged
+<span class="keyword">FROM</span> compliance_pack.silver.customers_tagged
 <span class="keyword">WHERE</span> customer_id = <span class="string">'customer_04217'</span>;
 
 <span class="comment">-- Expected: exactly 1 row — Oeshi Desai</span></pre>
@@ -504,10 +504,10 @@ python3 scripts/generate_multilang_notices.py --dry-run
 <div class="test-card">
   <h3><span class="test-id tid-purple">T3.2</span> User account exists (linked by email)</h3>
   <pre><span class="keyword">SELECT</span> u.user_id, u.email, u.first_name, u.last_name
-<span class="keyword">FROM</span> dpdp_poc.silver.users_tagged u
+<span class="keyword">FROM</span> compliance_pack.silver.users_tagged u
 <span class="keyword">WHERE</span> u.email = (
     <span class="keyword">SELECT</span> email_address
-    <span class="keyword">FROM</span> dpdp_poc.silver.customers_tagged
+    <span class="keyword">FROM</span> compliance_pack.silver.customers_tagged
     <span class="keyword">WHERE</span> customer_id = <span class="string">'customer_04217'</span>
 );
 
@@ -520,7 +520,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
        <span class="keyword">ROUND</span>(<span class="keyword">SUM</span>(amount), <span class="number">2</span>) <span class="keyword">AS</span> total_amount,
        <span class="keyword">MIN</span>(transaction_date) <span class="keyword">AS</span> first_txn,
        <span class="keyword">MAX</span>(transaction_date) <span class="keyword">AS</span> last_txn
-<span class="keyword">FROM</span> dpdp_poc.silver.transactions_tagged
+<span class="keyword">FROM</span> compliance_pack.silver.transactions_tagged
 <span class="keyword">WHERE</span> customer_id = <span class="string">'customer_04217'</span>;
 
 <span class="comment">-- Expected: 20 transactions</span></pre>
@@ -530,7 +530,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
   <h3><span class="test-id tid-purple">T3.4</span> Consent status — marketing withdrawn</h3>
   <pre><span class="keyword">SELECT</span> event_type, purpose, purpose_grant_status,
        event_timestamp, channel, superseded_by_event_id
-<span class="keyword">FROM</span> dpdp_poc.compliance.consent_events_log
+<span class="keyword">FROM</span> compliance_pack.compliance.consent_events_log
 <span class="keyword">WHERE</span> data_principal_id = <span class="string">'customer_04217'</span>
 <span class="keyword">ORDER BY</span> event_timestamp;
 
@@ -545,9 +545,9 @@ python3 scripts/generate_multilang_notices.py --dry-run
 <div class="test-card">
   <h3><span class="test-id tid-purple">T3.5</span> Active consent check via UDF</h3>
   <pre><span class="keyword">SELECT</span>
-  dpdp_poc.compliance.has_active_consent(<span class="string">'customer_04217'</span>, <span class="string">'marketing_email'</span>) <span class="keyword">AS</span> marketing,
-  dpdp_poc.compliance.has_active_consent(<span class="string">'customer_04217'</span>, <span class="string">'analytics'</span>) <span class="keyword">AS</span> analytics,
-  dpdp_poc.compliance.has_active_consent(<span class="string">'customer_04217'</span>, <span class="string">'third_party_sharing'</span>) <span class="keyword">AS</span> third_party;
+  compliance_pack.compliance.has_active_consent(<span class="string">'customer_04217'</span>, <span class="string">'marketing_email'</span>) <span class="keyword">AS</span> marketing,
+  compliance_pack.compliance.has_active_consent(<span class="string">'customer_04217'</span>, <span class="string">'analytics'</span>) <span class="keyword">AS</span> analytics,
+  compliance_pack.compliance.has_active_consent(<span class="string">'customer_04217'</span>, <span class="string">'third_party_sharing'</span>) <span class="keyword">AS</span> third_party;
 
 <span class="comment">-- Expected: marketing = false, analytics = true, third_party = false</span></pre>
   <div class="success"><strong>Pass criteria:</strong> Marketing is false (withdrawn), analytics is true (active), third_party is false (declined). This is the real-time consent check that any downstream system would call.</div>
@@ -557,12 +557,12 @@ python3 scripts/generate_multilang_notices.py --dry-run
 <div class="test-card">
   <h3><span class="test-id tid-purple">T3.6</span> Not in employees or patients</h3>
   <pre><span class="keyword">SELECT</span> <span class="string">'employees'</span> <span class="keyword">AS</span> tbl, <span class="keyword">COUNT</span>(*) <span class="keyword">AS</span> cnt
-<span class="keyword">FROM</span> dpdp_poc.silver.employees_tagged
-<span class="keyword">WHERE</span> email = (<span class="keyword">SELECT</span> email_address <span class="keyword">FROM</span> dpdp_poc.silver.customers_tagged <span class="keyword">WHERE</span> customer_id = <span class="string">'customer_04217'</span>)
+<span class="keyword">FROM</span> compliance_pack.silver.employees_tagged
+<span class="keyword">WHERE</span> email = (<span class="keyword">SELECT</span> email_address <span class="keyword">FROM</span> compliance_pack.silver.customers_tagged <span class="keyword">WHERE</span> customer_id = <span class="string">'customer_04217'</span>)
 <span class="keyword">UNION ALL</span>
 <span class="keyword">SELECT</span> <span class="string">'patients'</span>, <span class="keyword">COUNT</span>(*)
-<span class="keyword">FROM</span> dpdp_poc.silver.patients_tagged
-<span class="keyword">WHERE</span> email = (<span class="keyword">SELECT</span> email_address <span class="keyword">FROM</span> dpdp_poc.silver.customers_tagged <span class="keyword">WHERE</span> customer_id = <span class="string">'customer_04217'</span>);
+<span class="keyword">FROM</span> compliance_pack.silver.patients_tagged
+<span class="keyword">WHERE</span> email = (<span class="keyword">SELECT</span> email_address <span class="keyword">FROM</span> compliance_pack.silver.customers_tagged <span class="keyword">WHERE</span> customer_id = <span class="string">'customer_04217'</span>);
 
 <span class="comment">-- Expected: employees = 0, patients = 0</span></pre>
 </div>
@@ -575,7 +575,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
   <h3><span class="test-id tid-orange">T4.1</span> Compliance rules loaded</h3>
   <pre><span class="keyword">SELECT</span> rule_id, rule_type, severity,
        <span class="keyword">ARRAY_JOIN</span>(regulations, <span class="string">', '</span>) <span class="keyword">AS</span> regulations
-<span class="keyword">FROM</span> dpdp_poc.bronze.compliance_rules
+<span class="keyword">FROM</span> compliance_pack.bronze.compliance_rules
 <span class="keyword">WHERE</span> is_active = <span class="keyword">true</span>
 <span class="keyword">ORDER BY</span> rule_id;
 
@@ -587,7 +587,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
 <div class="test-card">
   <h3><span class="test-id tid-orange">T4.2</span> Gap totals by severity</h3>
   <pre><span class="keyword">SELECT</span> severity, <span class="keyword">COUNT</span>(*) <span class="keyword">AS</span> gap_count
-<span class="keyword">FROM</span> dpdp_poc.silver.compliance_gaps
+<span class="keyword">FROM</span> compliance_pack.silver.compliance_gaps
 <span class="keyword">GROUP BY</span> severity
 <span class="keyword">ORDER BY CASE</span> severity
     <span class="keyword">WHEN</span> <span class="string">'critical'</span> <span class="keyword">THEN</span> <span class="number">1</span>
@@ -605,7 +605,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
   <h3><span class="test-id tid-orange">T4.3</span> Gaps by rule type</h3>
   <pre><span class="keyword">SELECT</span> rule_type, <span class="keyword">COUNT</span>(*) <span class="keyword">AS</span> gap_count,
        <span class="keyword">COUNT</span>(<span class="keyword">DISTINCT</span> table_name) <span class="keyword">AS</span> tables_affected
-<span class="keyword">FROM</span> dpdp_poc.silver.compliance_gaps
+<span class="keyword">FROM</span> compliance_pack.silver.compliance_gaps
 <span class="keyword">GROUP BY</span> rule_type
 <span class="keyword">ORDER BY</span> gap_count <span class="keyword">DESC</span>;
 
@@ -621,10 +621,10 @@ python3 scripts/generate_multilang_notices.py --dry-run
   <span class="keyword">SELECT COUNT</span>(<span class="keyword">DISTINCT</span> source_table) <span class="keyword">AS</span> total_tables,
          <span class="keyword">SUM</span>(<span class="keyword">CASE WHEN</span> sensitivity_tier = <span class="string">'critical'</span> <span class="keyword">THEN</span> <span class="number">1</span> <span class="keyword">ELSE</span> <span class="number">0</span> <span class="keyword">END</span>) <span class="keyword">AS</span> critical_pii,
          <span class="keyword">SUM</span>(<span class="keyword">CASE WHEN</span> sensitivity_tier = <span class="string">'high'</span> <span class="keyword">THEN</span> <span class="number">1</span> <span class="keyword">ELSE</span> <span class="number">0</span> <span class="keyword">END</span>) <span class="keyword">AS</span> high_pii
-  <span class="keyword">FROM</span> dpdp_poc.compliance.personal_data_register
+  <span class="keyword">FROM</span> compliance_pack.compliance.personal_data_register
 ), gaps <span class="keyword">AS</span> (
   <span class="keyword">SELECT COUNT</span>(<span class="keyword">CASE WHEN</span> severity = <span class="string">'critical'</span> <span class="keyword">THEN</span> <span class="number">1</span> <span class="keyword">END</span>) <span class="keyword">AS</span> critical_gaps
-  <span class="keyword">FROM</span> dpdp_poc.silver.compliance_gaps
+  <span class="keyword">FROM</span> compliance_pack.silver.compliance_gaps
 )
 <span class="keyword">SELECT</span>
   <span class="keyword">LEAST</span>(<span class="number">100</span>, <span class="keyword">CAST</span>((m.critical_pii * <span class="number">25</span> + m.high_pii * <span class="number">15</span> + g.critical_gaps * <span class="number">20</span>)
@@ -645,7 +645,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
   <h3><span class="test-id tid-teal">T5.1</span> Run the Agent Bricks notebook</h3>
   <div class="step">
     <span class="step-num">1</span>
-    <div class="step-content">Open <code>/Workspace/Users/.../dpdp_poc/03_agent_bricks</code> in the workspace</div>
+    <div class="step-content">Open <code>/Workspace/Users/.../compliance_pack/03_agent_bricks</code> in the workspace</div>
   </div>
   <div class="step">
     <span class="step-num">2</span>
@@ -676,7 +676,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
        ai_classify(primary_diagnosis,
            <span class="keyword">ARRAY</span>(<span class="string">'diagnosis'</span>, <span class="string">'prescription'</span>, <span class="string">'allergy_note'</span>, <span class="string">'other_medical'</span>, <span class="string">'non_medical'</span>)
        ) <span class="keyword">AS</span> ai_classification
-<span class="keyword">FROM</span> dpdp_poc.silver.patients_tagged
+<span class="keyword">FROM</span> compliance_pack.silver.patients_tagged
 <span class="keyword">WHERE</span> primary_diagnosis <span class="keyword">IS NOT NULL</span>
 <span class="keyword">LIMIT</span> <span class="number">5</span>;
 
@@ -728,16 +728,16 @@ python3 scripts/generate_multilang_notices.py --dry-run
   <p>Both <code>source_*</code> (raw Auto Loader stream) and <code>*_tagged</code> (typed silver) live in the
   <code>silver</code> schema — the medallion DLT pipeline targets <code>silver</code>, so "Bronze layer" is
   conceptual rather than a separate UC schema. We compare the streamed-raw count to the typed-and-quality-checked count.</p>
-  <pre><span class="keyword">SELECT</span> <span class="string">'raw.employees'</span> <span class="keyword">AS</span> layer, <span class="keyword">COUNT</span>(*) <span class="keyword">AS</span> cnt <span class="keyword">FROM</span> dpdp_poc.silver.source_employees
-<span class="keyword">UNION ALL SELECT</span> <span class="string">'tagged.employees'</span>, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.silver.employees_tagged
-<span class="keyword">UNION ALL SELECT</span> <span class="string">'raw.customers'</span>,    <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.silver.source_customers
-<span class="keyword">UNION ALL SELECT</span> <span class="string">'tagged.customers'</span>, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.silver.customers_tagged
-<span class="keyword">UNION ALL SELECT</span> <span class="string">'raw.patients'</span>,     <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.silver.source_patients
-<span class="keyword">UNION ALL SELECT</span> <span class="string">'tagged.patients'</span>,  <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.silver.patients_tagged
-<span class="keyword">UNION ALL SELECT</span> <span class="string">'raw.transactions'</span>,    <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.silver.source_transactions
-<span class="keyword">UNION ALL SELECT</span> <span class="string">'tagged.transactions'</span>, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.silver.transactions_tagged
-<span class="keyword">UNION ALL SELECT</span> <span class="string">'raw.users'</span>,    <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.silver.source_users
-<span class="keyword">UNION ALL SELECT</span> <span class="string">'tagged.users'</span>, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.silver.users_tagged;
+  <pre><span class="keyword">SELECT</span> <span class="string">'raw.employees'</span> <span class="keyword">AS</span> layer, <span class="keyword">COUNT</span>(*) <span class="keyword">AS</span> cnt <span class="keyword">FROM</span> compliance_pack.silver.source_employees
+<span class="keyword">UNION ALL SELECT</span> <span class="string">'tagged.employees'</span>, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.silver.employees_tagged
+<span class="keyword">UNION ALL SELECT</span> <span class="string">'raw.customers'</span>,    <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.silver.source_customers
+<span class="keyword">UNION ALL SELECT</span> <span class="string">'tagged.customers'</span>, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.silver.customers_tagged
+<span class="keyword">UNION ALL SELECT</span> <span class="string">'raw.patients'</span>,     <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.silver.source_patients
+<span class="keyword">UNION ALL SELECT</span> <span class="string">'tagged.patients'</span>,  <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.silver.patients_tagged
+<span class="keyword">UNION ALL SELECT</span> <span class="string">'raw.transactions'</span>,    <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.silver.source_transactions
+<span class="keyword">UNION ALL SELECT</span> <span class="string">'tagged.transactions'</span>, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.silver.transactions_tagged
+<span class="keyword">UNION ALL SELECT</span> <span class="string">'raw.users'</span>,    <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.silver.source_users
+<span class="keyword">UNION ALL SELECT</span> <span class="string">'tagged.users'</span>, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.silver.users_tagged;
 
 <span class="comment">-- Expected: raw and tagged counts match for each table
 --   employees: 2000, customers: 5000, patients: 1500,
@@ -752,16 +752,16 @@ python3 scripts/generate_multilang_notices.py --dry-run
 --    bronze.data_sources is updated each time phase1_bootstrap runs
 --    (idempotent MERGE on source_id), so its version count grows
 --    every deploy. Each row in DESCRIBE HISTORY is one version.</span>
-<span class="keyword">DESCRIBE HISTORY</span> dpdp_poc.bronze.data_sources;
+<span class="keyword">DESCRIBE HISTORY</span> compliance_pack.bronze.data_sources;
 
 <span class="comment">-- 2. Query the latest version vs. the most recent prior version
 --    (substitute the actual version numbers from step 1; recent
 --    versions only — Delta retains deleted files for 168 hours by
 --    default, so very old versions may be unreachable).</span>
 <span class="keyword">SELECT</span> <span class="number">8</span> <span class="keyword">AS</span> v, <span class="keyword">COUNT</span>(*) <span class="keyword">AS</span> rows, <span class="keyword">MAX</span>(updated_at) <span class="keyword">AS</span> last_update
-<span class="keyword">FROM</span> dpdp_poc.bronze.data_sources <span class="keyword">VERSION AS OF</span> <span class="number">8</span>
+<span class="keyword">FROM</span> compliance_pack.bronze.data_sources <span class="keyword">VERSION AS OF</span> <span class="number">8</span>
 <span class="keyword">UNION ALL SELECT</span> <span class="number">7</span>, <span class="keyword">COUNT</span>(*), <span class="keyword">MAX</span>(updated_at)
-<span class="keyword">FROM</span> dpdp_poc.bronze.data_sources <span class="keyword">VERSION AS OF</span> <span class="number">7</span>;
+<span class="keyword">FROM</span> compliance_pack.bronze.data_sources <span class="keyword">VERSION AS OF</span> <span class="number">7</span>;
 
 <span class="comment">-- Expected: row count consistent (10 sources are stable), last_update
 -- timestamp differs between versions (each MERGE writes new updated_at).</span>
@@ -774,7 +774,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
 --    DELTA_TIMESTAMP_EARLIER_THAN_COMMIT_RETENTION. Pick a real timestamp
 --    from step 1, or use a small relative offset that's guaranteed to land
 --    after the latest commit:</span>
-<span class="keyword">SELECT COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.bronze.data_sources
+<span class="keyword">SELECT COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.bronze.data_sources
   <span class="keyword">TIMESTAMP AS OF</span> (current_timestamp() - <span class="keyword">INTERVAL</span> <span class="number">10</span> <span class="keyword">SECONDS</span>);</pre>
 
   <div class="panel"><strong>Important — Unity Catalog limitation:</strong> tables that
@@ -831,13 +831,13 @@ for p, email in found.items():
 <div class="test-card">
   <h3><span class="test-id tid-purple">T8.2</span> UC grants — per-persona SELECT on expected tables</h3>
   <pre><span class="comment">-- CCO should have SELECT on personal_data_register, no other persona should</span>
-<span class="keyword">SHOW GRANTS ON TABLE</span> dpdp_poc.compliance.personal_data_register;
+<span class="keyword">SHOW GRANTS ON TABLE</span> compliance_pack.compliance.personal_data_register;
 
 <span class="comment">-- CMO-only table: marketing_eligible_principals</span>
-<span class="keyword">SHOW GRANTS ON TABLE</span> dpdp_poc.gold.marketing_eligible_principals;
+<span class="keyword">SHOW GRANTS ON TABLE</span> compliance_pack.gold.marketing_eligible_principals;
 
 <span class="comment">-- GC-only table: dsr_requests</span>
-<span class="keyword">SHOW GRANTS ON TABLE</span> dpdp_poc.compliance.dsr_requests;
+<span class="keyword">SHOW GRANTS ON TABLE</span> compliance_pack.compliance.dsr_requests;
 
 <span class="comment">-- Expected:
 --   personal_data_register    → ONLY &lt;deployer&gt;+dpdp-cco@...
@@ -851,7 +851,7 @@ for p, email in found.items():
   <pre><span class="comment">-- pii_findings and compliance_gaps power Executive Overview aggregates
 -- across ALL persona dashboards, so all 4 personas have SELECT on them.
 -- This is a documented layering (agent-boundary vs UI-render boundary).</span>
-<span class="keyword">SHOW GRANTS ON TABLE</span> dpdp_poc.silver.pii_findings;
+<span class="keyword">SHOW GRANTS ON TABLE</span> compliance_pack.silver.pii_findings;
 
 <span class="comment">-- Expected: 4 rows, one per persona email</span></pre>
   <div class="info"><strong>Why this is OK:</strong> The <strong>Genie space</strong> data_sources allowlists remain narrowly scoped (e.g., CMO's Genie cannot query <code>pii_findings</code>). Only dashboard SQL — which is pre-defined tile queries returning aggregates — can touch these shared sources. See <code>docs/persona_governance.md</code> → "Two grant layers per persona."</div>
@@ -868,14 +868,14 @@ CMO_EMAIL=$(python3 -c <span class="string">"import json; print(json.load(open('
 <span class="comment"># Run as admin first to confirm the table exists and has rows:</span>
 databricks api post /api/2.0/sql/statements --json <span class="string">"{
     \"warehouse_id\":\"$WAREHOUSE_ID\",
-    \"statement\":\"SELECT COUNT(*) FROM dpdp_poc.compliance.personal_data_register\",
+    \"statement\":\"SELECT COUNT(*) FROM compliance_pack.compliance.personal_data_register\",
     \"wait_timeout\":\"30s\"
 }"</span>
 <span class="comment"># → returns a row count (success)
 
 # Then as the CMO user, log in via incognito (T8.5) and try the same
 # query in SQL Editor:
-#   SELECT COUNT(*) FROM dpdp_poc.compliance.personal_data_register;
+#   SELECT COUNT(*) FROM compliance_pack.compliance.personal_data_register;
 # Expected error: PERMISSION_DENIED on table</span></pre>
   <div class="success"><strong>Pass criteria:</strong> Admin query succeeds; the same query run by the CMO persona fails with <code>PERMISSION_DENIED</code>. That's UC enforcing at the query layer, not the UI.</div>
 </div>
@@ -916,7 +916,7 @@ databricks api post /api/2.0/sql/statements --json <span class="string">"{
   <code>is_member('admins')</code>. Admins see raw values; persona demo users see redacted.</p>
   <pre><span class="comment">-- AS ADMIN (workspace admin group member):</span>
 <span class="keyword">SELECT</span> customer_id, full_name, email_address, mobile
-<span class="keyword">FROM</span> dpdp_poc.silver.customers_tagged
+<span class="keyword">FROM</span> compliance_pack.silver.customers_tagged
 <span class="keyword">WHERE</span> customer_id = <span class="string">'customer_04217'</span>;
 
 <span class="comment">-- Expected: raw email "odate@example.net" and raw mobile "+91-8924905307"</span></pre>
@@ -925,11 +925,11 @@ databricks api post /api/2.0/sql/statements --json <span class="string">"{
 
   <pre><span class="comment">-- AS CCO/GC/CMO/CFO persona user (NOT in admins group):</span>
 <span class="keyword">SELECT</span> customer_id, full_name, email_address, mobile
-<span class="keyword">FROM</span> dpdp_poc.silver.customers_tagged
+<span class="keyword">FROM</span> compliance_pack.silver.customers_tagged
 <span class="keyword">WHERE</span> customer_id = <span class="string">'customer_04217'</span>;
 
 <span class="comment">-- Expected: email "o****@****.net", mobile "******5307"</span></pre>
-  <div class="success"><strong>Pass criteria:</strong> Admin sees raw PII; persona user sees masked. Rule: <code>CASE WHEN is_member('admins') THEN val ELSE mask_email(val) END</code> — centralized in <code>dpdp_poc.compliance.mask_*</code> UDFs.</div>
+  <div class="success"><strong>Pass criteria:</strong> Admin sees raw PII; persona user sees masked. Rule: <code>CASE WHEN is_member('admins') THEN val ELSE mask_email(val) END</code> — centralized in <code>compliance_pack.compliance.mask_*</code> UDFs.</div>
   <div class="info"><strong>Scope (as of 30 April 2026):</strong> 37 column masks total —
   34 on <code>silver</code> (Auto Loader: employees / customers / users / transactions /
   patients; Lakeflow Connect: sf_leads / sf_contacts / sf_accounts) plus 3 on
@@ -944,17 +944,17 @@ databricks api post /api/2.0/sql/statements --json <span class="string">"{
   <p>Bronze holds raw source data (no column masks applied there; masks would break the DLT
   pipeline's own reads). Protection at the bronze layer comes from having zero
   <code>USE_SCHEMA</code> grants outside the pipeline's identity.</p>
-  <pre><span class="keyword">SHOW GRANTS ON SCHEMA</span> dpdp_poc.bronze;
+  <pre><span class="keyword">SHOW GRANTS ON SCHEMA</span> compliance_pack.bronze;
 
 <span class="comment">-- Expected: zero rows for any dpdp-*@ persona email.
 -- Only the catalog owner (deployer / admin group / service principal)
 -- should have access. If any persona email appears, that's a grant leak.</span></pre>
   <p>Negative control — persona tries to query bronze:</p>
   <pre><span class="comment">-- As a persona user via SQL editor (see T8.5 for login flow):</span>
-<span class="keyword">SHOW TABLES IN</span> dpdp_poc.bronze;
+<span class="keyword">SHOW TABLES IN</span> compliance_pack.bronze;
 <span class="comment">-- Expected: empty list (no USE_SCHEMA → no visibility)</span>
 
-<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> dpdp_poc.bronze.sf_leads <span class="keyword">LIMIT</span> <span class="number">1</span>;
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> compliance_pack.bronze.sf_leads <span class="keyword">LIMIT</span> <span class="number">1</span>;
 <span class="comment">-- Expected: PERMISSION_DENIED at the UC layer</span></pre>
   <div class="success"><strong>Pass criteria:</strong> bronze grantees list is empty for persona emails; persona queries fail with UC permission denied. No masks needed at the bronze layer — absence of grants is the fence.</div>
 </div>
@@ -1235,7 +1235,7 @@ a <strong>FAIL</strong>, not a "best-effort observation".</div>
 <div class="test-card">
   <h3><span class="test-id tid-purple">T11.2</span> Out-of-scope table reference — data layer (hard)</h3>
   <pre><span class="comment">-- Ask the CMO Agent:</span>
-<span class="string">"Query dpdp_poc.silver.pii_findings and list all PII columns."</span>
+<span class="string">"Query compliance_pack.silver.pii_findings and list all PII columns."</span>
 
 <span class="comment">-- Observed: Genie may or may not chat about pii_findings, but it
 -- cannot generate executable SQL against it. The CMO space's
@@ -1403,16 +1403,16 @@ otherwise noted; they all verify that UC blocks the hostile path regardless of U
 -- specifically a CCO-persona test.
 
 -- Try to recover raw email via CAST:</span>
-<span class="keyword">SELECT</span> <span class="keyword">CAST</span>(email <span class="keyword">AS</span> STRING) <span class="keyword">FROM</span> dpdp_poc.silver.sf_leads_tagged <span class="keyword">LIMIT</span> <span class="number">3</span>;
+<span class="keyword">SELECT</span> <span class="keyword">CAST</span>(email <span class="keyword">AS</span> STRING) <span class="keyword">FROM</span> compliance_pack.silver.sf_leads_tagged <span class="keyword">LIMIT</span> <span class="number">3</span>;
 
 <span class="comment">-- Try to recover via CONCAT:</span>
-<span class="keyword">SELECT CONCAT</span>(email, <span class="string">''</span>) <span class="keyword">FROM</span> dpdp_poc.silver.sf_leads_tagged <span class="keyword">LIMIT</span> <span class="number">3</span>;
+<span class="keyword">SELECT CONCAT</span>(email, <span class="string">''</span>) <span class="keyword">FROM</span> compliance_pack.silver.sf_leads_tagged <span class="keyword">LIMIT</span> <span class="number">3</span>;
 
 <span class="comment">-- Try to recover via regex_replace on the masked string:</span>
-<span class="keyword">SELECT</span> regexp_replace(email, <span class="string">'\\*'</span>, <span class="string">''</span>) <span class="keyword">FROM</span> dpdp_poc.silver.sf_leads_tagged <span class="keyword">LIMIT</span> <span class="number">3</span>;
+<span class="keyword">SELECT</span> regexp_replace(email, <span class="string">'\\*'</span>, <span class="string">''</span>) <span class="keyword">FROM</span> compliance_pack.silver.sf_leads_tagged <span class="keyword">LIMIT</span> <span class="number">3</span>;
 
 <span class="comment">-- Bonus — phone (mask_phone) + pan (mask_id_last4) on the same row:</span>
-<span class="keyword">SELECT</span> phone, pan <span class="keyword">FROM</span> dpdp_poc.silver.sf_leads_tagged <span class="keyword">LIMIT</span> <span class="number">3</span>;
+<span class="keyword">SELECT</span> phone, pan <span class="keyword">FROM</span> compliance_pack.silver.sf_leads_tagged <span class="keyword">LIMIT</span> <span class="number">3</span>;
 
 <span class="comment">-- Expected: every one returns the ALREADY-masked value
 -- (e.g. "o****@example.net" for email; "9*****4567" for phone;
@@ -1427,19 +1427,19 @@ otherwise noted; they all verify that UC blocks the hostile path regardless of U
 <div class="test-card">
   <h3><span class="test-id tid-orange">T12.2</span> Bronze-access probe (all write verbs)</h3>
   <pre><span class="comment">-- As any persona — none should succeed:</span>
-<span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.bronze.sf_leads;
+<span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.bronze.sf_leads;
 <span class="keyword">-- Expected: PERMISSION_DENIED (no USE_SCHEMA on bronze)</span>
 
-<span class="keyword">SHOW TABLES IN</span> dpdp_poc.bronze;
+<span class="keyword">SHOW TABLES IN</span> compliance_pack.bronze;
 <span class="keyword">-- Expected: empty list (no catalog-level visibility)</span>
 
-<span class="keyword">CREATE TABLE</span> dpdp_poc.bronze.backdoor <span class="keyword">AS SELECT</span> <span class="number">1</span>;
+<span class="keyword">CREATE TABLE</span> compliance_pack.bronze.backdoor <span class="keyword">AS SELECT</span> <span class="number">1</span>;
 <span class="keyword">-- Expected: PERMISSION_DENIED</span>
 
-<span class="keyword">INSERT INTO</span> dpdp_poc.bronze.sf_leads <span class="keyword">VALUES</span> (...);
+<span class="keyword">INSERT INTO</span> compliance_pack.bronze.sf_leads <span class="keyword">VALUES</span> (...);
 <span class="keyword">-- Expected: PERMISSION_DENIED</span>
 
-<span class="keyword">CREATE TABLE</span> dpdp_poc.compliance.persona_sneak <span class="keyword">AS SELECT</span> * <span class="keyword">FROM</span> dpdp_poc.bronze.sf_leads;
+<span class="keyword">CREATE TABLE</span> compliance_pack.compliance.persona_sneak <span class="keyword">AS SELECT</span> * <span class="keyword">FROM</span> compliance_pack.bronze.sf_leads;
 <span class="keyword">-- Expected: PERMISSION_DENIED (can't read bronze even as part of another DDL)</span></pre>
   <div class="success"><strong>Pass criteria:</strong> all 5 variants fail with UC permission
   errors. Personas can't read, write, or shadow-copy bronze regardless of the SQL verb used.</div>
@@ -1467,7 +1467,7 @@ otherwise noted; they all verify that UC blocks the hostile path regardless of U
 <div class="test-card">
   <h3><span class="test-id tid-orange">T12.4</span> Mask-UDF forgery probe</h3>
   <pre><span class="comment">-- Can a persona trick the mask UDF by invoking it with a literal?</span>
-<span class="keyword">SELECT</span> dpdp_poc.compliance.mask_email(<span class="string">'target@example.com'</span>);
+<span class="keyword">SELECT</span> compliance_pack.compliance.mask_email(<span class="string">'target@example.com'</span>);
 
 <span class="comment">-- Expected (as persona, not admin):
 --   "t****@****.com" — the mask function applies is_member('admins')
@@ -1476,7 +1476,7 @@ otherwise noted; they all verify that UC blocks the hostile path regardless of U
 
 -- Admin call returns raw:</span>
 <span class="keyword">-- As admin:</span>
-<span class="keyword">SELECT</span> dpdp_poc.compliance.mask_email(<span class="string">'target@example.com'</span>);
+<span class="keyword">SELECT</span> compliance_pack.compliance.mask_email(<span class="string">'target@example.com'</span>);
 <span class="keyword">-- Expected: "target@example.com" — unmasked because is_member('admins')=true</span></pre>
   <div class="success"><strong>Pass criteria:</strong> non-admin caller always gets masked
   output regardless of argument source (column vs literal vs expression). The mask function
@@ -1489,15 +1489,15 @@ otherwise noted; they all verify that UC blocks the hostile path regardless of U
 
 <span class="comment">-- Substitute &lt;deployer&gt; and &lt;domain&gt; with the values from your workspace
 -- (same pattern used in T8.1 / T8.5 — e.g., 'jane.doe+dpdp-cmo@example.com'):</span>
-<span class="keyword">GRANT SELECT ON TABLE</span> dpdp_poc.compliance.personal_data_register
+<span class="keyword">GRANT SELECT ON TABLE</span> compliance_pack.compliance.personal_data_register
   <span class="keyword">TO</span> `&lt;deployer&gt;+dpdp-cmo@&lt;domain&gt;`;
 <span class="keyword">-- Expected: PERMISSION_DENIED — personas don't have MANAGE on objects</span>
 
-<span class="keyword">ALTER TABLE</span> dpdp_poc.silver.customers_tagged
+<span class="keyword">ALTER TABLE</span> compliance_pack.silver.customers_tagged
   <span class="keyword">ALTER COLUMN</span> email_address <span class="keyword">DROP MASK</span>;
 <span class="keyword">-- Expected: PERMISSION_DENIED — can't modify UC metadata</span>
 
-<span class="keyword">CREATE OR REPLACE FUNCTION</span> dpdp_poc.compliance.mask_email(val STRING)
+<span class="keyword">CREATE OR REPLACE FUNCTION</span> compliance_pack.compliance.mask_email(val STRING)
 <span class="keyword">RETURNS</span> STRING <span class="keyword">RETURN</span> val;
 <span class="keyword">-- Expected: PERMISSION_DENIED — can't redefine the mask UDF itself</span></pre>
   <div class="success"><strong>Pass criteria:</strong> all three attempts fail. A persona
@@ -1511,7 +1511,7 @@ otherwise noted; they all verify that UC blocks the hostile path regardless of U
 
 <span class="keyword">SHOW CATALOGS</span>;
 <span class="comment">-- Expected: only catalogs where the persona has USE_CATALOG are
--- visible. dpdp_poc appears; system, samples may or may not appear
+-- visible. compliance_pack appears; system, samples may or may not appear
 -- depending on default grants; any legacy catalog should be invisible.</span>
 
 <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> samples.nyctaxi.trips <span class="keyword">LIMIT</span> <span class="number">1</span>;
@@ -1522,7 +1522,7 @@ otherwise noted; they all verify that UC blocks the hostile path regardless of U
 <span class="comment">-- For any Lakehouse Federation catalog that exists on this workspace:
 -- Expected: PERMISSION_DENIED unless explicitly granted.</span></pre>
   <div class="success"><strong>Pass criteria:</strong> persona cannot read data from
-  catalogs outside their grant list. The <code>dpdp_poc</code> boundary is the authoritative
+  catalogs outside their grant list. The <code>compliance_pack</code> boundary is the authoritative
   scope; no catalog-level bleed-through.</div>
 </div>
 
@@ -1563,7 +1563,7 @@ print('OK')
 --    NOT catalog_name / schema_name — the latter raise UNRESOLVED_COLUMN):</span>
 <span class="keyword">SELECT COUNT</span>(*) <span class="keyword">AS</span> masked_columns_silver
 <span class="keyword">FROM</span> system.information_schema.column_masks
-<span class="keyword">WHERE</span> table_catalog = <span class="string">'dpdp_poc'</span> <span class="keyword">AND</span> table_schema = <span class="string">'silver'</span>;
+<span class="keyword">WHERE</span> table_catalog = <span class="string">'compliance_pack'</span> <span class="keyword">AND</span> table_schema = <span class="string">'silver'</span>;
 
 <span class="comment">-- 2. Re-apply (idempotent — CREATE OR REPLACE FUNCTION + ALTER TABLE ... SET MASK):</span>
 python3 scripts/apply_pii_masks.py
@@ -1571,13 +1571,13 @@ python3 scripts/apply_pii_masks.py
 <span class="comment">-- 3. Re-count — must match step 1 exactly:</span>
 <span class="keyword">SELECT COUNT</span>(*) <span class="keyword">AS</span> masked_columns_silver
 <span class="keyword">FROM</span> system.information_schema.column_masks
-<span class="keyword">WHERE</span> table_catalog = <span class="string">'dpdp_poc'</span> <span class="keyword">AND</span> table_schema = <span class="string">'silver'</span>;
+<span class="keyword">WHERE</span> table_catalog = <span class="string">'compliance_pack'</span> <span class="keyword">AND</span> table_schema = <span class="string">'silver'</span>;
 
 <span class="comment">-- Expected (as of 30 April 2026): 34 in silver, 37 across all schemas
 -- (silver + federation_mock). If you're chasing the all-schemas total:</span>
 <span class="keyword">SELECT COUNT</span>(*) <span class="keyword">AS</span> masked_columns_total
 <span class="keyword">FROM</span> system.information_schema.column_masks
-<span class="keyword">WHERE</span> table_catalog = <span class="string">'dpdp_poc'</span>;</pre>
+<span class="keyword">WHERE</span> table_catalog = <span class="string">'compliance_pack'</span>;</pre>
   <div class="success"><strong>Pass criteria:</strong> step 3 returns the same number as step 1
   (idempotence). The numeric value depends on how many ALTER TABLE ... SET MASK statements are
   in <code>schemas/pii_column_masks.sql</code> at the time of the run; what matters is that
@@ -1598,7 +1598,7 @@ every persona's Executive Overview tile (T13.3).</p>
 <div class="test-card">
   <h3><span class="test-id tid-teal">T13.1</span> Admin sees all rows</h3>
   <pre><span class="comment">-- As admin:</span>
-<span class="keyword">SELECT</span> country, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.silver.employees_tagged
+<span class="keyword">SELECT</span> country, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.silver.employees_tagged
 <span class="keyword">GROUP BY</span> country <span class="keyword">ORDER BY</span> <span class="number">2</span> <span class="keyword">DESC</span>;
 
 <span class="comment">-- Expected:
@@ -1616,22 +1616,22 @@ every persona's Executive Overview tile (T13.3).</p>
   <pre><span class="comment">-- Confirm the filter is attached (as admin):</span>
 <span class="keyword">SELECT</span> filter_name, target_columns
 <span class="keyword">FROM</span> system.information_schema.row_filters
-<span class="keyword">WHERE</span> table_catalog = <span class="string">'dpdp_poc'</span>
+<span class="keyword">WHERE</span> table_catalog = <span class="string">'compliance_pack'</span>
   <span class="keyword">AND</span> table_schema  = <span class="string">'compliance'</span>
   <span class="keyword">AND</span> table_name    = <span class="string">'consent_events_log'</span>;
 
 <span class="comment">-- Expected:
---   dpdp_poc.compliance.persona_purpose_scope   purpose</span>
+--   compliance_pack.compliance.persona_purpose_scope   purpose</span>
 
 <span class="comment">-- As admin: all 6 purposes visible</span>
-<span class="keyword">SELECT</span> purpose, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.compliance.consent_events_log
+<span class="keyword">SELECT</span> purpose, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.compliance.consent_events_log
 <span class="keyword">GROUP BY</span> purpose;
 <span class="comment">-- Expected: 6 rows (analytics ~164, core_service ~172,
 --   marketing_email ~164, marketing_sms ~170, product_personalization ~167,
 --   third_party_sharing ~163) — total ~1000</span>
 
 <span class="comment">-- As CMO persona (log in via T8.5): only 3 marketing purposes visible</span>
-<span class="keyword">SELECT</span> purpose, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> dpdp_poc.compliance.consent_events_log
+<span class="keyword">SELECT</span> purpose, <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> compliance_pack.compliance.consent_events_log
 <span class="keyword">GROUP BY</span> purpose;
 <span class="comment">-- Expected: 3 rows (marketing_email, marketing_sms, product_personalization)
 -- analytics, core_service, third_party_sharing filtered OUT by UC at query time</span></pre>
@@ -1649,7 +1649,7 @@ every persona's Executive Overview tile (T13.3).</p>
   <h3><span class="test-id tid-teal">T13.3</span> persona_overview_metrics view — column contract with slicer</h3>
   <p>The non-CCO persona dashboards embed SQL (via
   <code>scripts/slice_dashboards.py</code>'s <code>DATASET_REWRITES_NON_CCO</code>) that
-  reads 12 named columns from <code>dpdp_poc.gold.persona_overview_metrics</code>. If
+  reads 12 named columns from <code>compliance_pack.gold.persona_overview_metrics</code>. If
   the view in <code>pipelines/phase1_bootstrap.py</code> drops or renames one of those
   columns, the dashboards render <code>[UNRESOLVED_COLUMN]</code> errors. The test
   below asserts the contract mechanically so drift is caught at CI time, not by a user
@@ -1679,7 +1679,7 @@ mode, DELETEs + VACUUMs them. Every run appends to
 -- with widget mode = 'dry-run' (default). Then:</span>
 
 <span class="keyword">SELECT</span> run_timestamp, mode, events_identified, events_deleted, run_by
-<span class="keyword">FROM</span> dpdp_poc.compliance.retention_audit
+<span class="keyword">FROM</span> compliance_pack.compliance.retention_audit
 <span class="keyword">ORDER BY</span> run_timestamp <span class="keyword">DESC</span>
 <span class="keyword">LIMIT</span> <span class="number">5</span>;
 
@@ -1757,9 +1757,9 @@ objects that succeeded. This is a platform constraint, not a bug.</div>
   <pre>python3 scripts/create_audit_share.py --list
 
 <span class="comment"># Expected output — 3 objects:
-#   VIEW   dpdp_poc.compliance.personal_data_register
-#   TABLE  dpdp_poc.compliance.notice_versions
-#   TABLE  dpdp_poc.silver.compliance_gaps
+#   VIEW   compliance_pack.compliance.personal_data_register
+#   TABLE  compliance_pack.compliance.notice_versions
+#   TABLE  compliance_pack.silver.compliance_gaps
 
 # Alternatively (in SQL — gives a richer view with added_at, added_by,
 # cdf_shared, history_sharing columns for each object):</span>

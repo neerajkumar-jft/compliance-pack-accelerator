@@ -2,7 +2,7 @@
 -- This table is auto-maintained by the Lakebase-to-Delta sync configured per §5.7.2
 -- Do not write to this table directly; all writes come from the sync
 
-CREATE TABLE IF NOT EXISTS dpdp_poc.compliance.consent_events_log (
+CREATE TABLE IF NOT EXISTS compliance_pack.compliance.consent_events_log (
     event_id                    STRING      NOT NULL,
     data_principal_id           STRING      NOT NULL,
     event_timestamp             TIMESTAMP   NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.compliance.consent_events_log (
   );
 
 -- Sync destination for dsr_requests (smaller table, doesn't need partitioning)
-CREATE TABLE IF NOT EXISTS dpdp_poc.compliance.dsr_requests (
+CREATE TABLE IF NOT EXISTS compliance_pack.compliance.dsr_requests (
     request_id              STRING      NOT NULL,
     data_principal_id       STRING      NOT NULL,
     request_type            STRING      NOT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.compliance.dsr_requests (
 -- The marketing_eligible_principals Gold view from §5.8
 -- Consumed by downstream marketing processes to filter audiences
 -- ============================================================================
-CREATE OR REPLACE VIEW dpdp_poc.gold.marketing_eligible_principals AS
+CREATE OR REPLACE VIEW compliance_pack.gold.marketing_eligible_principals AS
 WITH latest_consent AS (
     SELECT
         data_principal_id,
@@ -84,7 +84,7 @@ WITH latest_consent AS (
             PARTITION BY data_principal_id, purpose
             ORDER BY event_timestamp DESC
         ) AS rn
-    FROM dpdp_poc.compliance.consent_events_log
+    FROM compliance_pack.compliance.consent_events_log
     WHERE purpose IN ('marketing_email','marketing_sms')
 )
 SELECT
@@ -100,7 +100,7 @@ WHERE rn = 1
 -- has_active_consent helper function from §5.9
 -- Downstream systems call this instead of reinventing the "latest wins" logic
 -- ============================================================================
-CREATE OR REPLACE FUNCTION dpdp_poc.compliance.has_active_consent(
+CREATE OR REPLACE FUNCTION compliance_pack.compliance.has_active_consent(
     principal_external_id STRING,
     purpose_name STRING
 ) RETURNS BOOLEAN
@@ -109,8 +109,8 @@ RETURN (
         (
             SELECT ce.event_type = 'granted'
                AND ce.purpose_grant_status = 'granted'
-            FROM dpdp_poc.compliance.consent_events_log ce
-            JOIN dpdp_poc.silver.customers_tagged c
+            FROM compliance_pack.compliance.consent_events_log ce
+            JOIN compliance_pack.silver.customers_tagged c
                 ON c.customer_id = principal_external_id
             WHERE ce.purpose = purpose_name
             ORDER BY ce.event_timestamp DESC

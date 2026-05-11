@@ -371,7 +371,7 @@ def run_dpia_generation(
 
     Args:
       spark: SparkSession.
-      catalog: Unity Catalog name (e.g. ``dpdp_poc``).
+      catalog: Unity Catalog name (e.g. ``compliance_pack``).
       invoke_llm: Callable accepting ``(messages, *, max_tokens, temperature)``
         and returning the assistant's text. Caller owns retries, timeouts,
         and auth.

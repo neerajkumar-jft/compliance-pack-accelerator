@@ -131,7 +131,7 @@ Lakebase is the OLTP write path. Delta is the immutable audit log and the query 
 
 ```sql
 -- Created in Unity Catalog, auto-maintained by Lakebase sync
-CREATE TABLE IF NOT EXISTS dpdp_poc.compliance.consent_events_log (
+CREATE TABLE IF NOT EXISTS compliance_pack.compliance.consent_events_log (
     -- All columns from public.consent_events preserved with matching types
     event_id                    STRING    NOT NULL,
     data_principal_id           STRING    NOT NULL,
@@ -175,8 +175,8 @@ Two properties matter for DPDP defensibility:
 
 Configure the Lakebase → Delta sync via Databricks UI or API:
 
-- Source: `dpdp_poc_consent.public.consent_events`
-- Destination: `dpdp_poc.compliance.consent_events_log`
+- Source: `compliance_pack_consent.public.consent_events`
+- Destination: `compliance_pack.compliance.consent_events_log`
 - Refresh interval: 60 seconds
 - Mode: append-only (respects the immutability guarantee — consent events are never updated or deleted in Lakebase either)
 
@@ -194,7 +194,7 @@ The 5-minute withdrawal propagation demonstration (Artifact 2 from §1.2) works 
 The critical Gold view:
 
 ```sql
-CREATE OR REPLACE VIEW dpdp_poc.gold.marketing_eligible_principals AS
+CREATE OR REPLACE VIEW compliance_pack.gold.marketing_eligible_principals AS
 WITH latest_consent AS (
     SELECT
         data_principal_id,
@@ -206,7 +206,7 @@ WITH latest_consent AS (
             PARTITION BY data_principal_id, purpose
             ORDER BY event_timestamp DESC
         ) AS rn
-    FROM dpdp_poc.compliance.consent_events_log
+    FROM compliance_pack.compliance.consent_events_log
     WHERE purpose IN ('marketing_email', 'marketing_sms')
 )
 SELECT
@@ -226,14 +226,14 @@ This view shows **only** principals whose *latest* consent event for each market
 Downstream systems don't query `consent_events_log` directly. They call a single helper function:
 
 ```sql
-CREATE OR REPLACE FUNCTION dpdp_poc.compliance.has_active_consent(
+CREATE OR REPLACE FUNCTION compliance_pack.compliance.has_active_consent(
     principal_external_id STRING,
     purpose_name STRING
 ) RETURNS BOOLEAN
 RETURN (
     SELECT COALESCE(
         (SELECT event_type = 'granted' AND purpose_grant_status = 'granted'
-         FROM dpdp_poc.compliance.consent_events_log ce
+         FROM compliance_pack.compliance.consent_events_log ce
          JOIN <principal lookup>
          WHERE <principal match>
            AND ce.purpose = purpose_name

@@ -252,7 +252,7 @@ example_queries:
   - question: "How many critical and high severity gaps do we have?"
     sql: |-
       SELECT severity, COUNT(DISTINCT gap_id) AS gap_count
-      FROM dpdp_poc.silver.compliance_gaps
+      FROM compliance_pack.silver.compliance_gaps
       WHERE severity IN ('critical','high')
       GROUP BY severity
       ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 END
@@ -274,7 +274,7 @@ example_queries:
              END AS dpdp_section,
              severity,
              COUNT(DISTINCT gap_id) AS gap_count
-      FROM dpdp_poc.silver.compliance_gaps
+      FROM compliance_pack.silver.compliance_gaps
       WHERE regulation='DPDP'
       GROUP BY rule_id, severity
       ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END, gap_count DESC
@@ -282,7 +282,7 @@ example_queries:
   - question: "Show me all consent withdrawals grouped by purpose."
     sql: |-
       SELECT purpose, COUNT(*) AS withdrawal_count
-      FROM dpdp_poc.compliance.consent_events_log
+      FROM compliance_pack.compliance.consent_events_log
       WHERE event_type='withdrawn'
       GROUP BY purpose
       ORDER BY withdrawal_count DESC
@@ -291,7 +291,7 @@ example_queries:
     sql: |-
       SELECT event_timestamp, purpose, event_type, purpose_grant_status,
              channel, notice_version, consent_capture_method
-      FROM dpdp_poc.compliance.consent_events_log
+      FROM compliance_pack.compliance.consent_events_log
       WHERE data_principal_id = :principal_id
       ORDER BY event_timestamp
 
@@ -299,14 +299,14 @@ example_queries:
     sql: |-
       SELECT notice_id, version_number, language, legal_basis,
              effective_from, approved_by
-      FROM dpdp_poc.compliance.notice_versions
+      FROM compliance_pack.compliance.notice_versions
       WHERE effective_to IS NULL
       ORDER BY notice_id, language
 
   - question: "What languages is our privacy notice available in?"
     sql: |-
       SELECT language, COUNT(DISTINCT notice_id) AS notices
-      FROM dpdp_poc.compliance.notice_versions
+      FROM compliance_pack.compliance.notice_versions
       WHERE effective_to IS NULL
       GROUP BY language
       ORDER BY language
@@ -315,7 +315,7 @@ example_queries:
     sql: |-
       SELECT gap_id, rule_id, severity, regulation,
              table_name, column_name, description, remediation
-      FROM dpdp_poc.silver.compliance_gaps
+      FROM compliance_pack.silver.compliance_gaps
       WHERE severity IN ('critical','high') AND regulation='DPDP'
       ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 END,
                rule_id
@@ -323,7 +323,7 @@ example_queries:
   - question: "How many DSR requests are past SLA?"
     sql: |-
       SELECT status, COUNT(*) AS past_sla
-      FROM dpdp_poc.compliance.dsr_requests
+      FROM compliance_pack.compliance.dsr_requests
       WHERE sla_deadline < CURRENT_TIMESTAMP
         AND status NOT IN ('completed','fulfilled','closed')
       GROUP BY status
@@ -333,14 +333,14 @@ example_queries:
       SELECT
         :principal_id AS principal_id,
         :purpose      AS purpose,
-        dpdp_poc.compliance.has_active_consent(:principal_id, :purpose) AS has_active_consent
+        compliance_pack.compliance.has_active_consent(:principal_id, :purpose) AS has_active_consent
 
   - question: "Show me the latest approved DPIA and who approved it."
     sql: |-
       SELECT run_id, generated_at, reviewed_by, reviewed_at,
              model_endpoint, prompt_version, regulation_pack,
              ROUND(latency_seconds, 2) AS latency_s
-      FROM dpdp_poc.compliance.dpia_runs
+      FROM compliance_pack.compliance.dpia_runs
       WHERE status = 'approved'
       ORDER BY generated_at DESC
       LIMIT 1
@@ -353,7 +353,7 @@ example_queries:
              reviewed_by,
              reviewed_at,
              CONCAT('Q', QUARTER(generated_at), ' ', YEAR(generated_at)) AS quarter
-      FROM dpdp_poc.compliance.dpia_runs
+      FROM compliance_pack.compliance.dpia_runs
       WHERE YEAR(generated_at) = YEAR(CURRENT_DATE)
       ORDER BY generated_at DESC
 
@@ -362,14 +362,14 @@ example_queries:
       SELECT COUNT(*) AS pending_review,
              MIN(generated_at) AS oldest_draft,
              MAX(generated_at) AS newest_draft
-      FROM dpdp_poc.compliance.dpia_runs
+      FROM compliance_pack.compliance.dpia_runs
       WHERE status = 'draft'
 
   - question: "Show the remediation_plan section from the latest approved DPIA."
     sql: |-
       SELECT run_id, reviewed_by, reviewed_at,
              dpia_sections['remediation_plan'] AS remediation_plan
-      FROM dpdp_poc.compliance.dpia_runs
+      FROM compliance_pack.compliance.dpia_runs
       WHERE status = 'approved' AND dpia_sections IS NOT NULL
       ORDER BY generated_at DESC
       LIMIT 1
@@ -380,7 +380,7 @@ example_queries:
         SELECT run_id, generated_at, reviewed_by,
                dpia_sections['remediation_plan'] AS remediation_plan,
                ROW_NUMBER() OVER (ORDER BY generated_at DESC) AS rn
-        FROM dpdp_poc.compliance.dpia_runs
+        FROM compliance_pack.compliance.dpia_runs
         WHERE status = 'approved' AND dpia_sections IS NOT NULL
       )
       SELECT
@@ -393,7 +393,7 @@ example_queries:
   - question: "Are any DPIAs failing structured-output validation?"
     sql: |-
       SELECT run_id, generated_at, status, parse_error
-      FROM dpdp_poc.compliance.dpia_runs
+      FROM compliance_pack.compliance.dpia_runs
       WHERE parse_error IS NOT NULL
       ORDER BY generated_at DESC
 
@@ -403,7 +403,7 @@ example_queries:
 # ---------------------------------------------------------------------
 # GC has SELECT on consent_events_log, so the UDF executes cleanly.
 sql_functions:
-  - identifier: dpdp_poc.compliance.has_active_consent
+  - identifier: compliance_pack.compliance.has_active_consent
 
 
 # ---------------------------------------------------------------------

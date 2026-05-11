@@ -4,7 +4,7 @@ Runs each statement in `schemas/persona_row_filters.sql` sequentially via
 the SQL statements API. Idempotent: CREATE OR REPLACE FUNCTION + ALTER
 TABLE ... SET ROW FILTER can be re-applied safely.
 
-Policy on `dpdp_poc.compliance.consent_events_log`:
+Policy on `compliance_pack.compliance.consent_events_log`:
     admin / CCO / GC / CFO personas → see every row
     CMO persona                     → see only notice_language='en-IN'
     any other user                  → see every row (grant-gated separately)

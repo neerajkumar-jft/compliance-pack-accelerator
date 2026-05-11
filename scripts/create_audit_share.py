@@ -6,13 +6,13 @@ Idempotent: uses CREATE SHARE IF NOT EXISTS + ALTER SHARE ... ADD
 share. To remove an object, use ALTER SHARE ... REMOVE {TABLE,VIEW}.
 
 Share contents:
-    - dpdp_poc.compliance.personal_data_register (view)
+    - compliance_pack.compliance.personal_data_register (view)
       Living PII register — what personal data we hold, where, and why
-    - dpdp_poc.silver.compliance_gaps (table)
+    - compliance_pack.silver.compliance_gaps (table)
       All detected compliance gaps with severity and remediation guidance
-    - dpdp_poc.compliance.notice_versions (table)
+    - compliance_pack.compliance.notice_versions (table)
       Every consent notice ever presented to principals (multi-language)
-    - dpdp_poc.gold.consent_coverage_summary (view)
+    - compliance_pack.gold.consent_coverage_summary (view)
       Consent grant rates per purpose, aggregate — no individual PII
 
 Not included (intentionally):
@@ -42,10 +42,10 @@ SHARE_NAME = "dpdp_audit_view_share"
 WAREHOUSE_ID = get_warehouse_id()
 
 SHARE_OBJECTS = [
-    ("VIEW",  "dpdp_poc.compliance.personal_data_register"),
-    ("TABLE", "dpdp_poc.silver.compliance_gaps"),
-    ("TABLE", "dpdp_poc.compliance.notice_versions"),
-    ("VIEW",  "dpdp_poc.gold.consent_coverage_summary"),
+    ("VIEW",  "compliance_pack.compliance.personal_data_register"),
+    ("TABLE", "compliance_pack.silver.compliance_gaps"),
+    ("TABLE", "compliance_pack.compliance.notice_versions"),
+    ("VIEW",  "compliance_pack.gold.consent_coverage_summary"),
 ]
 
 

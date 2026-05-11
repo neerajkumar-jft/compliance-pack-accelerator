@@ -13,19 +13,19 @@ This section is where you come when something breaks. Every procedure here is a 
 **Recovery**:
 ```sql
 -- 1. Drop the Bronze tables
-DROP TABLE IF EXISTS dpdp_poc.bronze.source_employees;
-DROP TABLE IF EXISTS dpdp_poc.bronze.source_customers;
-DROP TABLE IF EXISTS dpdp_poc.bronze.source_patients;
-DROP TABLE IF EXISTS dpdp_poc.bronze.source_transactions;
-DROP TABLE IF EXISTS dpdp_poc.bronze.source_users;
+DROP TABLE IF EXISTS compliance_pack.bronze.source_employees;
+DROP TABLE IF EXISTS compliance_pack.bronze.source_customers;
+DROP TABLE IF EXISTS compliance_pack.bronze.source_patients;
+DROP TABLE IF EXISTS compliance_pack.bronze.source_transactions;
+DROP TABLE IF EXISTS compliance_pack.bronze.source_users;
 ```
 
 ```bash
 # 2. Remove the Auto Loader checkpoints
-dbutils.fs.rm("/Volumes/dpdp_poc/bronze/_checkpoints/", recurse=True)
+dbutils.fs.rm("/Volumes/compliance_pack/bronze/_checkpoints/", recurse=True)
 
 # 3. Remove the schema inference state
-dbutils.fs.rm("/Volumes/dpdp_poc/bronze/_schemas/", recurse=True)
+dbutils.fs.rm("/Volumes/compliance_pack/bronze/_schemas/", recurse=True)
 ```
 
 ```python
@@ -35,7 +35,7 @@ dbutils.fs.rm("/Volumes/dpdp_poc/bronze/_schemas/", recurse=True)
 
 Verify:
 ```sql
-SELECT COUNT(*) FROM dpdp_poc.bronze.source_employees;
+SELECT COUNT(*) FROM compliance_pack.bronze.source_employees;
 -- Expected: 2000
 ```
 
@@ -46,7 +46,7 @@ SELECT COUNT(*) FROM dpdp_poc.bronze.source_employees;
 **Recovery**:
 ```sql
 -- 1. Clear the findings for the bad scan_job_id
-DELETE FROM dpdp_poc.silver.pii_findings
+DELETE FROM compliance_pack.silver.pii_findings
 WHERE scan_job_id = '<the bad job id>';
 
 -- 2. Remove UC tags applied by that job
@@ -56,7 +56,7 @@ WHERE scan_job_id = '<the bad job id>';
 ```python
 # Example: remove pii_type tag from a column
 spark.sql("""
-    ALTER TABLE dpdp_poc.silver.employees_tagged
+    ALTER TABLE compliance_pack.silver.employees_tagged
     ALTER COLUMN aadhaar_number
     UNSET TAGS ('pii_type', 'pii_category', 'sensitivity', 'classifier_source', 'dpdp_applicable')
 """)
@@ -68,7 +68,7 @@ spark.sql("""
 
 Verify:
 ```sql
-SELECT COUNT(*) FROM dpdp_poc.compliance.personal_data_register;
+SELECT COUNT(*) FROM compliance_pack.compliance.personal_data_register;
 -- Expected: ≥ 20 (post-re-scan)
 ```
 
@@ -98,7 +98,7 @@ The Lakebase→Delta sync will recreate the Delta tables automatically.
 **Recovery**:
 ```bash
 # 1. Regenerate synthetic data with same seed
-python generate_synthetic_data.py --output-dir /Volumes/dpdp_poc/bronze/landing/ --seed 42
+python generate_synthetic_data.py --output-dir /Volumes/compliance_pack/bronze/landing/ --seed 42
 
 # 2. Truncate Bronze and re-ingest (per §10.2)
 
@@ -113,8 +113,8 @@ If the manifest says `customer_04217` should have 14 transactions but your gener
 
 | Error message | Likely root cause | Fix |
 |---------------|-------------------|-----|
-| `Permission denied: 'APPLY TAG' on catalog 'dpdp_poc'` | Service principal missing `APPLY TAG` | `GRANT APPLY TAG ON CATALOG dpdp_poc TO '<sp>'` |
-| `Table or view not found: dpdp_poc.silver.pii_findings` | Silver DDL not applied | Run `schemas/silver.sql` |
+| `Permission denied: 'APPLY TAG' on catalog 'compliance_pack'` | Service principal missing `APPLY TAG` | `GRANT APPLY TAG ON CATALOG compliance_pack TO '<sp>'` |
+| `Table or view not found: compliance_pack.silver.pii_findings` | Silver DDL not applied | Run `schemas/silver.sql` |
 | `Cannot find Lakebase instance 'dpdp-poc-consent'` | Instance not provisioned | Create per §2.4 |
 | `ai_classify is not available in this workspace` | Feature not enabled or wrong region | Check workspace settings; region must support AI functions |
 | `Auto Loader: file already processed` | Stale checkpoint | Delete checkpoint dir and retry (per §10.2) |
@@ -132,7 +132,7 @@ If the workspace state is hopelessly confused, reset everything:
 
 ```sql
 -- Nuclear reset — drops all POC state
-DROP CATALOG IF EXISTS dpdp_poc CASCADE;
+DROP CATALOG IF EXISTS compliance_pack CASCADE;
 ```
 
 ```bash
@@ -177,11 +177,11 @@ After the Day 14 demo:
 
 ```sql
 -- Optional: export the final state for reference
-CREATE TABLE dpdp_poc.compliance.demo_snapshot_register
-AS SELECT * FROM dpdp_poc.compliance.personal_data_register;
+CREATE TABLE compliance_pack.compliance.demo_snapshot_register
+AS SELECT * FROM compliance_pack.compliance.personal_data_register;
 
-CREATE TABLE dpdp_poc.compliance.demo_snapshot_consent
-AS SELECT * FROM dpdp_poc.compliance.consent_events_log;
+CREATE TABLE compliance_pack.compliance.demo_snapshot_consent
+AS SELECT * FROM compliance_pack.compliance.consent_events_log;
 ```
 
 Do NOT delete the workspace state immediately — the Phase 1 team may want to reference the built artifacts for a day or two after the demo. Coordinate with the human reviewer on the cleanup timing.

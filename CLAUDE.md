@@ -55,7 +55,7 @@ notebook path, or dashboard ID being the same across deploys. To recover the
 real values for the current deploy, ask Databricks at runtime:
 
 - **URL**: read `targets.dev.workspace.host` in `databricks.yml` (set per-deployer by `scripts/configure_workspace_host.sh`).
-- **Catalog**: `dpdp_poc` (stable across deploys).
+- **Catalog**: `compliance_pack` (stable across deploys).
 - **Schemas**: `bronze`, `silver`, `gold`, `compliance`, `federation_mock` (stable).
 - **SQL Warehouse ID**: discover via `scripts/persona_config.py:get_warehouse_id()` (looks up the warehouse named `Serverless Starter Warehouse` in the current workspace, falls back to a STARTING/STOPPED instance if needed).
 - **Notebooks**: deployed under `/Workspace/Users/${workspace.current_user.userName}/.bundle/dpdp-poc/dev/files/notebooks/` by the bundle.
@@ -143,9 +143,9 @@ demo). The bundle path is the canonical demo location.
 ```bash
 # One-off upload to a custom path — rarely needed:
 ME="$(databricks current-user me | python3 -c 'import json,sys; print(json.load(sys.stdin)["userName"])')"
-databricks workspace mkdirs "/Workspace/Users/${ME}/dpdp_poc"
+databricks workspace mkdirs "/Workspace/Users/${ME}/compliance_pack"
 databricks workspace import \
-  "/Workspace/Users/${ME}/dpdp_poc/<name>" \
+  "/Workspace/Users/${ME}/compliance_pack/<name>" \
   --file notebooks/<name>.py --language PYTHON --format SOURCE --overwrite
 ```
 

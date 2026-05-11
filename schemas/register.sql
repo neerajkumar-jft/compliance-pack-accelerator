@@ -2,11 +2,11 @@
 -- Referenced from §3.6
 -- Run after schemas/silver.sql and after the classification job has produced findings
 
-CREATE OR REPLACE VIEW dpdp_poc.compliance.personal_data_register AS
+CREATE OR REPLACE VIEW compliance_pack.compliance.personal_data_register AS
 WITH latest_scan AS (
     SELECT scan_job_id
-    FROM dpdp_poc.silver.pii_findings
-    WHERE discovered_at = (SELECT MAX(discovered_at) FROM dpdp_poc.silver.pii_findings)
+    FROM compliance_pack.silver.pii_findings
+    WHERE discovered_at = (SELECT MAX(discovered_at) FROM compliance_pack.silver.pii_findings)
     LIMIT 1
 )
 SELECT
@@ -32,10 +32,10 @@ SELECT
     f.review_notes                      AS review_notes,
     f.discovered_at                     AS last_scanned_at,
     f.reviewed_at                       AS last_reviewed_at
-FROM dpdp_poc.silver.pii_findings f
+FROM compliance_pack.silver.pii_findings f
 JOIN latest_scan ls
     ON f.scan_job_id = ls.scan_job_id
-LEFT JOIN dpdp_poc.silver.discovered_tables dt
+LEFT JOIN compliance_pack.silver.discovered_tables dt
     ON dt.scan_job_id = f.scan_job_id
     AND dt.catalog_name = f.catalog_name
     AND dt.schema_name = f.schema_name
@@ -57,4 +57,4 @@ ORDER BY
 
 -- Grant read access to any principal needing to view the register
 -- (Adjust grantee based on your workspace's permission model)
-GRANT SELECT ON VIEW dpdp_poc.compliance.personal_data_register TO `account users`;
+GRANT SELECT ON VIEW compliance_pack.compliance.personal_data_register TO `account users`;

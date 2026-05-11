@@ -267,7 +267,7 @@
 <div class="change-card landed">
   <h3><span class="c-badge c-landed">LANDED</span> Wave 2 — column masking + Phase-1 bootstrap</h3>
   <ul style="margin: 8px 0 8px 24px; font-size: 12.5px;">
-    <li><strong>W2.1 Column-level PII masking</strong> (DPDP §5(2) minimization) — 5 UC UDFs in <code>dpdp_poc.compliance.mask_*</code> gated on <code>is_member('admins')</code>; 17 columns masked across 4 silver tables (email, phone, aadhaar, PAN, passport, bank_account, medical free-text, insurance_id). Admins see raw; personas see redacted. New test T8.6 verifies the boundary</li>
+    <li><strong>W2.1 Column-level PII masking</strong> (DPDP §5(2) minimization) — 5 UC UDFs in <code>compliance_pack.compliance.mask_*</code> gated on <code>is_member('admins')</code>; 17 columns masked across 4 silver tables (email, phone, aadhaar, PAN, passport, bank_account, medical free-text, insurance_id). Admins see raw; personas see redacted. New test T8.6 verifies the boundary</li>
     <li><strong>W2.2 Phase-1 bootstrap notebook</strong> — <code>pipelines/phase1_bootstrap.py</code> + <code>phase1_bootstrap</code> job restore the fresh-workspace path: 9 compliance rules, 135 gaps (rules × findings), 1,000 consent events (seed=42, canonical customer_04217 fingerprint), 1 notice version, personal_data_register view, has_active_consent UDF, marketing_eligible_principals + consent_coverage_summary + <em>persona_overview_metrics</em> views</li>
     <li><strong>W2.3 Aggregate overview view</strong> (partial) — <code>gold.persona_overview_metrics</code> is defined in <code>phase1_bootstrap.py</code> and lands on any fresh workspace. Current workspace blocked by UC quota ("estimated count: 513"); view goes live when tombstones clear or a support-ticket quota raise is granted. <code>apply_persona_uc_grants.py</code> has a commented Phase-2.1 cutover block ready for that moment</li>
   </ul>
@@ -295,7 +295,7 @@
   <p>Added a "Bronze is pipeline-only" section to <code>persona_governance.md</code>:
   bronze has no column masks (masks would break the DLT pipeline's own reads); protection
   comes from having zero <code>USE_SCHEMA</code> grants outside the pipeline's identity.
-  An SA walkthrough can run <code>SHOW GRANTS ON SCHEMA dpdp_poc.bronze</code> and see
+  An SA walkthrough can run <code>SHOW GRANTS ON SCHEMA compliance_pack.bronze</code> and see
   zero rows for any persona user.</p>
 </div>
 
@@ -319,7 +319,7 @@
   no column masks (masks would break the DLT pipeline's own reads); protection at the bronze
   layer comes from <em>absence of grants</em>, not from masking. Persona users have neither
   <code>USE_SCHEMA</code> nor any table grant on bronze — <code>SHOW GRANTS ON SCHEMA
-  dpdp_poc.bronze</code> returns zero rows for any persona email. Pre-empts the SA question
+  compliance_pack.bronze</code> returns zero rows for any persona email. Pre-empts the SA question
   "what prevents a new workspace user from querying bronze?"</p>
 </div>
 
@@ -636,7 +636,7 @@ how-to-fix, effort</strong>. The top 5 are the most likely sign-off blockers.</p
     <code>pii_findings</code> can race against the silver flows on first full pipeline
     run and come out empty. Added the targeted full-refresh API call to the deploy
     sequence: <code>databricks api post /api/2.0/pipelines/$ID/updates --json
-    '{"full_refresh_selection":["dpdp_poc.silver.pii_findings"]}'</code>.</li>
+    '{"full_refresh_selection":["compliance_pack.silver.pii_findings"]}'</code>.</li>
     <li><strong>catalog_storage_root default was workspace-specific</strong> — defaulted
     to my S3 path. Harmless on free-trial (the variable isn't consumed because the
     catalog block is commented out) but a landmine if someone uncomments that block.
@@ -728,7 +728,7 @@ how-to-fix, effort</strong>. The top 5 are the most likely sign-off blockers.</p
   <p><strong>Root cause:</strong> <code>scripts/slice_dashboards.py</code>'s
   <code>DATASET_REWRITES_NON_CCO</code> dict (committed as part of the W2.3 full
   cutover) rewrote 5 Executive Overview datasets to query
-  <code>dpdp_poc.gold.persona_overview_metrics</code>, but the view definition in
+  <code>compliance_pack.gold.persona_overview_metrics</code>, but the view definition in
   <code>pipelines/phase1_bootstrap.py</code> was authored as a 15-column "governance
   primitive" that never computed the 4 columns the slicer referenced. The two files
   shipped in an inconsistent state. Author comment on phase1_bootstrap.py lines 820-824

@@ -11,7 +11,7 @@ This test queries `system.information_schema.column_tags` and asserts:
 2. At least MIN_TAGGED_COLUMNS distinct (table, column) pairs carry
    PII tags (proxy for "classification reached the full source set")
 3. Tags exist on each of the 5 expected Silver tables
-4. The `dpdp_poc.silver.*` tables have tags on typical critical
+4. The `compliance_pack.silver.*` tables have tags on typical critical
    columns: aadhaar, pan, email
 
 Note: system.information_schema.column_tags may lag by up to 30s after
@@ -59,14 +59,14 @@ def main() -> int:
     rows = rows_or_raise(
         "SELECT table_name, column_name, tag_name, tag_value "
         "FROM system.information_schema.column_tags "
-        "WHERE catalog_name = 'dpdp_poc' "
+        "WHERE catalog_name = 'compliance_pack' "
         "  AND schema_name = 'silver' "
         f"  AND tag_name IN ({tag_names_csv}) "
         "ORDER BY table_name, column_name, tag_name"
     )
 
     if args.verbose:
-        print(f"\nFound {len(rows)} tag rows on dpdp_poc.silver.*:")
+        print(f"\nFound {len(rows)} tag rows on compliance_pack.silver.*:")
         for r in rows[:50]:
             print(f"  {r[0]:25s}  {r[1]:25s}  {r[2]:15s}  {r[3]}")
         if len(rows) > 50:

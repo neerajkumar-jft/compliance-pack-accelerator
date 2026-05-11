@@ -107,8 +107,8 @@ top-line counters):
 
 ```
 SHARED_OVERVIEW_TABLES = [
-    dpdp_poc.gold.persona_overview_metrics,      # 1-row scorecard
-    dpdp_poc.gold.persona_sensitivity_histogram, # 4-row tier breakdown
+    compliance_pack.gold.persona_overview_metrics,      # 1-row scorecard
+    compliance_pack.gold.persona_sensitivity_histogram, # 4-row tier breakdown
 ]
 ```
 
@@ -156,7 +156,7 @@ For each "what if X tries to do Y" scenario:
 |---|---|---|
 | CMO user opens CCO dashboard URL directly | Dashboard ACL | "You don't have permission" page |
 | CMO user opens CCO Genie space URL directly | Genie ACL | Permission denied banner |
-| CCO user opens the Lakeview SQL editor and writes `SELECT * FROM dpdp_poc.gold.marketing_eligible_principals` | UC grants | `PERMISSION_DENIED` on table |
+| CCO user opens the Lakeview SQL editor and writes `SELECT * FROM compliance_pack.gold.marketing_eligible_principals` | UC grants | `PERMISSION_DENIED` on table |
 | CMO user tries to run a query against `compliance.personal_data_register` via warehouse | UC grants | `PERMISSION_DENIED` on table |
 | CMO Genie agent is asked "show me customer PII" | Genie space scoping (Layer 1) | Agent refuses — table not in allowlist |
 | CMO user (hypothetically, if a dashboard query tried it) hits `personal_data_register` via Executive Overview | UC grants | Tile fails with permission error |
@@ -177,19 +177,19 @@ Applied via `scripts/apply_persona_uc_grants.py` (reads
 ```sql
 -- Per-table view (SHOW GRANTS TO `email` has a known server-side
 -- redaction issue with local-parts, use SHOW GRANTS ON instead):
-SHOW GRANTS ON TABLE dpdp_poc.compliance.personal_data_register;
-SHOW GRANTS ON TABLE dpdp_poc.gold.marketing_eligible_principals;
+SHOW GRANTS ON TABLE compliance_pack.compliance.personal_data_register;
+SHOW GRANTS ON TABLE compliance_pack.gold.marketing_eligible_principals;
 -- etc.
 ```
 
 Each persona user has:
-- `USE CATALOG` on `dpdp_poc`
+- `USE CATALOG` on `compliance_pack`
 - `USE SCHEMA` on each schema they need
 - `SELECT` on their layer-1 ∪ layer-2 tables
 
 ## Bronze is pipeline-only (not masked, not granted)
 
-The bronze schema (`dpdp_poc.bronze.*`) holds **raw source data** with
+The bronze schema (`compliance_pack.bronze.*`) holds **raw source data** with
 no column masks applied. It is never granted to any human user or
 workspace group — only the DLT pipeline (running as the deployer or a
 service principal) has the access path needed to read bronze and
@@ -201,15 +201,15 @@ materialization. The mask layer lives at silver because that's where
 human queries happen.
 
 **Why this is safe:** persona users have neither `USE_SCHEMA` nor any
-table grant on bronze. `SHOW TABLES IN dpdp_poc.bronze` returns an
-empty list, and any `SELECT * FROM dpdp_poc.bronze.*` attempt fails
+table grant on bronze. `SHOW TABLES IN compliance_pack.bronze` returns an
+empty list, and any `SELECT * FROM compliance_pack.bronze.*` attempt fails
 with `PERMISSION_DENIED` at the UC layer — before the query even hits
 the table.
 
 Verify the bronze fence:
 
 ```sql
-SHOW GRANTS ON SCHEMA dpdp_poc.bronze;
+SHOW GRANTS ON SCHEMA compliance_pack.bronze;
 -- Expected: zero rows for any dpdp-*@ persona email. Only the catalog
 -- owner (deployer / admin group / bundle service principal) should
 -- have access.
@@ -319,11 +319,11 @@ without needing the persona user's password:
 
 ```sql
 -- What CCO CAN see (should return rows)
-SELECT COUNT(*) FROM dpdp_poc.compliance.personal_data_register;
+SELECT COUNT(*) FROM compliance_pack.compliance.personal_data_register;
 -- Grantee: dpdp-cco@... → OK (in grants)
 
 -- What CMO CAN'T see (should fail)
-SELECT COUNT(*) FROM dpdp_poc.compliance.personal_data_register;
+SELECT COUNT(*) FROM compliance_pack.compliance.personal_data_register;
 -- Grantee: dpdp-cmo@... → PERMISSION_DENIED (not in grants)
 ```
 
@@ -362,7 +362,7 @@ CLI). Three independent permission layers govern who can do what:
 1. **Workspace `CAN_USE` on the app** — controls who can open the URL
    at all. Granted to CCO + GC + CFO; CMO has no business need.
 2. **App's runtime SP holds SELECT + UPDATE on `compliance.dpia_runs`,
-   plus SELECT on `/Volumes/dpdp_poc/compliance/dpia_artifacts`** —
+   plus SELECT on `/Volumes/compliance_pack/compliance/dpia_artifacts`** —
    the only identity in the workspace with UPDATE on the table. No
    persona user has UPDATE, so the only path to flipping `status` is
    through the app's enforce-the-rules code.
@@ -420,7 +420,7 @@ and the attach-Genie-banner scripts are identity-agnostic.
   Consumer access: Off`. For the persona demo, toggle
   `Consumer access: On` (required for dashboards/Genie) and optionally
   `Workspace access: Off`. This step is UI-only, not yet scripted.
-- **SHOW GRANTS may list `dpdp_poc.silver.pii_findings` on CMO/GC/CFO**
+- **SHOW GRANTS may list `compliance_pack.silver.pii_findings` on CMO/GC/CFO**
   because of the shared-overview layer. This is intentional — see
   "Two grant layers per persona" above. If an SA flags this, point to
   the Layer 1 (Genie space) scoping, which is the agent boundary and

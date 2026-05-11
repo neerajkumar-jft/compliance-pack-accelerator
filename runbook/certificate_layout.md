@@ -32,9 +32,9 @@ Table with two columns:
 Bold line: "The following records have been permanently erased from the organization's active systems as of the completion timestamp above."
 
 Numbered list of erased tables:
-1. `dpdp_poc.silver.customers_tagged` — 1 row
-2. `dpdp_poc.silver.users_tagged` — 1 row
-3. `dpdp_poc.compliance.consent_events_log` — 4 events
+1. `compliance_pack.silver.customers_tagged` — 1 row
+2. `compliance_pack.silver.users_tagged` — 1 row
+3. `compliance_pack.compliance.consent_events_log` — 4 events
 
 For each entry:
 - Table fully qualified name
@@ -46,7 +46,7 @@ For each entry:
 Bold line: "The following records have NOT been erased and are retained under legal obligation."
 
 Numbered list of scheduled residuals:
-1. `dpdp_poc.silver.transactions_tagged` — N rows
+1. `compliance_pack.silver.transactions_tagged` — N rows
    - Retention basis: Banking Regulation Act, 1949
    - Retention period: 7 years from the most recent transaction
    - Scheduled purge date: `YYYY-MM-DD`

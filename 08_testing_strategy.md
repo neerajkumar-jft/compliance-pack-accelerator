@@ -123,7 +123,7 @@ SELECT
     COUNT(*) AS total_findings,
     SUM(CASE WHEN sensitivity_tier = 'critical' THEN 1 ELSE 0 END) AS critical_findings,
     SUM(CASE WHEN classification_confidence >= 0.85 THEN 1 ELSE 0 END) AS auto_classified
-FROM dpdp_poc.compliance.personal_data_register;
+FROM compliance_pack.compliance.personal_data_register;
 ```
 
 **Pass criteria**:
@@ -164,7 +164,7 @@ def test_withdrawal_propagation():
     while now() - t0 < timedelta(minutes=5):
         result = spark.sql(f"""
             SELECT COUNT(*)
-            FROM dpdp_poc.gold.marketing_eligible_principals
+            FROM compliance_pack.gold.marketing_eligible_principals
             WHERE data_principal_id = '<customer_04217 uuid>'
               AND purpose = 'marketing_email'
         """).collect()[0][0]
@@ -200,7 +200,7 @@ def test_dsr_end_to_end():
     wait_for_completion(request_id, timeout_minutes=5)
 
     # Verify bundle contents
-    bundle_path = f"/Volumes/dpdp_poc/compliance/dsr_bundles/{request_id}/"
+    bundle_path = f"/Volumes/compliance_pack/compliance/dsr_bundles/{request_id}/"
     assert exists(f"{bundle_path}/data_export.json")
     assert exists(f"{bundle_path}/erasure_certificate.pdf")
     assert exists(f"{bundle_path}/retention_schedule.pdf")
@@ -217,13 +217,13 @@ def test_dsr_end_to_end():
     assert len(export["data_by_table"]["consent_events"]) == 4
 
     # Verify erasure actually happened via time travel
-    version_before = get_version_before_dsr("dpdp_poc.silver.customers_tagged")
+    version_before = get_version_before_dsr("compliance_pack.silver.customers_tagged")
     count_before = spark.sql(f"""
-        SELECT COUNT(*) FROM dpdp_poc.silver.customers_tagged VERSION AS OF {version_before}
+        SELECT COUNT(*) FROM compliance_pack.silver.customers_tagged VERSION AS OF {version_before}
         WHERE customer_id = 'customer_04217'
     """).collect()[0][0]
     count_after = spark.sql("""
-        SELECT COUNT(*) FROM dpdp_poc.silver.customers_tagged
+        SELECT COUNT(*) FROM compliance_pack.silver.customers_tagged
         WHERE customer_id = 'customer_04217'
     """).collect()[0][0]
     assert count_before == 1
@@ -231,7 +231,7 @@ def test_dsr_end_to_end():
 
     # Verify residual retention entry exists for transactions
     residual = spark.sql(f"""
-        SELECT scheduled_purge_date FROM dpdp_poc.compliance.residual_retention_register
+        SELECT scheduled_purge_date FROM compliance_pack.compliance.residual_retention_register
         WHERE original_dsr_request_id = '{request_id}'
           AND table_name = 'transactions_tagged'
     """).collect()
@@ -249,14 +249,14 @@ def test_dsr_end_to_end():
 def test_lineage_bronze_to_silver():
     # For each Silver table, verify it has lineage from at least one Bronze table
     for silver_table in ["employees_tagged", "customers_tagged", "patients_tagged", "transactions_tagged", "users_tagged"]:
-        lineage = query_uc_lineage(f"dpdp_poc.silver.{silver_table}")
+        lineage = query_uc_lineage(f"compliance_pack.silver.{silver_table}")
         assert len(lineage["upstream"]) >= 1
         assert any("bronze" in u for u in lineage["upstream"])
 
 def test_lineage_silver_to_compliance():
     # personal_data_register view must have lineage from silver.pii_findings
-    lineage = query_uc_lineage("dpdp_poc.compliance.personal_data_register")
-    assert "dpdp_poc.silver.pii_findings" in lineage["upstream"]
+    lineage = query_uc_lineage("compliance_pack.compliance.personal_data_register")
+    assert "compliance_pack.silver.pii_findings" in lineage["upstream"]
 ```
 
 **Pass criteria**: every lineage check passes.
@@ -268,7 +268,7 @@ def test_lineage_silver_to_compliance():
 ```python
 def test_consent_log_append_only():
     history = spark.sql("""
-        DESCRIBE HISTORY dpdp_poc.compliance.consent_events_log
+        DESCRIBE HISTORY compliance_pack.compliance.consent_events_log
     """).collect()
     for entry in history:
         assert entry["operation"] in ("CREATE TABLE", "WRITE", "STREAMING UPDATE"), \
@@ -286,13 +286,13 @@ def test_uc_tags_applied():
     tags = spark.sql("""
         SELECT table_name, column_name, tag_name, tag_value
         FROM system.information_schema.column_tags
-        WHERE catalog_name = 'dpdp_poc'
+        WHERE catalog_name = 'compliance_pack'
           AND schema_name = 'silver'
           AND tag_name = 'pii_type'
     """).collect()
     findings = spark.sql("""
         SELECT table_name, column_name
-        FROM dpdp_poc.silver.pii_findings
+        FROM compliance_pack.silver.pii_findings
         WHERE confidence >= 0.85
     """).collect()
     tag_keys = {(t.table_name, t.column_name) for t in tags}
@@ -310,7 +310,7 @@ By Day 7, Modules 01 and part of 02 must be at demonstrable state. The checkpoin
 1. Run INT-01 (register completeness) — must pass
 2. Run INT-04 (lineage visibility) — must pass
 3. Run INT-06 (UC tags) — must pass
-4. Manually inspect `dpdp_poc.compliance.personal_data_register` with the human collaborator
+4. Manually inspect `compliance_pack.compliance.personal_data_register` with the human collaborator
 5. Manually inspect Unity Catalog lineage graph for one Silver table
 6. Confirm Lakebase is provisioned and `consent_events` table schema is deployed (but may be empty)
 

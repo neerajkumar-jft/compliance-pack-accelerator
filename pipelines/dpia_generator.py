@@ -23,7 +23,7 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "dpdp_poc", "Unity Catalog name")
+dbutils.widgets.text("catalog", "compliance_pack", "Unity Catalog name")
 dbutils.widgets.text("model_endpoint", "databricks-gpt-oss-120b",
                      "Foundation model endpoint")
 dbutils.widgets.text("mlflow_experiment_path", "/Shared/dpdp_agent_bricks",

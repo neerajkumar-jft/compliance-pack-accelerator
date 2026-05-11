@@ -26,7 +26,7 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "dpdp_poc", "Unity Catalog name")
+dbutils.widgets.text("catalog", "compliance_pack", "Unity Catalog name")
 dbutils.widgets.dropdown("mode", "dry-run", ["dry-run", "apply"], "Execution mode")
 dbutils.widgets.text("vacuum_retention_hours", "168",
                      "VACUUM retention in hours (min 168 = 7 days)")

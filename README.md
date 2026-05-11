@@ -37,7 +37,7 @@ This POC is workspace-portable — every deployer stands it up in their own
 Databricks workspace. The pieces a teammate needs to know about:
 
 - **Workspace URL**: yours. Run `scripts/configure_workspace_host.sh https://dbc-<your-id>.cloud.databricks.com` once after cloning to rewrite the literal under `targets.dev.workspace.host` in `databricks.yml`.
-- **Catalog**: `dpdp_poc` (schemas: `bronze`, `silver`, `gold`, `compliance`, `federation_mock`) — created by `scripts/bootstrap_catalog.py`, the first step of `scripts/deploy_all.sh`.
+- **Catalog**: `compliance_pack` (schemas: `bronze`, `silver`, `gold`, `compliance`, `federation_mock`) — created by `scripts/bootstrap_catalog.py`, the first step of `scripts/deploy_all.sh`.
 - **SQL Warehouse**: a Serverless warehouse named `Serverless Starter Warehouse` is auto-discovered by `databricks.yml`'s `lookup` block; override the name with `--var sql_warehouse_id=<id>` if your workspace uses a different one.
 - **Dashboard**: `DPDP Compliance Platform` (10 pages), uploaded by `databricks bundle deploy`.
 - **Notebooks**: deployed under `/Workspace/Users/<your-email>/.bundle/dpdp-poc/dev/files/notebooks/` by the bundle.
@@ -257,10 +257,10 @@ python3 generate_synthetic_data.py --output-dir /tmp/dpdp_landing
 
 # 3. Upload CSVs to the landing volume (one folder per source table)
 for tbl in employees customers patients transactions users; do
-  databricks fs mkdir "dbfs:/Volumes/dpdp_poc/bronze/landing/${tbl}" 2>/dev/null || true
+  databricks fs mkdir "dbfs:/Volumes/compliance_pack/bronze/landing/${tbl}" 2>/dev/null || true
   databricks fs cp --recursive --overwrite \
     "/tmp/dpdp_landing/${tbl}/" \
-    "dbfs:/Volumes/dpdp_poc/bronze/landing/${tbl}/"
+    "dbfs:/Volumes/compliance_pack/bronze/landing/${tbl}/"
 done
 
 # 4. Run medallion — Bronze (Auto Loader) → Silver tables
@@ -287,7 +287,7 @@ python3 scripts/seed_data_sources.py
 #        pii_findings on incremental updates because it sees no change
 #        to known upstream sources.
 databricks api post "/api/2.0/pipelines/${PIPELINE_ID}/updates" \
-  --json '{"full_refresh_selection": ["dpdp_poc.silver.pii_findings"]}'
+  --json '{"full_refresh_selection": ["compliance_pack.silver.pii_findings"]}'
 # Then poll /api/2.0/pipelines/${PIPELINE_ID}/updates/<update_id> for
 # state == "COMPLETED" before continuing — deploy_all.sh:do_refresh has
 # the polling loop.
@@ -370,19 +370,19 @@ current deployment), run these in the SQL Editor:
 
 ```sql
 -- Check catalog exists
-SHOW SCHEMAS IN dpdp_poc;
+SHOW SCHEMAS IN compliance_pack;
 -- Expected: bronze, silver, gold, compliance
 
 -- Check PII register
-SELECT COUNT(*) FROM dpdp_poc.compliance.personal_data_register;
+SELECT COUNT(*) FROM compliance_pack.compliance.personal_data_register;
 -- Expected: 33
 
 -- Check consent events
-SELECT COUNT(*) FROM dpdp_poc.compliance.consent_events_log;
+SELECT COUNT(*) FROM compliance_pack.compliance.consent_events_log;
 -- Expected: 1000
 
 -- Check compliance gaps
-SELECT COUNT(*) FROM dpdp_poc.silver.compliance_gaps;
+SELECT COUNT(*) FROM compliance_pack.silver.compliance_gaps;
 -- Expected: 135
 ```
 
@@ -395,7 +395,7 @@ chiefly `test_post_deploy_smoke.py` (10 deploy-gate checks) and
 
 ## Run the Agent Bricks notebook (optional demo)
 
-1. Open the workspace → navigate to `dpdp_poc/03_agent_bricks`
+1. Open the workspace → navigate to `compliance_pack/03_agent_bricks`
 2. Attach a cluster
 3. Run cells sequentially
 4. The DPIA generator is the most demo-worthy cell
@@ -473,10 +473,10 @@ Client Source Systems (CRM, HRMS, Databases, Cloud Storage, SaaS)
 
 ```sql
 -- Quick check
-SELECT dpdp_poc.compliance.has_active_consent('customer_04217', 'marketing_email');
+SELECT compliance_pack.compliance.has_active_consent('customer_04217', 'marketing_email');
 -- false (withdrawn)
 
-SELECT dpdp_poc.compliance.has_active_consent('customer_04217', 'analytics');
+SELECT compliance_pack.compliance.has_active_consent('customer_04217', 'analytics');
 -- true (active)
 ```
 
@@ -521,7 +521,7 @@ The original `dpdp_accelerator-dev` used 28 Python connectors (~400K lines) with
 1. All changes go through `git` — no direct workspace edits
 2. Test your changes using the guide in `docs/how_to_test.html`
 3. If adding new tables, update `schemas/` DDL files first
-4. If adding new notebooks, upload to workspace: `databricks workspace import /Workspace/Users/.../dpdp_poc/<name> --file notebooks/<name>.py --language PYTHON --format SOURCE`
+4. If adding new notebooks, upload to workspace: `databricks workspace import /Workspace/Users/.../compliance_pack/<name> --file notebooks/<name>.py --language PYTHON --format SOURCE`
 5. Keep `docs/architecture.html` updated if the architecture changes
 
 ## License

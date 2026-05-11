@@ -9,7 +9,7 @@
 --     rows (DPDP §16). This filter adds a second dimension: persona
 --     identity via current_user().
 --
--- Policy on dpdp_poc.compliance.consent_events_log:
+-- Policy on compliance_pack.compliance.consent_events_log:
 --   admin (is_member('admins'))            → every row (~1000)
 --   CCO persona (you+dpdp-cco@...)         → every row (compliance oversight)
 --   GC  persona (you+dpdp-gc@...)          → every row (legal review)
@@ -39,7 +39,7 @@
 --     is_account_group_member('dpdp-cmo')
 --   on both matches below. Everything else stays the same.
 
-CREATE OR REPLACE FUNCTION dpdp_poc.compliance.persona_purpose_scope(purpose STRING)
+CREATE OR REPLACE FUNCTION compliance_pack.compliance.persona_purpose_scope(purpose STRING)
 RETURNS BOOLEAN
 RETURN
   is_member('admins')
@@ -47,8 +47,8 @@ RETURN
   OR purpose IN ('marketing_email', 'marketing_sms', 'product_personalization');
 
 -- Apply the filter.
-ALTER TABLE dpdp_poc.compliance.consent_events_log
-  SET ROW FILTER dpdp_poc.compliance.persona_purpose_scope ON (purpose);
+ALTER TABLE compliance_pack.compliance.consent_events_log
+  SET ROW FILTER compliance_pack.compliance.persona_purpose_scope ON (purpose);
 
 -- To drop the filter (e.g. for debugging or a schema migration):
---   ALTER TABLE dpdp_poc.compliance.consent_events_log DROP ROW FILTER;
+--   ALTER TABLE compliance_pack.compliance.consent_events_log DROP ROW FILTER;

@@ -33,8 +33,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _sql import rows_or_raise, sql  # noqa: E402
 
-TABLE = "dpdp_poc.compliance.consent_events_log"
-FUNCTION = "dpdp_poc.compliance.persona_purpose_scope"
+TABLE = "compliance_pack.compliance.consent_events_log"
+FUNCTION = "compliance_pack.compliance.persona_purpose_scope"
 
 MARKETING_PURPOSES = {"marketing_email", "marketing_sms", "product_personalization"}
 NON_MARKETING_PURPOSES = {"analytics", "core_service", "third_party_sharing"}
@@ -45,7 +45,7 @@ def _row_filter_applied_to_table() -> tuple[bool, str]:
     state, rows, err = sql(
         "SELECT filter_name, target_columns "
         "FROM system.information_schema.row_filters "
-        "WHERE table_catalog = 'dpdp_poc' "
+        "WHERE table_catalog = 'compliance_pack' "
         "  AND table_schema  = 'compliance' "
         "  AND table_name    = 'consent_events_log'"
     )

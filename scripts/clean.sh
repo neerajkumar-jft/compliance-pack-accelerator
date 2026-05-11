@@ -18,7 +18,7 @@
 #   WORKSPACE
 #     databricks bundle destroy --target dev --auto-approve
 #       (drops bundle-managed pipelines + jobs + dashboards)
-#     DROP CATALOG IF EXISTS dpdp_poc CASCADE
+#     DROP CATALOG IF EXISTS compliance_pack CASCADE
 #       (catalog + 5 schemas + all tables/views/volumes — bootstrap_catalog.py
 #        creates the catalog outside DAB so bundle destroy alone leaves it)
 #
@@ -40,7 +40,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-CATALOG="${DPDP_CATALOG:-dpdp_poc}"
+CATALOG="${DPDP_CATALOG:-compliance_pack}"
 TARGET="${DPDP_TARGET:-dev}"
 
 LOCAL=1

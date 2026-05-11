@@ -9,12 +9,12 @@ no longer has to hand-run them.
 
 What it creates (or no-ops if already present):
 
-    catalog  · dpdp_poc
-    schemas  · dpdp_poc.{bronze, silver, compliance, gold}
-    volumes  · dpdp_poc.bronze.landing       (Auto Loader source CSVs)
-             · dpdp_poc.bronze.checkpoints   (Auto Loader checkpoint state)
-             · dpdp_poc.compliance.dsr_bundles    (DSR audit JSON)
-             · dpdp_poc.compliance.dpia_artifacts (DPIA generation artifacts)
+    catalog  · compliance_pack
+    schemas  · compliance_pack.{bronze, silver, compliance, gold}
+    volumes  · compliance_pack.bronze.landing       (Auto Loader source CSVs)
+             · compliance_pack.bronze.checkpoints   (Auto Loader checkpoint state)
+             · compliance_pack.compliance.dsr_bundles    (DSR audit JSON)
+             · compliance_pack.compliance.dpia_artifacts (DPIA generation artifacts)
 
 (``federation_mock`` schema is created later by ``seed_federation_data.py``.)
 
@@ -35,7 +35,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-CATALOG = os.environ.get("DPDP_CATALOG", "dpdp_poc")
+CATALOG = os.environ.get("DPDP_CATALOG", "compliance_pack")
 
 # Order matters: catalog → schemas → volumes.
 STATEMENTS: list[tuple[str, str]] = [

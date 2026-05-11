@@ -27,7 +27,7 @@ Subsumes gaps 1.2, 2.2, 3.6, 5.1.
 Reason: POC reviewed internally next week on Free Edition workspace (no account admin). External-service dependencies (AWS, SF, Postgres) create demo logistics risk without strengthening the approach-validation goal. Industry convention for tier-3 demos (Databricks `dbdemos`, Snowflake quickstarts) is self-contained.
 
 **Rolled back 2026-04-24:**
-- External volume `dpdp_poc.bronze.landing_external` DROPPED
+- External volume `compliance_pack.bronze.landing_external` DROPPED
 - External storage credential + external location in workspace left intact (pre-existing, not POC-specific)
 - `pipelines/medallion.py` reverted to managed-volume-only code path
 

@@ -21,11 +21,11 @@
 -- ROW FILTER — enforced at query time by Unity Catalog, regardless
 -- of the UI path (dashboard tile, Genie question, SQL editor, API).
 
-CREATE OR REPLACE FUNCTION dpdp_poc.compliance.residency_filter(country STRING)
+CREATE OR REPLACE FUNCTION compliance_pack.compliance.residency_filter(country STRING)
 RETURNS BOOLEAN
 RETURN is_member('admins') OR country IN ('India');
 
 -- Apply to employees_tagged (has an explicit `country` column with
 -- India + USA data in the POC).
-ALTER TABLE dpdp_poc.silver.employees_tagged
-  SET ROW FILTER dpdp_poc.compliance.residency_filter ON (country);
+ALTER TABLE compliance_pack.silver.employees_tagged
+  SET ROW FILTER compliance_pack.compliance.residency_filter ON (country);

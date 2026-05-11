@@ -25,7 +25,7 @@ from pyspark.sql.types import StringType
 # ---------------------------------------------------------------------------
 # Configuration read from pipeline parameters
 # ---------------------------------------------------------------------------
-CATALOG = spark.conf.get("catalog", "dpdp_poc")
+CATALOG = spark.conf.get("catalog", "compliance_pack")
 LANDING_ROOT = spark.conf.get("landing_volume_path", f"/Volumes/{CATALOG}/bronze/landing")
 CHECKPOINT_ROOT = f"/Volumes/{CATALOG}/bronze/checkpoints"
 

@@ -12,7 +12,7 @@
 #   scripts/deploy_all.sh --smoke-only     # only run the post-deploy smoke test
 #
 # Steps (in order):
-#   bootstrap_uc  bootstrap_catalog.py (create dpdp_poc + schemas + volumes — idempotent)
+#   bootstrap_uc  bootstrap_catalog.py (create compliance_pack + schemas + volumes — idempotent)
 #   bundle        databricks bundle deploy --target dev
 #   synthetic     generate + upload Auto Loader CSVs
 #   medallion     bundle run run_medallion (5 silver tables + pii_findings)
@@ -119,10 +119,10 @@ do_bundle() {
 do_synthetic() {
   python3 generate_synthetic_data.py --output-dir "$LANDING_DIR"
   for tbl in employees customers patients transactions users; do
-    databricks fs mkdir "dbfs:/Volumes/dpdp_poc/bronze/landing/${tbl}" 2>/dev/null || true
+    databricks fs mkdir "dbfs:/Volumes/compliance_pack/bronze/landing/${tbl}" 2>/dev/null || true
     databricks fs cp --recursive --overwrite \
       "${LANDING_DIR}/${tbl}/" \
-      "dbfs:/Volumes/dpdp_poc/bronze/landing/${tbl}/"
+      "dbfs:/Volumes/compliance_pack/bronze/landing/${tbl}/"
   done
 }
 
@@ -166,10 +166,10 @@ do_refresh() {
   #      the classifier re-scan all 10 silver objects.
   local pid update_id state attempt
   pid="$(databricks pipelines list-pipelines -o json \
-        | python3 -c 'import json,sys;print(next(p["pipeline_id"] for p in json.load(sys.stdin) if p["name"].endswith("dpdp_poc_medallion")))')"
+        | python3 -c 'import json,sys;print(next(p["pipeline_id"] for p in json.load(sys.stdin) if p["name"].endswith("compliance_pack_medallion")))')"
 
   update_id="$(databricks api post "/api/2.0/pipelines/${pid}/updates" \
-    --json '{"full_refresh_selection": ["dpdp_poc.silver.pii_findings"]}' \
+    --json '{"full_refresh_selection": ["compliance_pack.silver.pii_findings"]}' \
     | python3 -c 'import json,sys;print(json.load(sys.stdin)["update_id"])')"
   echo "  full_refresh_selection on pii_findings: update_id=${update_id}"
 

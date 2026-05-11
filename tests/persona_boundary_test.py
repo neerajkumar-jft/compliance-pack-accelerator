@@ -48,20 +48,20 @@ EMAILS_FILE = REPO_ROOT / "dashboards" / "personas" / ".persona_emails.json"
 # out_of_scope_table: the persona SHOULD NOT have SELECT → grants view confirms.
 CASES = {
     "cco": {
-        "in_scope":     "dpdp_poc.compliance.personal_data_register",
-        "out_of_scope": "dpdp_poc.gold.marketing_eligible_principals",
+        "in_scope":     "compliance_pack.compliance.personal_data_register",
+        "out_of_scope": "compliance_pack.gold.marketing_eligible_principals",
     },
     "gc": {
-        "in_scope":     "dpdp_poc.compliance.dsr_requests",
-        "out_of_scope": "dpdp_poc.gold.marketing_eligible_principals",
+        "in_scope":     "compliance_pack.compliance.dsr_requests",
+        "out_of_scope": "compliance_pack.gold.marketing_eligible_principals",
     },
     "cmo": {
-        "in_scope":     "dpdp_poc.gold.marketing_eligible_principals",
-        "out_of_scope": "dpdp_poc.compliance.personal_data_register",
+        "in_scope":     "compliance_pack.gold.marketing_eligible_principals",
+        "out_of_scope": "compliance_pack.compliance.personal_data_register",
     },
     "cfo": {
-        "in_scope":     "dpdp_poc.silver.compliance_gaps",
-        "out_of_scope": "dpdp_poc.compliance.consent_events_log",
+        "in_scope":     "compliance_pack.silver.compliance_gaps",
+        "out_of_scope": "compliance_pack.compliance.consent_events_log",
     },
 }
 

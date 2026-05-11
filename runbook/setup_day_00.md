@@ -29,16 +29,16 @@ This file is primarily for the human collaborator coordinating the engagement, n
 - [ ] Secret scope `dpdp-poc` created
 
 ### Unity Catalog scaffolding
-- [ ] Catalog `dpdp_poc` created
+- [ ] Catalog `compliance_pack` created
 - [ ] Schemas `bronze`, `silver`, `gold`, `compliance` created
-- [ ] Volume `dpdp_poc.bronze.landing` created
+- [ ] Volume `compliance_pack.bronze.landing` created
 - [ ] All grants from §2.3 applied to the service principal
 
 Run the verify_environment notebook from `tests/verify_environment.md` at the end of this step. All checks must pass.
 
 ### Lakebase provisioning
 - [ ] Lakebase instance `dpdp-poc-consent` provisioned (smallest tier)
-- [ ] Database `dpdp_poc_consent` created
+- [ ] Database `compliance_pack_consent` created
 - [ ] Native auth integration configured (no separate JDBC password)
 - [ ] Connection tested from the workspace
 
@@ -50,7 +50,7 @@ Run the verify_environment notebook from `tests/verify_environment.md` at the en
 ## Two days before Day 1
 
 ### Repository setup
-- [ ] This spec repo (`dpdp_poc_spec/`) imported into the workspace or accessible via a shared location
+- [ ] This spec repo (`compliance_pack_spec/`) imported into the workspace or accessible via a shared location
 - [ ] Claude Code has been granted workspace access through its service principal identity
 - [ ] The human collaborator has reviewed SPEC.md top to bottom
 - [ ] Any questions about the spec have been raised and resolved (or documented as open items)

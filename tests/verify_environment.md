@@ -31,13 +31,13 @@ print("✓ Runtime check passed")
 
 ```python
 catalogs = [row.catalog for row in spark.sql("SHOW CATALOGS").collect()]
-assert "dpdp_poc" in catalogs, f"Catalog dpdp_poc not found. Available: {catalogs}"
+assert "compliance_pack" in catalogs, f"Catalog compliance_pack not found. Available: {catalogs}"
 
-schemas = [row.databaseName for row in spark.sql("SHOW SCHEMAS IN dpdp_poc").collect()]
+schemas = [row.databaseName for row in spark.sql("SHOW SCHEMAS IN compliance_pack").collect()]
 for required in ["bronze", "silver", "gold", "compliance"]:
-    assert required in schemas, f"Schema dpdp_poc.{required} missing"
+    assert required in schemas, f"Schema compliance_pack.{required} missing"
 
-print("✓ Catalog dpdp_poc and all 4 schemas present")
+print("✓ Catalog compliance_pack and all 4 schemas present")
 ```
 
 ## Block 3 — Service principal grants
@@ -45,8 +45,8 @@ print("✓ Catalog dpdp_poc and all 4 schemas present")
 ```python
 # Verify we can CREATE TABLE in bronze (implies USE CATALOG, USE SCHEMA, CREATE TABLE)
 try:
-    spark.sql("CREATE TABLE IF NOT EXISTS dpdp_poc.bronze._env_check (x INT) USING DELTA")
-    spark.sql("DROP TABLE dpdp_poc.bronze._env_check")
+    spark.sql("CREATE TABLE IF NOT EXISTS compliance_pack.bronze._env_check (x INT) USING DELTA")
+    spark.sql("DROP TABLE compliance_pack.bronze._env_check")
     print("✓ CREATE TABLE privilege on bronze")
 except Exception as e:
     print(f"✗ FAILED CREATE TABLE in bronze: {e}")
@@ -54,16 +54,16 @@ except Exception as e:
 
 # Verify APPLY TAG privilege
 try:
-    spark.sql("CREATE TABLE IF NOT EXISTS dpdp_poc.silver._tag_check (x INT) USING DELTA")
+    spark.sql("CREATE TABLE IF NOT EXISTS compliance_pack.silver._tag_check (x INT) USING DELTA")
     spark.sql("""
-        ALTER TABLE dpdp_poc.silver._tag_check
+        ALTER TABLE compliance_pack.silver._tag_check
         ALTER COLUMN x SET TAGS ('_env_check' = 'ok')
     """)
     spark.sql("""
-        ALTER TABLE dpdp_poc.silver._tag_check
+        ALTER TABLE compliance_pack.silver._tag_check
         ALTER COLUMN x UNSET TAGS ('_env_check')
     """)
-    spark.sql("DROP TABLE dpdp_poc.silver._tag_check")
+    spark.sql("DROP TABLE compliance_pack.silver._tag_check")
     print("✓ APPLY TAG privilege")
 except Exception as e:
     print(f"✗ FAILED APPLY TAG: see §2.3 for grant statement. Error: {e}")
@@ -75,17 +75,17 @@ except Exception as e:
 ```python
 # The volume must exist and be writable
 try:
-    result = dbutils.fs.ls("/Volumes/dpdp_poc/bronze/landing/")
+    result = dbutils.fs.ls("/Volumes/compliance_pack/bronze/landing/")
     print("✓ Landing zone volume exists")
 
     # Test write
-    test_path = "/Volumes/dpdp_poc/bronze/landing/_env_check.txt"
+    test_path = "/Volumes/compliance_pack/bronze/landing/_env_check.txt"
     dbutils.fs.put(test_path, "env check", overwrite=True)
     dbutils.fs.rm(test_path)
     print("✓ Landing zone is writable")
 except Exception as e:
     print(f"✗ Landing zone check failed: {e}")
-    print("Create the volume per §2.10: CREATE VOLUME IF NOT EXISTS dpdp_poc.bronze.landing")
+    print("Create the volume per §2.10: CREATE VOLUME IF NOT EXISTS compliance_pack.bronze.landing")
     raise
 ```
 

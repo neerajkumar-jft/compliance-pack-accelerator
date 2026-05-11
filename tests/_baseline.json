@@ -37,24 +37,17 @@
   "dsr_principal_customer_04217": {
     "consent_events": 4,
     "customers": 1,
-    "transactions": 33
+    "transactions": 13
   },
   "notice_versions": {
     "by_language": {
-      "bn-IN": 1,
       "en-IN": 1,
-      "gu-IN": 1,
       "hi-IN": 1,
-      "kn-IN": 1,
-      "ml-IN": 1,
-      "mr-IN": 1,
-      "pa-IN": 1,
-      "ta-IN": 1,
-      "te-IN": 1
+      "ta-IN": 1
     },
     "human_authored": 3,
-    "machine_translated": 7,
-    "total": 10
+    "machine_translated": 0,
+    "total": 3
   },
   "personal_data_register": 36,
   "pii_findings": {
@@ -80,15 +73,15 @@
   },
   "silver_tagged_objects": 10,
   "synthetic_row_counts": {
-    "customers": 4761,
-    "employees": 3901,
+    "customers": 5000,
+    "employees": 2000,
     "federation_campaign_response": 100,
     "federation_lead_scoring": 200,
-    "patients": 1423,
+    "patients": 1500,
     "sf_accounts": 30,
     "sf_contacts": 60,
     "sf_leads": 100,
-    "transactions": 19018,
-    "users": 2856
+    "transactions": 10000,
+    "users": 3000
   }
 }

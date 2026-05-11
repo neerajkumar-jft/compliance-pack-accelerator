@@ -97,12 +97,12 @@ text_instructions: |
 # ---------------------------------------------------------------------
 filters:
   - name: latest_pii_scan
-    sql: "scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)"
+    sql: "scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)"
     synonyms: ["latest scan", "current scan", "most recent scan", "today"]
     instruction: "Apply when user says 'current', 'latest', 'today', or doesn't specify a time window. Use against pii_findings only; compliance_gaps has a separate latest_gap_scan filter."
 
   - name: latest_gap_scan
-    sql: "scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.compliance_gaps)"
+    sql: "scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.compliance_gaps)"
     synonyms: ["latest gaps", "current gaps", "most recent gap scan"]
     instruction: "Apply against compliance_gaps for current-state questions. Note: compliance_gaps uses a DIFFERENT scan_job_id format than pii_findings; never substitute one for the other."
 
@@ -209,24 +209,24 @@ example_queries:
              total_gaps, critical_gaps, high_gaps,
              risk_score, compliance_score, risk_level,
              avg_confidence, days_since_last_scan
-      FROM dpdp_poc.gold.persona_overview_metrics
+      FROM compliance_pack.gold.persona_overview_metrics
 
   - question: "What critical PII do we have and in which tables?"
     sql: |-
       SELECT table_name,
              COUNT(DISTINCT finding_id) AS critical_columns,
              COLLECT_SET(column_name) AS columns
-      FROM dpdp_poc.silver.pii_findings
+      FROM compliance_pack.silver.pii_findings
       WHERE sensitivity_tier = 'critical'
-        AND scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)
+        AND scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)
       GROUP BY table_name
       ORDER BY critical_columns DESC
 
   - question: "How many compliance gaps do we have by severity?"
     sql: |-
       SELECT severity, COUNT(DISTINCT gap_id) AS n
-      FROM dpdp_poc.silver.compliance_gaps
-      WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.compliance_gaps)
+      FROM compliance_pack.silver.compliance_gaps
+      WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.compliance_gaps)
       GROUP BY severity
       ORDER BY CASE severity
           WHEN 'critical' THEN 1
@@ -239,7 +239,7 @@ example_queries:
     sql: |-
       SELECT rule_id, rule_type, severity, regulation,
              COUNT(DISTINCT gap_id) AS n
-      FROM dpdp_poc.silver.compliance_gaps
+      FROM compliance_pack.silver.compliance_gaps
       GROUP BY rule_id, rule_type, severity, regulation
       ORDER BY n DESC
 
@@ -249,7 +249,7 @@ example_queries:
              sensitivity_tier,
              ROUND(classification_confidence, 2) AS confidence,
              human_reviewed, review_status
-      FROM dpdp_poc.compliance.personal_data_register
+      FROM compliance_pack.compliance.personal_data_register
       ORDER BY CASE sensitivity_tier
           WHEN 'critical' THEN 1
           WHEN 'high' THEN 2
@@ -262,16 +262,16 @@ example_queries:
     sql: |-
       SELECT purpose, total_principals, granted, declined, withdrawn,
              grant_rate_pct
-      FROM dpdp_poc.gold.consent_coverage_summary
+      FROM compliance_pack.gold.consent_coverage_summary
       ORDER BY grant_rate_pct DESC
 
   - question: "Show PII findings in a specific table"
     sql: |-
       SELECT column_name, pii_category, pii_type, sensitivity_tier,
              ROUND(confidence, 2) AS confidence, classifier_source
-      FROM dpdp_poc.silver.pii_findings
+      FROM compliance_pack.silver.pii_findings
       WHERE table_name = :table_name
-        AND scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)
+        AND scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)
       ORDER BY CASE sensitivity_tier
           WHEN 'critical' THEN 1
           WHEN 'high' THEN 2
@@ -285,8 +285,8 @@ example_queries:
              f.sensitivity_tier,
              COUNT(DISTINCT g.gap_id) AS gap_count,
              COLLECT_SET(g.rule_id) AS rules
-      FROM dpdp_poc.silver.pii_findings f
-      JOIN dpdp_poc.silver.compliance_gaps g
+      FROM compliance_pack.silver.pii_findings f
+      JOIN compliance_pack.silver.compliance_gaps g
         ON f.table_name = g.table_name
        AND f.column_name = g.column_name
       WHERE f.sensitivity_tier = 'critical'
@@ -296,7 +296,7 @@ example_queries:
   - question: "What's our sensitivity distribution?"
     sql: |-
       SELECT sensitivity, count
-      FROM dpdp_poc.gold.persona_sensitivity_histogram
+      FROM compliance_pack.gold.persona_sensitivity_histogram
       ORDER BY CASE sensitivity
           WHEN 'critical' THEN 1
           WHEN 'high' THEN 2
@@ -309,8 +309,8 @@ example_queries:
       SELECT g.table_name, d.row_count, d.column_count,
              COUNT(DISTINCT g.gap_id) AS gaps,
              COUNT(DISTINCT CASE WHEN g.severity='critical' THEN g.gap_id END) AS critical_gaps
-      FROM dpdp_poc.silver.compliance_gaps g
-      LEFT JOIN dpdp_poc.silver.discovered_tables d
+      FROM compliance_pack.silver.compliance_gaps g
+      LEFT JOIN compliance_pack.silver.discovered_tables d
         ON g.table_name = d.table_name
       GROUP BY g.table_name, d.row_count, d.column_count
       ORDER BY gaps DESC
@@ -319,7 +319,7 @@ example_queries:
     sql: |-
       SELECT catalog_name, schema_name, table_name,
              row_count, column_count, scanned_at
-      FROM dpdp_poc.silver.discovered_tables
+      FROM compliance_pack.silver.discovered_tables
       ORDER BY row_count DESC
 
 
@@ -340,24 +340,24 @@ sql_functions: []
 # for the deployer to add once via the UI.
 manual_joins:
   - name: pii_findings_to_discovered_tables
-    left_table: dpdp_poc.silver.pii_findings
-    right_table: dpdp_poc.silver.discovered_tables
+    left_table: compliance_pack.silver.pii_findings
+    right_table: compliance_pack.silver.discovered_tables
     left_column: table_name
     right_column: table_name
     relationship: "Many to One"
     instruction: "Bring table-level row_count / column_count alongside per-column findings."
 
   - name: compliance_gaps_to_discovered_tables
-    left_table: dpdp_poc.silver.compliance_gaps
-    right_table: dpdp_poc.silver.discovered_tables
+    left_table: compliance_pack.silver.compliance_gaps
+    right_table: compliance_pack.silver.discovered_tables
     left_column: table_name
     right_column: table_name
     relationship: "Many to One"
     instruction: "Table-level context for gaps (row_count / column_count)."
 
   - name: compliance_gaps_to_pii_findings
-    left_table: dpdp_poc.silver.compliance_gaps
-    right_table: dpdp_poc.silver.pii_findings
+    left_table: compliance_pack.silver.compliance_gaps
+    right_table: compliance_pack.silver.pii_findings
     left_column: table_name
     right_column: table_name
     second_left_column: column_name

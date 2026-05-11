@@ -49,7 +49,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from persona_config import get_warehouse_id  # noqa: E402
 
 WAREHOUSE_ID = get_warehouse_id()
-CATALOG = os.environ.get("DPDP_CATALOG", "dpdp_poc")
+CATALOG = os.environ.get("DPDP_CATALOG", "compliance_pack")
 
 # DDL — mirrors schemas/bronze.sql + the CREATE in phase1_bootstrap.py §2.
 CREATE_TABLE = f"""

@@ -16,7 +16,7 @@ The Databricks Asset Bundle (`databricks.yml` at the repo root plus `resources/*
 
 | Manual step before DAB | Replaced by |
 |------------------------|-------------|
-| `CREATE CATALOG dpdp_poc` in a notebook | `resources.catalogs.dpdp_poc_catalog` in `catalog_and_storage.yml` |
+| `CREATE CATALOG compliance_pack` in a notebook | `resources.catalogs.compliance_pack_catalog` in `catalog_and_storage.yml` |
 | `CREATE SCHEMA bronze, silver, gold, compliance, federation_mock` | `resources.schemas.*` blocks (federation_mock is created on demand by `scripts/seed_federation_data.py`) |
 | Provisioning a Lakebase instance in the UI | `resources.database_instances.consent_oltp` |
 | Hand-writing an Auto Loader notebook | The `medallion_pipeline` resource plus `pipelines/medallion.py` |
@@ -30,7 +30,7 @@ There is no manual UI interaction in the deployment path. If you find yourself c
 ## 11.3 · Repository layout for DAB
 
 ```
-dpdp_poc_spec/
+compliance_pack_spec/
 ├── databricks.yml                 ← DAB root; deploy entry point
 ├── resources/
 │   ├── catalog_and_storage.yml    ← catalogs, schemas, volumes, Lakebase
@@ -66,7 +66,7 @@ From a fresh terminal with Databricks CLI installed and configured:
 
 ```bash
 # 1. Clone / unpack the spec repo
-cd /path/to/dpdp_poc_spec
+cd /path/to/compliance_pack_spec
 
 # 2. Validate the bundle (catches schema errors before deploy)
 databricks bundle validate --target dev
@@ -112,13 +112,13 @@ Mapping the command to the resources it creates:
 bundle deploy
   ├── uploads pipelines/*.py to /Workspace/.../.bundle/dpdp-poc/dev/pipelines/
   ├── uploads apps/dsr_portal/ to the Databricks Apps workspace volume
-  ├── creates catalog dpdp_poc (resources/catalog_and_storage.yml)
+  ├── creates catalog compliance_pack (resources/catalog_and_storage.yml)
   │   ├── schema bronze, silver, gold, compliance
   │   ├── volume bronze.landing, bronze.checkpoints, compliance.dsr_bundles
   │   └── grants to service principal
   ├── creates Lakebase instance dpdp-poc-consent
-  │   └── creates database dpdp_poc_consent
-  ├── creates DLT pipeline dpdp_poc_medallion (resources/pipelines.yml)
+  │   └── creates database compliance_pack_consent
+  ├── creates DLT pipeline compliance_pack_medallion (resources/pipelines.yml)
   │   └── with libraries pointing at pipelines/medallion.py, pipelines/classification_dlt.py
   ├── creates Workflow jobs (resources/jobs.yml)
   │   ├── init_lakebase_schema
@@ -160,7 +160,7 @@ The bundle uses variables for values that vary per deployment:
 
 ```yaml
 variables:
-  catalog_name: { default: dpdp_poc }
+  catalog_name: { default: compliance_pack }
   lakebase_instance_name: { default: dpdp-poc-consent }
   notification_email: { default: dpdp-poc-team@example.com }
   ...

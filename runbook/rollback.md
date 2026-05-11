@@ -1,6 +1,6 @@
 # Rollback procedures
 
-> ⚠️ **Pre-build planning document.** Rollbacks 3 (Lakebase) and 4 (DSR principal restoration via synthetic-data regen) reference components not used in the free-trial POC. Rollback 5 (Full workspace reset via `DROP CATALOG dpdp_poc CASCADE`) is still accurate. **For cleanup of the persona layer specifically, see [`docs/persona_deploy.md`](../docs/persona_deploy.md#cleaning-up--starting-over).**
+> ⚠️ **Pre-build planning document.** Rollbacks 3 (Lakebase) and 4 (DSR principal restoration via synthetic-data regen) reference components not used in the free-trial POC. Rollback 5 (Full workspace reset via `DROP CATALOG compliance_pack CASCADE`) is still accurate. **For cleanup of the persona layer specifically, see [`docs/persona_deploy.md`](../docs/persona_deploy.md#cleaning-up--starting-over).**
 
 Concrete recovery playbooks. Each procedure is self-contained — copy the commands, run them, verify. Cross-references §10.2 through §10.7 of the main spec.
 
@@ -18,17 +18,17 @@ You are here because something went wrong and you need to get back to a known-go
 
 ```sql
 -- Drop all Bronze tables
-DROP TABLE IF EXISTS dpdp_poc.bronze.source_employees;
-DROP TABLE IF EXISTS dpdp_poc.bronze.source_customers;
-DROP TABLE IF EXISTS dpdp_poc.bronze.source_patients;
-DROP TABLE IF EXISTS dpdp_poc.bronze.source_transactions;
-DROP TABLE IF EXISTS dpdp_poc.bronze.source_users;
+DROP TABLE IF EXISTS compliance_pack.bronze.source_employees;
+DROP TABLE IF EXISTS compliance_pack.bronze.source_customers;
+DROP TABLE IF EXISTS compliance_pack.bronze.source_patients;
+DROP TABLE IF EXISTS compliance_pack.bronze.source_transactions;
+DROP TABLE IF EXISTS compliance_pack.bronze.source_users;
 ```
 
 ```python
 # Remove Auto Loader state
-dbutils.fs.rm("/Volumes/dpdp_poc/bronze/_checkpoints/", recurse=True)
-dbutils.fs.rm("/Volumes/dpdp_poc/bronze/_schemas/", recurse=True)
+dbutils.fs.rm("/Volumes/compliance_pack/bronze/_checkpoints/", recurse=True)
+dbutils.fs.rm("/Volumes/compliance_pack/bronze/_schemas/", recurse=True)
 ```
 
 ```sql
@@ -38,7 +38,7 @@ dbutils.fs.rm("/Volumes/dpdp_poc/bronze/_schemas/", recurse=True)
 
 Then rerun Auto Loader ingestion per §3.4. Verify:
 ```sql
-SELECT COUNT(*) FROM dpdp_poc.bronze.source_employees;
+SELECT COUNT(*) FROM compliance_pack.bronze.source_employees;
 -- Expected: ~2000 (matches manifest)
 ```
 
@@ -53,15 +53,15 @@ SELECT COUNT(*) FROM dpdp_poc.bronze.source_employees;
 ```sql
 -- Identify the bad scan_job_id
 SELECT scan_job_id, discovered_at, COUNT(*) AS findings_count
-FROM dpdp_poc.silver.pii_findings
+FROM compliance_pack.silver.pii_findings
 GROUP BY scan_job_id, discovered_at
 ORDER BY discovered_at DESC;
 
 -- Delete the bad scan's findings
-DELETE FROM dpdp_poc.silver.pii_findings
+DELETE FROM compliance_pack.silver.pii_findings
 WHERE scan_job_id = '<bad job id>';
 
-DELETE FROM dpdp_poc.silver.discovered_tables
+DELETE FROM compliance_pack.silver.discovered_tables
 WHERE scan_job_id = '<bad job id>';
 ```
 
@@ -74,7 +74,7 @@ silver_tables = ['employees_tagged', 'customers_tagged', 'patients_tagged',
 for tbl in silver_tables:
     cols = spark.sql(f"""
         SELECT column_name FROM system.information_schema.column_tags
-        WHERE catalog_name = 'dpdp_poc'
+        WHERE catalog_name = 'compliance_pack'
           AND schema_name = 'silver'
           AND table_name = '{tbl}'
           AND tag_name IN ('pii_type', 'pii_category', 'sensitivity',
@@ -83,7 +83,7 @@ for tbl in silver_tables:
     for col_row in cols:
         col = col_row.column_name
         spark.sql(f"""
-            ALTER TABLE dpdp_poc.silver.{tbl}
+            ALTER TABLE compliance_pack.silver.{tbl}
             ALTER COLUMN {col}
             UNSET TAGS ('pii_type', 'pii_category', 'sensitivity',
                         'classifier_source', 'dpdp_applicable')
@@ -114,8 +114,8 @@ The Lakebase → Delta sync will recreate the Delta destination tables automatic
 
 ```sql
 -- On Databricks side
-DROP TABLE IF EXISTS dpdp_poc.compliance.consent_events_log;
-DROP TABLE IF EXISTS dpdp_poc.compliance.dsr_requests;
+DROP TABLE IF EXISTS compliance_pack.compliance.consent_events_log;
+DROP TABLE IF EXISTS compliance_pack.compliance.dsr_requests;
 ```
 
 Reconfigure the sync per §5.7.2. Re-seed the notice version. Re-run the consent event generator for 1,000 events per §6.6.
@@ -133,7 +133,7 @@ Since DSR erasure is (by design) irreversible once VACUUM has run, the only rest
 ```bash
 # From outside the workspace or from a notebook
 python generate_synthetic_data.py \
-    --output-dir /Volumes/dpdp_poc/bronze/landing/ \
+    --output-dir /Volumes/compliance_pack/bronze/landing/ \
     --seed 42
 ```
 
@@ -141,7 +141,7 @@ Then rollback 1 (Bronze) and rollback 2 (classification) to force re-ingest and 
 
 If the residual_retention_register entry from the prior DSR run still exists, clear it:
 ```sql
-DELETE FROM dpdp_poc.compliance.residual_retention_register
+DELETE FROM compliance_pack.compliance.residual_retention_register
 WHERE principal_identifier = 'customer_04217';
 ```
 
@@ -155,7 +155,7 @@ WHERE principal_identifier = 'customer_04217';
 
 ```sql
 -- Nuclear option
-DROP CATALOG IF EXISTS dpdp_poc CASCADE;
+DROP CATALOG IF EXISTS compliance_pack CASCADE;
 ```
 
 ```sql

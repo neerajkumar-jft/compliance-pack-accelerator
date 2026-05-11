@@ -27,8 +27,8 @@ resources:
     #   2. Workspace admin grants:
     #        - CAN_USE on the app to CCO + GC + CFO persona users
     #        - CAN_USE on the SQL warehouse to the app's SP
-    #        - SELECT + UPDATE on dpdp_poc.compliance.dpia_runs to the app's SP
-    #        - SELECT on /Volumes/dpdp_poc/compliance/dpia_artifacts to the app's SP
+    #        - SELECT + UPDATE on compliance_pack.compliance.dpia_runs to the app's SP
+    #        - SELECT on /Volumes/compliance_pack/compliance/dpia_artifacts to the app's SP
     #   These steps are documented but not auto-applied — the SP id is
     #   only known after the first deploy.
     #

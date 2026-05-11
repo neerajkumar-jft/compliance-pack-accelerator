@@ -32,7 +32,7 @@ Generator: `generate_salesforce_data.py` (seed=43).
 
 ## 3.1c · Lakehouse Federation simulation (pattern 3 of 3)
 
-Day 4 added a simulated foreign catalog: a `dpdp_poc.federation_mock` schema holds Postgres-shape marketing tables, and `silver.federation_*_tagged` are **VIEWS** that select from them. The view-not-table shape signals "query flies, data stays put" — in production the view's source would be a UC foreign catalog.
+Day 4 added a simulated foreign catalog: a `compliance_pack.federation_mock` schema holds Postgres-shape marketing tables, and `silver.federation_*_tagged` are **VIEWS** that select from them. The view-not-table shape signals "query flies, data stays put" — in production the view's source would be a UC foreign catalog.
 
 | Table / view | Row count | Notes |
 |--------------|-----------|-------|
@@ -188,7 +188,7 @@ Bronze tables mirror the source schema with three metadata columns appended. The
 For each source table, the Bronze DDL follows this pattern (full DDL in `schemas/bronze.sql`):
 
 ```sql
-CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_employees (
+CREATE TABLE IF NOT EXISTS compliance_pack.bronze.source_employees (
     -- All source columns as above, with all types STRING to tolerate CSV quirks
     employee_id STRING,
     first_name STRING,
@@ -273,10 +273,10 @@ DDL pattern in `schemas/silver.sql`.
 This table is adapted from the accelerator's `silver.pii_findings` (lines 356-372 of `02_Silver_Discovery.py`) with minor improvements. It is the source of truth for every PII decision the platform has made.
 
 ```sql
-CREATE TABLE IF NOT EXISTS dpdp_poc.silver.pii_findings (
+CREATE TABLE IF NOT EXISTS compliance_pack.silver.pii_findings (
     finding_id              STRING    NOT NULL,     -- UUID per finding
     scan_job_id             STRING    NOT NULL,     -- UUID per classification run
-    catalog_name            STRING    NOT NULL,     -- always 'dpdp_poc'
+    catalog_name            STRING    NOT NULL,     -- always 'compliance_pack'
     schema_name             STRING    NOT NULL,     -- always 'silver' for POC
     table_name              STRING    NOT NULL,
     column_name             STRING    NOT NULL,
@@ -302,7 +302,7 @@ Note the `sample_match_redacted` column — it stores an illustrative but redact
 ### 3.5.3 · `discovered_tables` — table-level scan metadata
 
 ```sql
-CREATE TABLE IF NOT EXISTS dpdp_poc.silver.discovered_tables (
+CREATE TABLE IF NOT EXISTS compliance_pack.silver.discovered_tables (
     table_id            STRING    NOT NULL,
     scan_job_id         STRING    NOT NULL,
     catalog_name        STRING    NOT NULL,
@@ -321,7 +321,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.discovered_tables (
 The register — artifact 1 from §1.2 — is a view that joins `pii_findings` with the Unity Catalog system tables to produce the stakeholder-facing output.
 
 ```sql
-CREATE OR REPLACE VIEW dpdp_poc.compliance.personal_data_register AS
+CREATE OR REPLACE VIEW compliance_pack.compliance.personal_data_register AS
 SELECT
     f.catalog_name || '.' || f.schema_name || '.' || f.table_name AS fully_qualified_table,
     f.table_name                    AS source_table,
@@ -338,8 +338,8 @@ SELECT
     f.human_reviewed                AS human_reviewed,
     f.review_status                 AS review_status,
     f.discovered_at                 AS last_scanned_at
-FROM dpdp_poc.silver.pii_findings f
-LEFT JOIN dpdp_poc.silver.discovered_tables dt
+FROM compliance_pack.silver.pii_findings f
+LEFT JOIN compliance_pack.silver.discovered_tables dt
     ON dt.scan_job_id = f.scan_job_id
     AND dt.table_name = f.table_name
 LEFT JOIN system.information_schema.tables t
@@ -349,8 +349,8 @@ LEFT JOIN system.information_schema.tables t
 WHERE f.scan_job_id IN (
     -- latest scan job only
     SELECT scan_job_id
-    FROM dpdp_poc.silver.pii_findings
-    WHERE discovered_at = (SELECT MAX(discovered_at) FROM dpdp_poc.silver.pii_findings)
+    FROM compliance_pack.silver.pii_findings
+    WHERE discovered_at = (SELECT MAX(discovered_at) FROM compliance_pack.silver.pii_findings)
 );
 ```
 
@@ -371,7 +371,7 @@ The tags applied per PII column:
 Applied via:
 
 ```sql
-ALTER TABLE dpdp_poc.silver.employees_tagged
+ALTER TABLE compliance_pack.silver.employees_tagged
 ALTER COLUMN aadhaar_number
 SET TAGS (
     'pii_type' = 'aadhaar',

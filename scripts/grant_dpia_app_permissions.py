@@ -14,10 +14,10 @@ What it does:
      learn which workspace users are CCO, GC, CFO.
   3. Applies four buckets of permissions:
        a. Workspace `CAN_USE` on the SQL warehouse → the app's SP
-       b. UC `SELECT, MODIFY` on dpdp_poc.compliance.dpia_runs → SP
+       b. UC `SELECT, MODIFY` on compliance_pack.compliance.dpia_runs → SP
           (so the app can list runs AND issue the approval UPDATE — no
           persona user has MODIFY, only the SP does)
-       c. UC `READ VOLUME` on dpdp_poc.compliance.dpia_artifacts → SP
+       c. UC `READ VOLUME` on compliance_pack.compliance.dpia_artifacts → SP
           (so the PDF download can read the artifact JSON)
        d. App-level `CAN_USE` → CCO + GC + CFO persona users
           (CMO is intentionally excluded — DPIA review isn't a marketing
@@ -50,7 +50,7 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-CATALOG = os.environ.get("DPDP_CATALOG", "dpdp_poc")
+CATALOG = os.environ.get("DPDP_CATALOG", "compliance_pack")
 APP_NAME = "dpdp-dpia-review"
 APPROVER_PERSONAS = ("cco", "gc")  # can click the Approve button
 VIEWER_PERSONAS   = ("cfo",)        # CAN_USE on app, but Approve hidden in UI
@@ -244,7 +244,7 @@ def main() -> int:
          ]}),
         # USE CATALOG + USE SCHEMA are PREREQUISITES for SELECT and
         # MODIFY to actually be exercised — without them the SP gets
-        # PERMISSION_DENIED on `dpdp_poc.compliance.dpia_runs` even
+        # PERMISSION_DENIED on `compliance_pack.compliance.dpia_runs` even
         # though the row-level grant exists. UC checks them in order:
         # USE CATALOG → USE SCHEMA → table grant.
         (f"UC USE CATALOG ON CATALOG {CATALOG} → SP",

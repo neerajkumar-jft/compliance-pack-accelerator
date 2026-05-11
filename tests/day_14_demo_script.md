@@ -12,7 +12,7 @@ Complete this checklist 30 minutes before the demo:
 - [ ] Lakebase connection tested (one quick SELECT)
 - [ ] `marketing_eligible_principals` view currently shows `customer_04217` as eligible for `marketing_email`
 - [ ] DSR portal UI loaded in a second browser tab (if using Databricks Apps)
-- [ ] Unity Catalog Explorer open in a third tab, navigated to `dpdp_poc.silver.employees_tagged`
+- [ ] Unity Catalog Explorer open in a third tab, navigated to `compliance_pack.silver.employees_tagged`
 - [ ] Stopwatch or timer ready for the 5-minute withdrawal propagation demo
 - [ ] A fallback screenshot deck prepared in case of live issues — see "Fallback" below
 - [ ] Credit budget reviewed: ensure enough remaining for the full demo
@@ -38,7 +38,7 @@ SELECT
     sensitivity_tier,
     classification_confidence,
     data_owner
-FROM dpdp_poc.compliance.personal_data_register
+FROM compliance_pack.compliance.personal_data_register
 ORDER BY sensitivity_tier DESC, source_table, source_column;
 ```
 
@@ -46,7 +46,7 @@ Narrate while stakeholders view the output:
 
 > "This is the register. Every column across 5 source tables, classified by PII category with a confidence score. This view queries Unity Catalog's metadata and our classification findings in real time — it doesn't get stale as the source evolves."
 
-Switch to Unity Catalog Explorer tab. Navigate to `dpdp_poc.silver.employees_tagged`. Point to the `aadhaar_number` column's tags.
+Switch to Unity Catalog Explorer tab. Navigate to `compliance_pack.silver.employees_tagged`. Point to the `aadhaar_number` column's tags.
 
 > "The register is backed by column tags in Unity Catalog. Every downstream query, every masking rule, every access policy can reason about PII using these tags. The tagging is automatic when classification confidence exceeds 85%."
 
@@ -67,7 +67,7 @@ SELECT
     event_type,
     purpose_grant_status,
     COUNT(*) AS event_count
-FROM dpdp_poc.compliance.consent_events_log
+FROM compliance_pack.compliance.consent_events_log
 GROUP BY channel, purpose, event_type, purpose_grant_status
 ORDER BY channel, purpose;
 ```
@@ -77,7 +77,7 @@ ORDER BY channel, purpose;
 Run this to show the eligible audience right now:
 ```sql
 SELECT COUNT(*) AS eligible_for_marketing_email
-FROM dpdp_poc.gold.marketing_eligible_principals
+FROM compliance_pack.gold.marketing_eligible_principals
 WHERE purpose = 'marketing_email';
 ```
 
@@ -120,7 +120,7 @@ Start timer. Explain while waiting:
 
 Poll the Gold view every 30 seconds:
 ```sql
-SELECT COUNT(*) FROM dpdp_poc.gold.marketing_eligible_principals
+SELECT COUNT(*) FROM compliance_pack.gold.marketing_eligible_principals
 WHERE data_principal_id = '<DEMO_CUSTOMER_UUID>' AND purpose = 'marketing_email';
 ```
 
@@ -130,7 +130,7 @@ When it returns 0, note elapsed time.
 
 Show the immutability property:
 ```sql
-DESCRIBE HISTORY dpdp_poc.compliance.consent_events_log LIMIT 5;
+DESCRIBE HISTORY compliance_pack.compliance.consent_events_log LIMIT 5;
 ```
 
 > "Every operation on the consent log is append-only. No UPDATEs, no DELETEs. The Delta transaction log is content-addressed, so even post-hoc modification would be detectable. This is what makes the log regulator-grade."
@@ -155,7 +155,7 @@ Switch to the DSR portal tab (or run via API notebook). Submit:
 
 Wait for status: completed. Walk through the discovery:
 ```sql
-SELECT * FROM dpdp_poc.compliance.dsr_requests
+SELECT * FROM compliance_pack.compliance.dsr_requests
 WHERE request_id = '<returned request_id>';
 ```
 
@@ -169,12 +169,12 @@ Navigate to the bundle path and open each file:
 Then run the time-travel proof:
 ```sql
 -- Before erasure
-SELECT COUNT(*) FROM dpdp_poc.silver.customers_tagged VERSION AS OF <version_before>
+SELECT COUNT(*) FROM compliance_pack.silver.customers_tagged VERSION AS OF <version_before>
 WHERE customer_id = 'customer_04217';
 -- Expected: 1
 
 -- After erasure
-SELECT COUNT(*) FROM dpdp_poc.silver.customers_tagged
+SELECT COUNT(*) FROM compliance_pack.silver.customers_tagged
 WHERE customer_id = 'customer_04217';
 -- Expected: 0
 ```

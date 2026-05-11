@@ -13,7 +13,7 @@
 -- ============================================================================
 -- employees_tagged
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.silver.employees_tagged (
+CREATE TABLE IF NOT EXISTS compliance_pack.silver.employees_tagged (
     employee_id             STRING,
     first_name              STRING,
     last_name               STRING,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.employees_tagged (
 -- ============================================================================
 -- customers_tagged
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.silver.customers_tagged (
+CREATE TABLE IF NOT EXISTS compliance_pack.silver.customers_tagged (
     customer_id             STRING,
     full_name               STRING,
     email_address           STRING,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.customers_tagged (
 -- ============================================================================
 -- patients_tagged
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.silver.patients_tagged (
+CREATE TABLE IF NOT EXISTS compliance_pack.silver.patients_tagged (
     patient_id              STRING,
     medical_record_number   STRING,
     full_name               STRING,
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.patients_tagged (
 -- ============================================================================
 -- transactions_tagged
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.silver.transactions_tagged (
+CREATE TABLE IF NOT EXISTS compliance_pack.silver.transactions_tagged (
     transaction_id          STRING,
     customer_id             STRING,
     transaction_date        TIMESTAMP,
@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.transactions_tagged (
 -- ============================================================================
 -- users_tagged
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.silver.users_tagged (
+CREATE TABLE IF NOT EXISTS compliance_pack.silver.users_tagged (
     user_id                 STRING,
     username                STRING,
     email                   STRING,
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.users_tagged (
 -- ============================================================================
 -- pii_findings - column-level PII discovery results
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.silver.pii_findings (
+CREATE TABLE IF NOT EXISTS compliance_pack.silver.pii_findings (
     finding_id              STRING      NOT NULL,
     scan_job_id             STRING      NOT NULL,
     catalog_name            STRING      NOT NULL,
@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.pii_findings (
 -- ============================================================================
 -- discovered_tables - table-level scan metadata
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.silver.discovered_tables (
+CREATE TABLE IF NOT EXISTS compliance_pack.silver.discovered_tables (
     table_id            STRING      NOT NULL,
     scan_job_id         STRING      NOT NULL,
     catalog_name        STRING      NOT NULL,

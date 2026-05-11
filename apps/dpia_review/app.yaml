@@ -14,4 +14,4 @@ command:
 
 env:
   - name: DPDP_CATALOG
-    value: "dpdp_poc"
+    value: "compliance_pack"

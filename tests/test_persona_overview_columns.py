@@ -1,7 +1,7 @@
 """Column-contract test for gold.persona_overview_metrics.
 
 Dashboards created by `scripts/slice_dashboards.py` embed SQL that reads
-named columns from `dpdp_poc.gold.persona_overview_metrics`. If the view
+named columns from `compliance_pack.gold.persona_overview_metrics`. If the view
 in `pipelines/phase1_bootstrap.py` drops or renames one of those columns,
 the CFO/CMO/GC persona dashboards render
 `[UNRESOLVED_COLUMN] column <name> cannot be resolved` on their
@@ -29,11 +29,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _sql import rows_or_raise  # noqa: E402
 
-VIEW = "dpdp_poc.gold.persona_overview_metrics"
+VIEW = "compliance_pack.gold.persona_overview_metrics"
 
 # The column names any non-CCO dashboard tile may read via the slicer.
 # Derived mechanically from DATASET_REWRITES_NON_CCO in slice_dashboards.py —
-# grep for SELECT targets + fully-qualified FROM dpdp_poc.gold.persona_overview_metrics.
+# grep for SELECT targets + fully-qualified FROM compliance_pack.gold.persona_overview_metrics.
 REQUIRED_COLUMNS = {
     # risk_scores tile
     "risk_score",

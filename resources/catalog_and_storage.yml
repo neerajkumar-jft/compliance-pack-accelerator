@@ -8,15 +8,15 @@
 # On free-trial/default-storage workspaces:
 #   1. Create the catalog (+ schemas + volumes) once via the Databricks UI
 #      (Catalog Explorer → + Create → Catalog) or via the CLI:
-#        databricks catalogs create dpdp_poc
-#        databricks schemas create bronze dpdp_poc
+#        databricks catalogs create compliance_pack
+#        databricks schemas create bronze compliance_pack
 #        ... (see the commented block below for the full list)
 #   2. Bundle deploys only manage the pipeline, jobs, and dashboards against
 #      the pre-created catalog.
 #
 # resources:
 #   catalogs:
-#     dpdp_poc_catalog:
+#     compliance_pack_catalog:
 #       name: ${var.catalog_name}
 #       comment: "DPDP Compliance POC. Covers Modules 01 (PII inventory) and 02 (consent)."
 #       storage_root: ${var.catalog_storage_root}
@@ -51,7 +51,7 @@
 # Lakebase (paid tier — commented out for free-trial compatibility)
 # ---------------------------------------------------------------------------
 # In the full POC, consent events and DSR intake write to a Lakebase instance,
-# then sync to Delta at dpdp_poc.compliance.*. Lakebase is NOT available on
+# then sync to Delta at compliance_pack.compliance.*. Lakebase is NOT available on
 # Databricks free-trial workspaces.
 #
 # On the free tier, compliance.consent_events_log and compliance.dsr_requests

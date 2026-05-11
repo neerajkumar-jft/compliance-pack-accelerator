@@ -79,7 +79,7 @@ def main() -> int:
 
     # 1. customers_tagged has both IN and GB jurisdiction values
     rows = _sql(
-        "SELECT jurisdiction, COUNT(*) FROM dpdp_poc.silver.customers_tagged "
+        "SELECT jurisdiction, COUNT(*) FROM compliance_pack.silver.customers_tagged "
         "GROUP BY jurisdiction ORDER BY 2 DESC"
     )
     jur_mix = {r[0]: int(r[1]) for r in rows}
@@ -98,7 +98,7 @@ def main() -> int:
 
     # 2. Multi-pack rules loaded into compliance_rules
     rows = _sql(
-        "SELECT regulation_pack, COUNT(*) FROM dpdp_poc.bronze.compliance_rules "
+        "SELECT regulation_pack, COUNT(*) FROM compliance_pack.bronze.compliance_rules "
         "GROUP BY regulation_pack"
     )
     rule_mix = {r[0]: int(r[1]) for r in rows}
@@ -117,7 +117,7 @@ def main() -> int:
 
     # 3. Gaps are tagged with regulation_pack from both packs
     rows = _sql(
-        "SELECT regulation_pack, COUNT(*) FROM dpdp_poc.silver.compliance_gaps "
+        "SELECT regulation_pack, COUNT(*) FROM compliance_pack.silver.compliance_gaps "
         "GROUP BY regulation_pack ORDER BY 2 DESC"
     )
     gap_mix = {r[0]: int(r[1]) for r in rows}

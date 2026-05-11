@@ -37,7 +37,7 @@ The architectural commitments that make this extensibility real:
 
 **What it is**: A queryable table in Unity Catalog showing every column across the source system that contains personal data, with its PII category, sensitivity tier, data owner, and lineage to its raw source.
 
-**Where it lives**: `dpdp_poc.compliance.personal_data_register` (view over the tagged Silver tables).
+**Where it lives**: `compliance_pack.compliance.personal_data_register` (view over the tagged Silver tables).
 
 **How to verify**:
 
@@ -52,7 +52,7 @@ SELECT
     classification_confidence,
     data_owner,
     last_scanned_at
-FROM dpdp_poc.compliance.personal_data_register
+FROM compliance_pack.compliance.personal_data_register
 ORDER BY sensitivity_tier DESC, source_table, source_column;
 ```
 
@@ -66,9 +66,9 @@ This query must return at least 20 rows (based on the synthetic source schema ha
 
 **Where it lives**:
 
-- Lakebase: `dpdp_poc_consent.public.consent_events` (OLTP store)
-- Delta: `dpdp_poc.compliance.consent_events_log` (immutable audit layer)
-- Suppression surface: `dpdp_poc.compliance.marketing_eligible_principals` (Gold view)
+- Lakebase: `compliance_pack_consent.public.consent_events` (OLTP store)
+- Delta: `compliance_pack.compliance.consent_events_log` (immutable audit layer)
+- Suppression surface: `compliance_pack.compliance.marketing_eligible_principals` (Gold view)
 
 **How to verify**:
 
@@ -78,7 +78,7 @@ SELECT COUNT(*) AS event_count,
        COUNT(DISTINCT data_principal_id) AS distinct_principals,
        COUNT(DISTINCT purpose) AS distinct_purposes,
        COUNT(DISTINCT channel) AS distinct_channels
-FROM dpdp_poc.compliance.consent_events_log;
+FROM compliance_pack.compliance.consent_events_log;
 -- event_count >= 1000
 -- distinct_principals >= 300 (from spec §6)
 -- distinct_purposes = 6
@@ -99,7 +99,7 @@ The test for this is in `tests/integration_tests.md` under "Test INT-02-withdraw
 
 **What it is**: A complete data subject rights request fulfilled against a specific synthetic principal, producing a three-part response bundle: data export, erasure certificate, and retention schedule.
 
-**Where it lives**: `dpdp_poc_demo/dsr_bundles/<request_id>/` in DBFS, containing:
+**Where it lives**: `compliance_pack_demo/dsr_bundles/<request_id>/` in DBFS, containing:
 
 - `data_export.json` — all records associated with the principal, pretty-printed
 - `erasure_certificate.pdf` — a signed certificate listing what was erased
@@ -143,8 +143,8 @@ Every item in this list has been deliberately excluded, with a specific reason. 
 
 The POC is complete when every one of these statements is true:
 
-1. `dpdp_poc.compliance.personal_data_register` returns the expected non-empty, schema-complete result set (Artifact 1 verification query)
-2. `dpdp_poc.compliance.consent_events_log` contains at least 1000 events with all required columns populated (Artifact 2 volume check)
+1. `compliance_pack.compliance.personal_data_register` returns the expected non-empty, schema-complete result set (Artifact 1 verification query)
+2. `compliance_pack.compliance.consent_events_log` contains at least 1000 events with all required columns populated (Artifact 2 volume check)
 3. The withdrawal propagation integration test passes within the 5-minute SLA (Artifact 2 latency check)
 4. The synthetic DSR integration test passes, producing a bundle that matches the spec in `synthetic_data/dsr_principal_spec.md` (Artifact 3 completeness)
 5. The Day 7 checkpoint script completes without errors
