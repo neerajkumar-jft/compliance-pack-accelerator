@@ -1,0 +1,44 @@
+# UK GDPR — Languages covered by this pack's notice generator.
+#
+# UK does not have a constitutional list of official languages comparable to
+# the Indian Constitution's 8th Schedule. English is de facto the lingua
+# franca; Welsh has co-equal status in Wales (Welsh Language Act 1993,
+# Welsh Language Measure 2011); Scottish Gaelic is officially recognised in
+# Scotland but lower-impact. Public-sector controllers in Wales must offer
+# Welsh-language notices; private-sector practice varies.
+#
+# Phase 0 baseline: en-GB only is hand-authored. cy-GB is machine-translated
+# with human-review-required = true so a Welsh-language deployment can
+# upgrade to a hand-authored notice without a code change.
+#
+# Fields:
+#   code                    — IETF BCP 47 (en-GB, cy-GB, gd-GB)
+#   script                  — Unicode script name
+#   speakers_l1_millions    — approximate L1 speaker population in UK
+#   model_support_tier      — strong / good / fair / unsupported
+#   human_review_required   — true for low-resource / regulated languages
+
+languages:
+  - code: en-GB
+    script: Latin
+    speakers_l1_millions: 56.1
+    model_support_tier: strong
+    human_review_required: false
+    seeded_by_poc: true                 # Hand-authored notice ships in the pack
+    notes: "Default language for UK-GDPR notices."
+
+  - code: cy-GB
+    script: Latin
+    speakers_l1_millions: 0.56          # Welsh L1 + L2 ~700k
+    model_support_tier: good
+    human_review_required: true
+    seeded_by_poc: false                # Machine-translated; flag for human review
+    notes: "Required for Welsh public-sector controllers; recommended for any controller serving Welsh speakers."
+
+  - code: gd-GB
+    script: Latin
+    speakers_l1_millions: 0.057         # Scottish Gaelic ~57k
+    model_support_tier: fair
+    human_review_required: true
+    seeded_by_poc: false
+    notes: "Optional for Scotland-facing services; covered by Gaelic Language (Scotland) Act 2005."

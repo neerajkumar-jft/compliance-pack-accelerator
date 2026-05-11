@@ -1,0 +1,86 @@
+# UK GDPR — Cross-border data transfer controls.
+#
+# UK GDPR Chapter V mirrors EU GDPR's Chapter V structure: transfers to
+# "third countries" outside the UK require an adequacy decision, an
+# appropriate safeguard (IDTA, BCRs, the UK Addendum to EU SCCs), or a
+# specific Art. 49 derogation.
+#
+# This file lists the countries the platform considers "safe" for direct
+# transfer. The residency-filter UDF (M3 work) reads this and restricts
+# non-admin reads of UK principals' data to rows whose `country` is in the
+# allowed list. Rows in restricted countries surface as a high-severity
+# compliance gap (UK-RES-001).
+
+# Countries with current UK adequacy decisions or analogous safe-transfer
+# status. Source: ICO international transfer adequacy regulations as of
+# 2026-Q2. Refresh annually — adequacy can be revoked.
+allowed_countries:
+  - United Kingdom
+  # EEA — UK has retained adequacy for the EU/EEA post-Brexit
+  - Austria
+  - Belgium
+  - Bulgaria
+  - Croatia
+  - Cyprus
+  - Czech Republic
+  - Denmark
+  - Estonia
+  - Finland
+  - France
+  - Germany
+  - Greece
+  - Hungary
+  - Iceland
+  - Ireland
+  - Italy
+  - Latvia
+  - Liechtenstein
+  - Lithuania
+  - Luxembourg
+  - Malta
+  - Netherlands
+  - Norway
+  - Poland
+  - Portugal
+  - Romania
+  - Slovakia
+  - Slovenia
+  - Spain
+  - Sweden
+  # Other UK adequacy decisions (Schedule to UK Adequacy Regulations 2021)
+  - Andorra
+  - Argentina
+  - Canada                              # PIPEDA — commercial only
+  - Faroe Islands
+  - Guernsey
+  - Isle of Man
+  - Israel
+  - Japan
+  - Jersey
+  - New Zealand
+  - South Korea
+  - Switzerland
+  - Uruguay
+  # United States — UK Extension to the EU-US Data Privacy Framework (2023)
+  - United States                       # via UK Extension to DPF only
+
+# Sectoral restrictions — placeholder for category-aware filtering (e.g.,
+# special-category Art. 9 data may have stricter destination rules).
+restricted_countries_by_sector: []
+
+# Countries explicitly blocked. UK GDPR doesn't maintain a formal blocklist;
+# this is for customer-defined risk policy (e.g., sanctions lists).
+blocked_countries: []
+
+# Apply this residency filter to these (table, column) pairs at silver-read
+# time. The row filter UDF blocks reads of rows whose `country` is not in
+# allowed_countries unless the reader is in the admins group.
+apply_filter_to:
+  - table: customers_tagged
+    column: country
+  - table: users_tagged
+    column: country
+  - table: patients_tagged
+    column: country
+  - table: employees_tagged
+    column: country

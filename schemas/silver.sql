@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.customers_tagged (
     billing_address         STRING,
     city                    STRING,
     state                   STRING,
+    country                 STRING,        -- ADR-0001 M2 source for jurisdiction derivation
     postal_code             STRING,
     loyalty_tier            STRING,
     loyalty_points          INT,
@@ -89,6 +90,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.patients_tagged (
     date_of_birth           DATE,
     gender                  STRING,
     aadhaar_number          STRING,
+    nhs_number              STRING,        -- UK GDPR special-category PII (Art. 9)
     phone                   STRING,
     email                   STRING,
     emergency_contact_name  STRING,
@@ -100,11 +102,12 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.patients_tagged (
     insurance_id            STRING,
     allergies               STRING,
     attending_physician     STRING,
+    country                 STRING,        -- ADR-0001 M2 source for jurisdiction derivation
     last_visit_date         DATE,
     next_appointment        DATE,
     ward                    STRING,
     notes                   STRING,
-    jurisdiction            STRING,        -- ADR-0001 routing key (M1: hardcoded 'IN')
+    jurisdiction            STRING,        -- ADR-0001 routing key (derived from country in M2)
     _source_file            STRING      NOT NULL,
     _ingested_at            TIMESTAMP   NOT NULL,
     _source_hash            STRING      NOT NULL
@@ -163,7 +166,8 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.users_tagged (
     marketing_opt_in        BOOLEAN,
     terms_accepted_version  STRING,
     referral_source         STRING,
-    jurisdiction            STRING,        -- ADR-0001 routing key (M1: hardcoded 'IN')
+    country                 STRING,        -- ADR-0001 M2 source for jurisdiction derivation
+    jurisdiction            STRING,        -- ADR-0001 routing key (derived from country in M2)
     _source_file            STRING      NOT NULL,
     _ingested_at            TIMESTAMP   NOT NULL,
     _source_hash            STRING      NOT NULL

@@ -70,12 +70,11 @@ def jurisdiction_from(country_col: str):
     )
 
 
-# M1 fallback for tables where the source row carries no country signal.
-# customers_tagged, users_tagged, patients_tagged are populated by synthetic
-# generators that produce 100% Indian principals today; the literal 'IN'
-# below preserves backward compatibility with existing tests until M2
-# expands the generators to a 70/25/5 IN/GB/unmapped split.
-JURISDICTION_HARDCODED_IN = F.lit("IN")
+# M1 had a JURISDICTION_HARDCODED_IN fallback for tables whose source rows
+# carried no country signal. M2 retired it — the 70/25/5 IN/GB/unmapped
+# synthetic mix means every customer-level table now writes a `country`
+# column, and all four silver materialisers call jurisdiction_from('country')
+# uniformly. Left as a comment in case a future pack needs a similar fallback.
 
 # ---------------------------------------------------------------------------
 # Helper: Auto Loader stream for a single source table
@@ -197,7 +196,7 @@ def customers_tagged():
             .withColumn("loyalty_points",     F.col("loyalty_points").cast("int"))
             .withColumn("registration_date",  F.to_timestamp("registration_date"))
             .withColumn("last_activity_date", F.to_timestamp("last_activity_date"))
-            .withColumn("jurisdiction",       JURISDICTION_HARDCODED_IN)  # ADR-0001 (M1)
+            .withColumn("jurisdiction",       jurisdiction_from("country"))  # ADR-0001 M2
             .drop("_rescued_data")
     )
 
@@ -216,7 +215,7 @@ def patients_tagged():
             .withColumn("date_of_birth",    F.to_date("date_of_birth"))
             .withColumn("last_visit_date",  F.to_date("last_visit_date"))
             .withColumn("next_appointment", F.to_date("next_appointment"))
-            .withColumn("jurisdiction",     JURISDICTION_HARDCODED_IN)  # ADR-0001 (M1)
+            .withColumn("jurisdiction",     jurisdiction_from("country"))  # ADR-0001 M2
             .drop("_rescued_data")
     )
 
@@ -253,7 +252,7 @@ def users_tagged():
             .withColumn("mfa_enabled",   F.col("mfa_enabled").cast("boolean"))
             .withColumn("created_at",    F.to_timestamp("created_at"))
             .withColumn("last_login",    F.to_timestamp("last_login"))
-            .withColumn("jurisdiction",  JURISDICTION_HARDCODED_IN)  # ADR-0001 (M1)
+            .withColumn("jurisdiction",  jurisdiction_from("country"))  # ADR-0001 M2
             .drop("_rescued_data")
     )
 

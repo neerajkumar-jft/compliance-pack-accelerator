@@ -245,6 +245,11 @@ def _restore_grants_on(table_fq: str, saved: list) -> None:
 # COMMAND ----------
 
 # bronze.compliance_rules + silver.compliance_gaps
+#
+# Both tables gain a `regulation_pack` column in M2 (ADR-0001) so rule rows
+# and gap rows are tagged with their source pack — required so the dashboard
+# can slice by pack and so an Indian principal's gap (DPDP rule) is
+# distinguishable from a UK principal's gap (UK GDPR rule) on the same column.
 spark.sql(f"""
 CREATE TABLE IF NOT EXISTS {CATALOG}.bronze.compliance_rules (
     rule_id               STRING  NOT NULL,
@@ -254,28 +259,47 @@ CREATE TABLE IF NOT EXISTS {CATALOG}.bronze.compliance_rules (
     applicable_categories ARRAY<STRING> NOT NULL,
     description           STRING  NOT NULL,
     remediation           STRING  NOT NULL,
-    is_active             BOOLEAN NOT NULL
+    is_active             BOOLEAN NOT NULL,
+    regulation_pack       STRING                 -- ADR-0001 M2: source pack code
 ) USING DELTA
-  COMMENT 'DPDP compliance gap detection rules'
+  COMMENT 'Multi-pack compliance gap detection rules (DPDP, UK GDPR, ...)'
 """)
+
+# Backfill regulation_pack on pre-M2 tables (CREATE TABLE IF NOT EXISTS is a
+# no-op when the table already exists; the ALTER below adds the column on
+# existing deployments without losing data).
+spark.sql(f"""
+ALTER TABLE {CATALOG}.bronze.compliance_rules
+ADD COLUMNS (regulation_pack STRING)
+""") if "regulation_pack" not in [
+    f.name for f in spark.table(f"{CATALOG}.bronze.compliance_rules").schema
+] else None
 
 spark.sql(f"""
 CREATE TABLE IF NOT EXISTS {CATALOG}.silver.compliance_gaps (
-    gap_id       STRING    NOT NULL,
-    scan_job_id  STRING    NOT NULL,
-    table_name   STRING    NOT NULL,
-    column_name  STRING    NOT NULL,
-    pii_type     STRING    NOT NULL,
-    pii_category STRING    NOT NULL,
-    rule_id      STRING    NOT NULL,
-    rule_type    STRING    NOT NULL,
-    severity     STRING    NOT NULL,
-    regulation   STRING    NOT NULL,
-    description  STRING    NOT NULL,
-    remediation  STRING    NOT NULL,
-    detected_at  TIMESTAMP NOT NULL
+    gap_id          STRING    NOT NULL,
+    scan_job_id     STRING    NOT NULL,
+    table_name      STRING    NOT NULL,
+    column_name     STRING    NOT NULL,
+    pii_type        STRING    NOT NULL,
+    pii_category    STRING    NOT NULL,
+    rule_id         STRING    NOT NULL,
+    rule_type       STRING    NOT NULL,
+    severity        STRING    NOT NULL,
+    regulation      STRING    NOT NULL,
+    description     STRING    NOT NULL,
+    remediation     STRING    NOT NULL,
+    detected_at     TIMESTAMP NOT NULL,
+    regulation_pack STRING                          -- ADR-0001 M2: source pack code
 ) USING DELTA
 """)
+
+spark.sql(f"""
+ALTER TABLE {CATALOG}.silver.compliance_gaps
+ADD COLUMNS (regulation_pack STRING)
+""") if "regulation_pack" not in [
+    f.name for f in spark.table(f"{CATALOG}.silver.compliance_gaps").schema
+] else None
 
 # compliance.notice_versions + consent_events_log + dsr_requests
 spark.sql(f"""
@@ -555,11 +579,20 @@ _repo_root = _locate_repo_root()
 if _repo_root not in _sys.path:
     _sys.path.insert(0, _repo_root)
 
-from governance_core.pack_loader import active_pack  # noqa: E402
-_pack = active_pack()
-print(f"Regulation pack: {_pack.name} ({_pack.code})")
-RULES = _pack.rules()
-print(f"  → {len(RULES)} rules loaded from regulations/{_pack.code}/rules.yaml")
+# ADR-0001 M2: load every pack under regulations/ and emit their rules into
+# bronze.compliance_rules tagged with the source pack code. Gaps in §4 then
+# join through the principal's jurisdiction to apply only the rules of the
+# pack governing that principal.
+from governance_core.pack_loader import loaded_packs  # noqa: E402
+_packs = loaded_packs()
+print(f"Loaded {len(_packs)} regulation pack(s): {[p.code for p in _packs]}")
+
+ALL_RULES: list[tuple[dict, str]] = []
+for _p in _packs:
+    rules_in_pack = _p.rules()
+    print(f"  → {len(rules_in_pack)} rules from regulations/{_p.code}/rules.yaml")
+    ALL_RULES.extend((r, _p.code) for r in rules_in_pack)
+print(f"  total: {len(ALL_RULES)} rule rows across all packs")
 
 from pyspark.sql import Row
 # Use the target table's schema explicitly. On serverless Spark/Connect,
@@ -577,19 +610,23 @@ rules_df = spark.createDataFrame([
         description=r["description"],
         remediation=r["remediation"],
         is_active=True,
+        regulation_pack=pack_code,
     )
-    for r in RULES
+    for r, pack_code in ALL_RULES
 ], schema=_rules_schema)
 
-# MERGE for idempotency
+# MERGE for idempotency — rule_id is unique within a pack but two packs
+# could theoretically reuse the same rule_id (DPDP doesn't with UK GDPR, but
+# defensive); merge on the (rule_id, regulation_pack) composite.
 rules_df.createOrReplaceTempView("_rules_src")
 spark.sql(f"""
 MERGE INTO {CATALOG}.bronze.compliance_rules t
-USING _rules_src s ON t.rule_id = s.rule_id
+USING _rules_src s
+  ON t.rule_id = s.rule_id AND t.regulation_pack = s.regulation_pack
 WHEN MATCHED THEN UPDATE SET *
 WHEN NOT MATCHED THEN INSERT *
 """)
-print(f"✓ {spark.table(f'{CATALOG}.bronze.compliance_rules').count()} compliance rules loaded")
+print(f"✓ {spark.table(f'{CATALOG}.bronze.compliance_rules').count()} compliance rules loaded (multi-pack)")
 
 # COMMAND ----------
 
@@ -606,6 +643,13 @@ from datetime import datetime
 
 scan_job_id = f"gap_scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
+# ADR-0001 M2: gaps are now multi-pack. Each (finding × rule) pair where the
+# rule's applicable_categories includes the finding's pii_category produces
+# one gap row, tagged with the rule's source pack (regulation_pack column).
+# Downstream queries filter by regulation_pack to slice per regulation; the
+# dashboard's jurisdiction filter composes with this through the
+# customers/users/patients .jurisdiction columns (a UK-GDPR gap is only
+# actionable against GB principals, etc.).
 spark.sql(f"""
 CREATE OR REPLACE TEMP VIEW _gap_candidates AS
 SELECT
@@ -621,7 +665,8 @@ SELECT
     r.regulations[0] AS regulation,
     r.description,
     r.remediation,
-    current_timestamp() AS detected_at
+    current_timestamp() AS detected_at,
+    r.regulation_pack
 FROM {CATALOG}.silver.pii_findings f
 CROSS JOIN {CATALOG}.bronze.compliance_rules r
 WHERE r.is_active = true

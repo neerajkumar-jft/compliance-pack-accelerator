@@ -105,6 +105,128 @@ USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_3) AppleWebKit/605.1.15 Safari/17.2",
 ]
 
+# ---------------------------------------------------------------------------
+# Multi-jurisdiction mix (ADR-0001 M2)
+# ---------------------------------------------------------------------------
+# Customer-level rows are seeded across jurisdictions in this ratio so the
+# rule engine has principals for each loaded pack to route to. The mix is
+# deterministic given the seed (pick_jurisdiction consumes one rng draw per
+# row). Adjusting the mix changes the per-jurisdiction PII / consent /
+# compliance-gap counts but not their relative ratios.
+#
+#   70% IN  → governed by regulations/dpdp_2023/ (730d retention, ₹250cr cap)
+#   25% GB  → governed by regulations/uk_gdpr/  (90d retention, £17.5M cap)
+#    5% NULL → "country uncaptured" — surfaces as high-severity gap UK-LAW-001
+#             until backfilled (ADR-0001 §"Schema migration").
+JURISDICTION_MIX: list[tuple[str | None, float]] = [
+    ("IN", 0.70),
+    ("GB", 0.25),
+    (None, 0.05),                       # unmapped — country left blank
+]
+
+# UK cities + counties — used when jurisdiction is 'GB'.
+UK_REGIONS = [
+    "Greater London", "Greater Manchester", "West Midlands", "West Yorkshire",
+    "Merseyside", "South Yorkshire", "Tyne and Wear", "Strathclyde",
+    "Edinburgh", "Glasgow City", "Cardiff", "Belfast",
+]
+UK_CITIES = [
+    "London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Sheffield",
+    "Bristol", "Newcastle", "Nottingham", "Edinburgh", "Glasgow", "Cardiff",
+    "Belfast", "Reading", "Brighton", "Oxford", "Cambridge", "Southampton",
+]
+
+
+def pick_jurisdiction(rng: random.Random) -> str | None:
+    """Return 'IN' / 'GB' / None according to JURISDICTION_MIX. One rng draw."""
+    r = rng.random()
+    cumulative = 0.0
+    for code, weight in JURISDICTION_MIX:
+        cumulative += weight
+        if r < cumulative:
+            return code
+    return JURISDICTION_MIX[-1][0]  # safety, never hits
+
+
+def country_for(jur: str | None) -> str:
+    """Country string written into the row's `country` column."""
+    if jur == "IN":
+        return "India"
+    if jur == "GB":
+        return "United Kingdom"
+    return ""                            # unmapped → empty string
+
+
+# ---------------------------------------------------------------------------
+# UK-specific PII generators
+# ---------------------------------------------------------------------------
+def fake_uk_mobile(rng: random.Random, with_prefix: bool = True) -> str:
+    """UK mobile (E.164: +44 7xxx xxxxxx; leading 7 after country code)."""
+    rest = "".join(rng.choices("0123456789", k=9))
+    if with_prefix:
+        return f"+44-7{rest}"
+    return f"07{rest}"
+
+
+def fake_uk_postcode(rng: random.Random) -> str:
+    """UK postcode in canonical A9 9AA / AA9 9AA form."""
+    area = rng.choice([
+        "SW1A", "EC1A", "W1A", "WC1H", "NW1", "SE1", "E14", "N1", "M1",
+        "B1", "L1", "G1", "EH1", "CF10", "BT1", "OX1", "CB2", "BS1",
+    ])
+    sector = rng.randint(0, 9)
+    unit = "".join(rng.choices("ABDEFGHJLNPQRSTUWXYZ", k=2))
+    return f"{area} {sector}{unit}"
+
+
+def fake_nhs_number(rng: random.Random) -> str:
+    """NHS Number — 10 digits, last is a Mod-11 check digit.
+
+    NHS check-digit algorithm:
+      1. multiply each of the first 9 digits by (10, 9, 8, ..., 2)
+      2. sum the products, divide by 11, remainder = R
+      3. check digit = 11 - R (or 0 if R == 0; INVALID if R == 10)
+
+    Re-rolls invalid candidates so output always validates.
+    """
+    while True:
+        digits = [rng.randint(0, 9) for _ in range(9)]
+        weighted = sum(d * w for d, w in zip(digits, range(10, 1, -1)))
+        rem = weighted % 11
+        check = 11 - rem
+        if check == 11:
+            check = 0
+        if check == 10:
+            continue                     # invalid; re-roll
+        digits.append(check)
+        s = "".join(str(d) for d in digits)
+        return f"{s[:3]} {s[3:6]} {s[6:]}"
+
+
+def fake_nino(rng: random.Random) -> str:
+    """UK National Insurance Number: 2 letters + 6 digits + suffix A-D."""
+    # Valid first letters: A-Z except D, F, I, Q, U, V
+    valid_first = "ABCEGHJKLMNOPRSTWXYZ"
+    valid_second = "ABCEGHJLMNPRSTWXYZ"   # excludes D, F, I, O, Q, U, V
+    prefix = rng.choice(valid_first) + rng.choice(valid_second)
+    digits = "".join(rng.choices("0123456789", k=6))
+    suffix = rng.choice("ABCD")
+    return f"{prefix} {digits[:2]} {digits[2:4]} {digits[4:]} {suffix}"
+
+
+def fake_utr(rng: random.Random) -> str:
+    """HMRC Unique Taxpayer Reference: 10 digits, no checksum."""
+    return "".join(rng.choices("0123456789", k=10))
+
+
+def fake_uk_address(rng: random.Random, fake: Faker) -> str:
+    """UK-shaped address string."""
+    return (
+        f"{rng.randint(1, 199)} {fake.last_name()} "
+        f"{rng.choice(['Road','Street','Lane','Avenue','Close','Place'])}, "
+        f"{rng.choice(UK_CITIES)}"
+    )
+
 
 # ---------------------------------------------------------------------------
 # PII generators
@@ -199,33 +321,44 @@ def generate_employees(rng: random.Random, fake: Faker, count: int) -> list[dict
     rows = []
     for i in range(count):
         emp_id = f"EMP{i+1:06d}"
-        state = rng.choice(INDIAN_STATES)
-        cities = INDIAN_CITIES.get(state, [fake.city()])
-        city = rng.choice(cities)
-        is_foreign = rng.random() < 0.03  # 3% foreign staff
+        # ADR-0001 M2: jurisdiction mix drives country + region + PII shape.
+        jur = pick_jurisdiction(rng)
+        if jur == "GB":
+            region = rng.choice(UK_REGIONS)
+            city = rng.choice(UK_CITIES)
+            phone = fake_uk_mobile(rng)
+            address = fake_uk_address(rng, fake)
+            postal = fake_uk_postcode(rng)
+        else:
+            # IN and unmapped both use Indian-shape data — unmapped is "country
+            # uncaptured" not "non-Indian".
+            region = rng.choice(INDIAN_STATES)
+            cities = INDIAN_CITIES.get(region, [fake.city()])
+            city = rng.choice(cities)
+            phone = fake_indian_mobile(rng)
+            address = fake_address(rng, fake)
+            postal = fake_postal_code(rng)
 
         row = {
             "employee_id": emp_id,
             "first_name": fake.first_name(),
             "last_name": fake.last_name(),
             "email": f"{fake.user_name()}@company.com",
-            "phone_number": (
-                f"+1-555-{rng.randint(100,999)}-{rng.randint(1000,9999)}"
-                if is_foreign
-                else fake_indian_mobile(rng)
-            ),
+            "phone_number": phone,
             "date_of_birth": fake_dob(rng, 22, 60).isoformat(),
-            "aadhaar_number": "" if is_foreign else fake_aadhaar(rng),
-            "pan_number": "" if is_foreign else fake_pan(rng),
+            # India-only PII fields are blank on GB rows; the per-data-subject
+            # classifier under UK GDPR doesn't expect aadhaar/pan/ifsc.
+            "aadhaar_number": "" if jur == "GB" else fake_aadhaar(rng),
+            "pan_number": "" if jur == "GB" else fake_pan(rng),
             "passport_number": fake_passport(rng),
-            "address": fake_address(rng, fake),
-            "city": "San Francisco" if is_foreign else city,
-            "state": "California" if is_foreign else state,
-            "country": "USA" if is_foreign else "India",
-            "postal_code": "94102" if is_foreign else fake_postal_code(rng),
+            "address": address,
+            "city": city,
+            "state": region,
+            "country": country_for(jur),
+            "postal_code": postal,
             "salary": round(rng.uniform(300000, 5000000), 2),
             "bank_account": fake_bank_account(rng),
-            "ifsc_code": "" if is_foreign else fake_ifsc(rng),
+            "ifsc_code": "" if jur == "GB" else fake_ifsc(rng),
             "department": rng.choice(DEPARTMENTS),
             "designation": rng.choice(DESIGNATIONS),
             "hire_date": fake_date_range(
@@ -243,30 +376,54 @@ def generate_customers(rng: random.Random, fake: Faker, count: int) -> list[dict
     rows = []
     for i in range(count):
         cust_id = f"customer_{i:05d}"
-        state = rng.choice(INDIAN_STATES)
-        cities = INDIAN_CITIES.get(state, [fake.city()])
-        city = rng.choice(cities)
+        # DSR test principal (customer_04217) must stay Indian — many tests
+        # assert DPDP-specific behaviour against this row.
+        if i == DSR_PRINCIPAL_INDEX:
+            jur = "IN"
+        else:
+            jur = pick_jurisdiction(rng)
+
+        if jur == "GB":
+            region = rng.choice(UK_REGIONS)
+            city = rng.choice(UK_CITIES)
+            mobile = fake_uk_mobile(rng, with_prefix=rng.random() < 0.6)
+            address = fake_uk_address(rng, fake)
+            postal = fake_uk_postcode(rng)
+            pref_lang = "en"
+        else:
+            region = rng.choice(INDIAN_STATES)
+            cities = INDIAN_CITIES.get(region, [fake.city()])
+            city = rng.choice(cities)
+            mobile = fake_indian_mobile(rng, with_prefix=rng.random() < 0.6)
+            address = fake_address(rng, fake)
+            postal = fake_postal_code(rng)
+            pref_lang = rng.choice(
+                ["en", "hi", "ta", "te", "kn", "ml", "mr", "bn", "gu"]
+            )
+
         reg_date = fake_date_range(rng, date(2020, 1, 1), date(2026, 3, 1))
 
         row = {
             "customer_id": cust_id,
             "full_name": f"{fake.first_name()} {fake.last_name()}",
             "email_address": fake.email(),
-            "mobile": fake_indian_mobile(rng, with_prefix=rng.random() < 0.6),
+            "mobile": mobile,
             "date_of_birth": fake_dob(rng, 18, 75).isoformat(),
-            "aadhaar_number": fake_aadhaar(rng),
-            "pan_number": fake_pan(rng),
+            # Aadhaar/PAN are India-only IDs; GB rows leave them blank so the
+            # DPDP classifier doesn't surface false-positive matches on UK
+            # principals.
+            "aadhaar_number": "" if jur == "GB" else fake_aadhaar(rng),
+            "pan_number": "" if jur == "GB" else fake_pan(rng),
             "credit_card_number": fake.credit_card_number(),
             "cvv": f"{rng.randint(100,999)}",
-            "billing_address": fake_address(rng, fake),
+            "billing_address": address,
             "city": city,
-            "state": state,
-            "postal_code": fake_postal_code(rng),
+            "state": region,
+            "country": country_for(jur),       # ADR-0001 M2 routing key
+            "postal_code": postal,
             "loyalty_tier": rng.choice(LOYALTY_TIERS),
             "loyalty_points": rng.randint(0, 50000),
-            "preferred_language": rng.choice(
-                ["en", "hi", "ta", "te", "kn", "ml", "mr", "bn", "gu"]
-            ),
+            "preferred_language": pref_lang,
             "registration_date": reg_date.isoformat(),
             "last_activity_date": fake_date_range(
                 rng, reg_date, GENERATOR_DATE
@@ -300,17 +457,30 @@ def generate_patients(rng: random.Random, fake: Faker, count: int) -> list[dict]
             "Pantoprazole 40mg OD", "Ibuprofen 400mg BD", "Sumatriptan 50mg PRN",
         ]
 
+        jur = pick_jurisdiction(rng)
+        if jur == "GB":
+            phone = fake_uk_mobile(rng)
+            emergency_phone = fake_uk_mobile(rng)
+            aadhaar = ""
+            nhs = fake_nhs_number(rng)         # GB rows carry NHS Number
+        else:
+            phone = fake_indian_mobile(rng)
+            emergency_phone = fake_indian_mobile(rng)
+            aadhaar = fake_aadhaar(rng)
+            nhs = ""
+
         row = {
             "patient_id": patient_id,
             "medical_record_number": f"MRN-{rng.randint(100000,999999)}",
             "full_name": f"{fake.first_name()} {fake.last_name()}",
             "date_of_birth": dob.isoformat(),
             "gender": rng.choice(GENDERS),
-            "aadhaar_number": fake_aadhaar(rng),
-            "phone": fake_indian_mobile(rng),
+            "aadhaar_number": aadhaar,
+            "nhs_number": nhs,                # UK GDPR special-category PII
+            "phone": phone,
             "email": fake.email(),
             "emergency_contact_name": f"{fake.first_name()} {fake.last_name()}",
-            "emergency_contact_phone": fake_indian_mobile(rng),
+            "emergency_contact_phone": emergency_phone,
             "blood_group": rng.choice(BLOOD_GROUPS),
             "primary_diagnosis": rng.choice(diagnoses),
             "current_prescription": rng.choice(prescriptions),
@@ -320,6 +490,7 @@ def generate_patients(rng: random.Random, fake: Faker, count: int) -> list[dict]
                 ["None", "Penicillin", "Sulfa drugs", "Aspirin", "Ibuprofen", "Latex"]
             ),
             "attending_physician": f"Dr. {fake.last_name()}",
+            "country": country_for(jur),       # ADR-0001 M2 routing key
             "last_visit_date": last_visit.isoformat(),
             "next_appointment": (
                 last_visit + timedelta(days=rng.randint(7, 180))
@@ -442,13 +613,25 @@ def generate_users(
         created = fake_date_range(rng, date(2021, 1, 1), date(2026, 3, 1))
         last_login = fake_date_range(rng, created, GENERATOR_DATE)
 
+        # User jurisdiction: when the user overlaps with an existing customer,
+        # inherit the customer's country to keep the linked-principal join
+        # honest. For non-overlap users, draw from the mix independently.
+        if is_overlap:
+            jur = derive_user_jurisdiction_from_country(cust.get("country", ""))
+        else:
+            jur = pick_jurisdiction(rng)
+        phone = fake_uk_mobile(rng) if jur == "GB" else fake_indian_mobile(rng)
+        pref_lang = "en" if jur == "GB" else rng.choice(
+            ["en", "hi", "ta", "te", "kn", "ml"]
+        )
+
         row = {
             "user_id": user_id,
             "username": fake.user_name(),
             "email": email,
             "first_name": first_name,
             "last_name": last_name,
-            "phone": fake_indian_mobile(rng),
+            "phone": phone,
             "date_of_birth": fake_dob(rng, 18, 70).isoformat(),
             "ip_address": fake_ip(rng, fake),
             "device_id": f"DEV-{uuid.UUID(int=rng.getrandbits(128)).hex[:12]}",
@@ -456,15 +639,29 @@ def generate_users(
             "mfa_enabled": rng.choice(["true", "false"]),
             "last_login": f"{last_login.isoformat()}T{rng.randint(0,23):02d}:{rng.randint(0,59):02d}:{rng.randint(0,59):02d}",
             "created_at": f"{created.isoformat()}T{rng.randint(0,23):02d}:{rng.randint(0,59):02d}:{rng.randint(0,59):02d}",
-            "preferred_language": rng.choice(["en", "hi", "ta", "te", "kn", "ml"]),
+            "preferred_language": pref_lang,
             "marketing_opt_in": rng.choice(["true", "false"]),
             "terms_accepted_version": f"v{rng.choice([1,2,3])}.{rng.randint(0,5)}",
             "referral_source": rng.choice([
                 "organic", "google_ads", "social_media", "referral", "direct",
             ]),
+            "country": country_for(jur),      # ADR-0001 M2 routing key
         }
         rows.append(row)
     return rows
+
+
+def derive_user_jurisdiction_from_country(country: str) -> str | None:
+    """Inverse of country_for() — used when a user inherits its parent
+    customer's country and we need the jurisdiction code to render PII shape.
+    Kept narrow on purpose; the canonical mapping lives in
+    governance_core.pack_loader.derive_jurisdiction.
+    """
+    if country == "India":
+        return "IN"
+    if country == "United Kingdom":
+        return "GB"
+    return None
 
 
 def generate_consent_events(

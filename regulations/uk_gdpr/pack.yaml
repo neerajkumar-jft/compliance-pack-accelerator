@@ -1,0 +1,82 @@
+# Pack metadata — UK GDPR (post-Brexit, 1 January 2021)
+#
+# The "UK GDPR" is the EU GDPR as retained in UK law via the European Union
+# (Withdrawal) Act 2018, sitting alongside the Data Protection Act 2018 (DPA).
+# Most provisions track EU GDPR exactly; divergences appear in cookies (PECR),
+# international transfers (UK Adequacy Regulations), and the new ICO-set
+# International Data Transfer Agreement (IDTA) replacing EU SCCs.
+#
+# This pack covers the UK GDPR + DPA 2018 + PECR overlay for compliance-rule
+# purposes. The DPIA template (dpia_template.yaml) frames work under
+# Article 35 specifically.
+
+name: "UK General Data Protection Regulation (UK GDPR) + Data Protection Act 2018"
+code: uk_gdpr
+jurisdiction: GB                                      # ISO 3166-1 alpha-2
+effective_date: "2021-01-01"                          # End of EU-GDPR transition period
+supervising_authority: "Information Commissioner's Office (ICO)"
+primary_locale: en-GB
+
+# Penalty structure — two-tier per UK GDPR Art. 83.
+# Tier 1 (higher): infringements of Art. 5 (principles), 6 (lawful basis),
+#   7 (consent), 9 (special-category data), 12-22 (subject rights), 25-39
+#   (controller obligations), 44-49 (international transfers).
+# Tier 2 (standard): infringements of Art. 8 (children), 11 (no identifiable),
+#   25-39 controller record-keeping/security/notification, 41-43 (certification).
+penalty_structure: tiered_per_infringement
+max_penalty:
+  - amount: 17_500_000                                # £17.5 million
+    currency: GBP
+    trigger: "higher-tier infringement (or 4% of worldwide annual turnover, whichever is higher)"
+    turnover_percent: 4
+  - amount: 8_700_000                                 # £8.7 million
+    currency: GBP
+    trigger: "standard-tier infringement (or 2% of worldwide annual turnover, whichever is higher)"
+    turnover_percent: 2
+
+# Which platform features this pack activates. Each activation line corresponds
+# to a canonical element defined in governance_core/*.
+activates:
+  # Rights from governance_core.rights.RIGHT_CATALOGUE. UK GDPR Art. 15-22
+  # plus the right to lodge a complaint (Art. 77). The eight named here are
+  # what's exercisable by data subjects.
+  rights:
+    - access                # UK GDPR Art. 15
+    - rectification         # UK GDPR Art. 16
+    - erasure               # UK GDPR Art. 17 ("right to be forgotten")
+    - restriction           # UK GDPR Art. 18
+    - portability           # UK GDPR Art. 20
+    - objection             # UK GDPR Art. 21
+    - no_auto_decision      # UK GDPR Art. 22
+    - grievance             # Right to lodge complaint with ICO (Art. 77)
+
+  # Region-specific PII pattern pack. Universal patterns come from
+  # governance_core.pii_patterns.universal; UK-specific from
+  # regulations/uk_gdpr/pii_patterns.py (NHS Number, NINO, UK postcode, UTR).
+  pii_pattern_packs:
+    - uk
+
+  # DPO requirement — UK GDPR Art. 37 mandates a DPO for: public authorities,
+  # large-scale systematic monitoring, large-scale special-category processing.
+  # Most other controllers may appoint voluntarily; ICO recommends it.
+  requires_dpo: conditional
+
+  # Minor protection — Information Society Services consent threshold.
+  # Default in DPA 2018 §9 = 13 (lower than EU GDPR's 16, exercising
+  # member-state derogation while transitionally still in scope).
+  minor_age: 13
+
+  # Consent default — opt-in required for all consent-based processing.
+  # Where lawful basis is not consent (legitimate interest, contract, legal
+  # obligation, vital interest, public task), no consent capture needed but
+  # other Art. 6 conditions apply.
+  consent_default: opt_in
+
+  # International transfer mechanism currently authorised — kept here for
+  # future enforcement once the residency filter goes pack-aware.
+  transfer_mechanisms:
+    - adequacy_decision     # UK has issued adequacy regulations for EEA, etc.
+    - international_data_transfer_agreement   # IDTA (replaces SCCs in UK)
+    - uk_addendum_to_eu_sccs                  # UK Addendum bolted onto EU SCCs
+    - binding_corporate_rules                 # BCRs approved by ICO
+    - derogations_art_49                      # Limited specific situations
