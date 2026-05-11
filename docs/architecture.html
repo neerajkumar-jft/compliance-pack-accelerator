@@ -604,14 +604,19 @@
 
 <div class="footer" style="text-align:left; font-size: 12px; line-height: 1.5; color: #555; padding: 16px 20px; background: #fafafa; border-top: 1px solid #e0e0e0;">
   <p><strong>Note on numbers.</strong> Counts shown in the module cards and metric tiles
-  (36 PII findings across 10 silver objects, 37 column masks, 135 base compliance gaps from
-  the DPDP-only seed, 1,000 consent events, 292 principals, 9 DPDP rules) are
-  <strong>illustrative</strong> — they come from the synthetic POC dataset on a Databricks
-  Free Edition workspace (seed=42) and are reproducible via the SQL in
-  <a href="how_to_test.html">how_to_test.html</a>. With UK GDPR and additional packs loaded
-  the absolute counts grow (more PII patterns hit, more rules fire); the transferable signal
-  is the shape of the ratios (critical-to-total gap mix, auto-classify rate, consent-grant
-  rate per jurisdiction), not the specific numbers.</p>
+  reflect the live multi-jurisdiction workspace as of the ADR-0001 M4 cut-over
+  (2026-05-11): 36 PII findings across 10 silver objects · 37 column masks ·
+  <strong>21 multi-pack compliance rules</strong> (9 DPDP + 12 UK GDPR) ·
+  <strong>462 compliance gaps</strong> tagged by source pack (164 dpdp_2023 +
+  298 uk_gdpr) · 1,000 consent events · 292 principals · mixed jurisdiction in
+  customers_tagged (3,503 IN + 1,258 GB). These are <strong>illustrative</strong> —
+  they come from the synthetic POC dataset on a Databricks Free Edition workspace
+  (seed=42) and are reproducible via the SQL in
+  <a href="how_to_test.html">how_to_test.html</a>. Adding further packs grows the
+  rule and gap counts linearly with the pack's rule × applicable-finding cross-join;
+  the transferable signal is the shape of the ratios (per-jurisdiction gap mix,
+  critical-to-total gap mix, auto-classify rate, consent-grant rate per
+  jurisdiction), not the specific numbers.</p>
   <p style="margin-top: 10px; color: #777;">Compliance Pack Accelerator ·
   Databricks-Native Multi-Jurisdiction Architecture · May 2026 ·
   <a href="adr/0001-multi-jurisdiction-data-subject-routing.md">ADR-0001 governs this design</a></p>

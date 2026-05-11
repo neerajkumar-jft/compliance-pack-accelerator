@@ -535,7 +535,17 @@
       ]
     },
     {
-      "name": "1af5f294",
+      "name": "jur_dist",
+      "displayName": "jurisdiction_distinct_for_filter",
+      "queryLines": [
+        "SELECT jurisdiction, COUNT_IF(jurisdiction IS NOT NULL) AS jurisdiction_associativity\n",
+        "FROM dpdp_poc.silver.customers_tagged\n",
+        "GROUP BY jurisdiction\n",
+        "ORDER BY jurisdiction NULLS LAST\n"
+      ]
+    },
+    {
+      "name": "efa628be",
       "displayName": "cfo_penalty_exposure_total",
       "queryLines": [
         "SELECT ROUND(SUM(CASE severity WHEN 'critical' THEN 250 WHEN 'high' THEN 150 WHEN 'medium' THEN 50 ELSE 5 END) / 100, 1) AS exposure_hundreds_cr\n",
@@ -543,7 +553,7 @@
       ]
     },
     {
-      "name": "fb63b195",
+      "name": "0c885c1a",
       "displayName": "cfo_gaps_by_severity_with_penalty",
       "queryLines": [
         "SELECT severity, COUNT(*) AS gap_count, MAX(CASE severity WHEN 'critical' THEN 250 WHEN 'high' THEN 150 WHEN 'medium' THEN 50 ELSE 5 END) AS penalty_ceiling_cr\n",
@@ -562,6 +572,53 @@
       "name": "6942c052",
       "displayName": "Executive Overview",
       "layout": [
+        {
+          "widget": {
+            "name": "filter-jurisdiction",
+            "queries": [
+              {
+                "name": "dashboards/jurisdiction-filter/datasets/jur_dist_jurisdiction",
+                "query": {
+                  "datasetName": "jur_dist",
+                  "fields": [
+                    {
+                      "name": "jurisdiction",
+                      "expression": "`jurisdiction`"
+                    },
+                    {
+                      "name": "jurisdiction_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Filter by Jurisdiction (ADR-0001)",
+                "showTitle": true,
+                "description": "Slices every Executive Overview tile by the principal's regulation pack: IN \u2192 DPDP, GB \u2192 UK GDPR. Leaving the filter unset returns all jurisdictions."
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "jurisdiction",
+                    "queryName": "dashboards/jurisdiction-filter/datasets/jur_dist_jurisdiction"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        },
         {
           "widget": {
             "name": "dpdp-compliance-dashboard",
@@ -618,7 +675,7 @@
           },
           "position": {
             "x": 0,
-            "y": 0,
+            "y": 1,
             "width": 6,
             "height": 2
           }
@@ -703,7 +760,7 @@
           },
           "position": {
             "x": 0,
-            "y": 2,
+            "y": 3,
             "width": 3,
             "height": 2
           }
@@ -788,7 +845,7 @@
           },
           "position": {
             "x": 3,
-            "y": 2,
+            "y": 3,
             "width": 3,
             "height": 2
           }
@@ -833,7 +890,7 @@
           },
           "position": {
             "x": 0,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -895,7 +952,7 @@
           },
           "position": {
             "x": 1,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -940,7 +997,7 @@
           },
           "position": {
             "x": 2,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -1002,7 +1059,7 @@
           },
           "position": {
             "x": 3,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -1064,7 +1121,7 @@
           },
           "position": {
             "x": 4,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -1143,7 +1200,7 @@
           },
           "position": {
             "x": 5,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -1216,7 +1273,7 @@
           },
           "position": {
             "x": 0,
-            "y": 6,
+            "y": 7,
             "width": 3,
             "height": 6
           }
@@ -1292,7 +1349,7 @@
           },
           "position": {
             "x": 3,
-            "y": 6,
+            "y": 7,
             "width": 3,
             "height": 6
           }
@@ -1313,7 +1370,7 @@
           },
           "position": {
             "x": 0,
-            "y": 12,
+            "y": 13,
             "width": 6,
             "height": 1
           }
@@ -2227,7 +2284,7 @@
       "pageType": "PAGE_TYPE_CANVAS"
     },
     {
-      "name": "7c760956",
+      "name": "aa7b3635",
       "displayName": "Penalty Exposure",
       "layout": [
         {
@@ -2237,7 +2294,7 @@
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "1af5f294",
+                  "datasetName": "efa628be",
                   "fields": [
                     {
                       "name": "exposure_hundreds_cr",
@@ -2278,7 +2335,7 @@
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "fb63b195",
+                  "datasetName": "0c885c1a",
                   "fields": [
                     {
                       "name": "severity",

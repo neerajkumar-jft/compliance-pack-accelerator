@@ -23,7 +23,7 @@ is the binding architectural decision for the project.
 |---|---|---|
 | **PII Discovery & Data Inventory** | Live | 36 findings across 10 silver objects (8 tables + 2 federation views) · UC tags · 21.5K base rows |
 | **Consent Intelligence Engine** | Live | 1,000 events · 292 principals · 6 purposes · 4 channels |
-| **Compliance Audit & Gap Analysis** | Live | 9 DPDP rules · 135 gaps · 72 critical · 52 high |
+| **Compliance Audit & Gap Analysis** | Live | **21 multi-pack rules** (9 DPDP + 12 UK GDPR) · **462 gaps** (164 dpdp_2023 + 298 uk_gdpr) · per-row routing |
 | **Agent Bricks (AI Agents)** | Live | DPIA generator (30s, multi-regulator citations) · Compliance Q&A · PII classifier |
 | **AI/BI Dashboard** | Live | 10-page professional dashboard with Genie NL queries |
 | **Persona Governance Layer** | Live | 4 sliced dashboards + 4 scoped Genie spaces (CCO/GC/CMO/CFO) with UC-enforced boundaries |
@@ -76,7 +76,7 @@ dpdp/
 │   ├── bronze.sql                    ← 5 Auto Loader source tables + data_sources (SF + federation tables created by their seed scripts)
 │   ├── silver.sql                    ← 5 Auto Loader silver tables + pii_findings + discovered_tables (3 SF + 2 federation views layered on top)
 │   ├── register.sql                  ← personal_data_register view
-│   ├── compliance_rules.sql          ← 9 DPDP rules + compliance_gaps table
+│   ├── compliance_rules.sql          ← 21 multi-pack rules (DPDP + UK GDPR) + compliance_gaps table
 │   ├── consent_events_delta.sql      ← consent log + Gold views
 │   ├── notice_versions.sql           ← consent notice templates
 │   └── pii_patterns.py               ← composition shim (governance_core + active pack)
@@ -313,7 +313,7 @@ python3 scripts/setup_all_personas.py
 
 The `phase1_bootstrap` job runs `pipelines/phase1_bootstrap.py` and produces:
 
-- `bronze.compliance_rules` — 9 DPDP rules
+- `bronze.compliance_rules` — 21 multi-pack rules (9 DPDP + 12 UK GDPR), tagged with regulation_pack
 - `bronze.data_sources` — ingestion-source registry seeded with 10 canonical rows (5 Auto Loader + 3 Salesforce + 2 federation); the classifier reads `silver_table_name` from here, so adding a new ingestion path is a single row in `scripts/seed_data_sources.py:DATA_SOURCES_SEED` (the seed step runs in `deploy_all.sh` between the federation seeder and the medallion refresh; phase1_bootstrap also has an idempotent copy of the MERGE for partial-deploy resilience)
 - `silver.compliance_gaps` — ~135 rules × findings
 - `compliance.consent_events_log` — 1,000 deterministic events (seed=42)

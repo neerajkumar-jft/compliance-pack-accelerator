@@ -535,14 +535,24 @@
       ]
     },
     {
-      "name": "a2a988f4",
+      "name": "jur_dist",
+      "displayName": "jurisdiction_distinct_for_filter",
+      "queryLines": [
+        "SELECT jurisdiction, COUNT_IF(jurisdiction IS NOT NULL) AS jurisdiction_associativity\n",
+        "FROM dpdp_poc.silver.customers_tagged\n",
+        "GROUP BY jurisdiction\n",
+        "ORDER BY jurisdiction NULLS LAST\n"
+      ]
+    },
+    {
+      "name": "10061a7f",
       "displayName": "cmo_marketing_eligible_count",
       "queryLines": [
         "SELECT COUNT(*) AS eligible_principals FROM dpdp_poc.gold.marketing_eligible_principals;"
       ]
     },
     {
-      "name": "32dd29fb",
+      "name": "c6e0e15b",
       "displayName": "cmo_consent_by_purpose",
       "queryLines": [
         "WITH latest AS (\n",
@@ -558,7 +568,7 @@
       ]
     },
     {
-      "name": "88e8fd2f",
+      "name": "6afed1da",
       "displayName": "cmo_withdrawal_trend",
       "queryLines": [
         "SELECT DATE_TRUNC('day', event_time) AS day,\n",
@@ -579,6 +589,53 @@
       "name": "6942c052",
       "displayName": "Executive Overview",
       "layout": [
+        {
+          "widget": {
+            "name": "filter-jurisdiction",
+            "queries": [
+              {
+                "name": "dashboards/jurisdiction-filter/datasets/jur_dist_jurisdiction",
+                "query": {
+                  "datasetName": "jur_dist",
+                  "fields": [
+                    {
+                      "name": "jurisdiction",
+                      "expression": "`jurisdiction`"
+                    },
+                    {
+                      "name": "jurisdiction_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Filter by Jurisdiction (ADR-0001)",
+                "showTitle": true,
+                "description": "Slices every Executive Overview tile by the principal's regulation pack: IN \u2192 DPDP, GB \u2192 UK GDPR. Leaving the filter unset returns all jurisdictions."
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "jurisdiction",
+                    "queryName": "dashboards/jurisdiction-filter/datasets/jur_dist_jurisdiction"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 1
+          }
+        },
         {
           "widget": {
             "name": "dpdp-compliance-dashboard",
@@ -635,7 +692,7 @@
           },
           "position": {
             "x": 0,
-            "y": 0,
+            "y": 1,
             "width": 6,
             "height": 2
           }
@@ -720,7 +777,7 @@
           },
           "position": {
             "x": 0,
-            "y": 2,
+            "y": 3,
             "width": 3,
             "height": 2
           }
@@ -805,7 +862,7 @@
           },
           "position": {
             "x": 3,
-            "y": 2,
+            "y": 3,
             "width": 3,
             "height": 2
           }
@@ -850,7 +907,7 @@
           },
           "position": {
             "x": 0,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -912,7 +969,7 @@
           },
           "position": {
             "x": 1,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -957,7 +1014,7 @@
           },
           "position": {
             "x": 2,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -1019,7 +1076,7 @@
           },
           "position": {
             "x": 3,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -1081,7 +1138,7 @@
           },
           "position": {
             "x": 4,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -1160,7 +1217,7 @@
           },
           "position": {
             "x": 5,
-            "y": 4,
+            "y": 5,
             "width": 1,
             "height": 2
           }
@@ -1233,7 +1290,7 @@
           },
           "position": {
             "x": 0,
-            "y": 6,
+            "y": 7,
             "width": 3,
             "height": 6
           }
@@ -1309,7 +1366,7 @@
           },
           "position": {
             "x": 3,
-            "y": 6,
+            "y": 7,
             "width": 3,
             "height": 6
           }
@@ -1330,7 +1387,7 @@
           },
           "position": {
             "x": 0,
-            "y": 12,
+            "y": 13,
             "width": 6,
             "height": 1
           }
@@ -1339,7 +1396,7 @@
       "pageType": "PAGE_TYPE_CANVAS"
     },
     {
-      "name": "1062f3c6",
+      "name": "48a060c1",
       "displayName": "Consent & Audience",
       "layout": [
         {
@@ -1349,7 +1406,7 @@
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "a2a988f4",
+                  "datasetName": "10061a7f",
                   "fields": [
                     {
                       "name": "eligible_principals",
@@ -1390,7 +1447,7 @@
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "32dd29fb",
+                  "datasetName": "c6e0e15b",
                   "fields": [
                     {
                       "name": "purpose",
@@ -1464,7 +1521,7 @@
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "88e8fd2f",
+                  "datasetName": "6afed1da",
                   "fields": [
                     {
                       "name": "day",

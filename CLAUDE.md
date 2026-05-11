@@ -30,21 +30,18 @@ under the DPDP India 2023 pack as the worked example:
 
 | Component | State | Key Detail |
 |---|---|---|
-| PII Discovery (Module 01) | COMPLETE | 36 findings across 10 silver objects, UC tags on 36 columns |
+| PII Discovery (Module 01) | COMPLETE | 36 findings across 10 silver objects · universal patterns + 5 IN-specific + 5 UK-specific PII patterns active |
 | Consent Intelligence (Module 02) | COMPLETE | 1,000 events in Delta (no Lakebase — not available in trial) |
-| Compliance Audit (Module 05) | COMPLETE | 9 DPDP rules, 135 gaps (72 critical, 52 high, 11 medium) |
+| Compliance Audit (Module 05) | COMPLETE | 21 multi-pack rules (9 DPDP + 12 UK GDPR), 462 gaps (164 dpdp_2023 + 298 uk_gdpr), per-row routing |
 | Agent Bricks | COMPLETE | DPIA generator, Compliance Q&A, PII classifier |
-| DPIA Generator (productionised) | COMPLETE | Quarterly cron + structured pydantic output + GC/CCO approval flow + Databricks Review App |
-| Dashboard | COMPLETE | 10-page Lakeview dashboard (adapted from accelerator) |
+| DPIA Generator (productionised) | COMPLETE | Quarterly cron + structured pydantic output + GC/CCO approval flow + Databricks Review App + multi-regulator citation merge |
+| Dashboard | COMPLETE | 10-page Lakeview dashboard + jurisdiction filter on Executive Overview |
 | Data Source Onboarding | COMPLETE | Notebook with Federation/Lakeflow/Auto Loader patterns |
-| Synthetic Data | COMPLETE | 21,500 rows, seed=42, deterministic, 100% IN principals (M2 will introduce 70/25/5 IN/GB/unmapped split) |
-| Regulation-Pack Framework | COMPLETE | `governance_core/` + `regulations/dpdp_2023/` — single-pack-active loader. M1 refactors to multi-pack-loaded. |
+| Synthetic Data | COMPLETE | Seed=42, deterministic, mixed-jurisdiction 70/25/5 IN/GB/unmapped (3,503 IN + 1,258 GB customers live) |
+| Regulation-Pack Framework (ADR-0001) | COMPLETE | `governance_core/` + `regulations/dpdp_2023/` + `regulations/uk_gdpr/` — multi-pack loader, per-data-subject rule routing through `customers_tagged.jurisdiction`. All 4 milestones (M1-M4) merged. |
 
 ### What's NOT Built (Phase 1 scope)
 
-- **ADR-0001 implementation (M1–M4)** — multi-pack loader, jurisdiction
-  column, UK GDPR pack, dashboard jurisdiction filter, mixed-data tests.
-  Plan: `~/.claude/projects/.../memory/project_multi_jurisdiction_implementation_plan.md`.
 - Module 03 — DSR Hub (portal, erasure execution, certificates)
 - Module 04 — Breach Detection (needs Lakewatch, Private Preview)
 - Module 06 — Retention & Transfers (needs retention catalog)
