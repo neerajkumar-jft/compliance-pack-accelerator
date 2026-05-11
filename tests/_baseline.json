@@ -3,21 +3,23 @@
   "column_tags_distinct_columns": 36,
   "compliance_gaps": {
     "by_rule_type": {
-      "access_control": 25,
-      "breach_notification": 14,
-      "consent": 58,
-      "data_subject_rights": 36,
-      "encryption": 17,
-      "retention": 14
+      "access_control": 61,
+      "breach_notification": 72,
+      "consent": 102,
+      "data_subject_rights": 80,
+      "encryption": 31,
+      "lawfulness": 36,
+      "retention": 58,
+      "transparency": 22
     },
     "by_severity": {
-      "critical": 86,
-      "high": 64,
-      "medium": 14
+      "critical": 252,
+      "high": 174,
+      "medium": 36
     },
-    "total": 164
+    "total": 462
   },
-  "compliance_rules": 9,
+  "compliance_rules": 21,
   "consent": {
     "distinct_channels": 4,
     "distinct_principals": 240,
@@ -35,7 +37,7 @@
   "dsr_principal_customer_04217": {
     "consent_events": 4,
     "customers": 1,
-    "transactions": 20
+    "transactions": 33
   },
   "notice_versions": {
     "by_language": {
@@ -78,15 +80,15 @@
   },
   "silver_tagged_objects": 10,
   "synthetic_row_counts": {
-    "customers": 5000,
-    "employees": 2000,
+    "customers": 4761,
+    "employees": 3901,
     "federation_campaign_response": 100,
     "federation_lead_scoring": 200,
-    "patients": 1500,
+    "patients": 1423,
     "sf_accounts": 30,
     "sf_contacts": 60,
     "sf_leads": 100,
-    "transactions": 10000,
-    "users": 3000
+    "transactions": 19018,
+    "users": 2856
   }
 }
