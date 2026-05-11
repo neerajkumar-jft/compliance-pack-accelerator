@@ -278,7 +278,7 @@ The manifest file is critical. It records the generator's expected outputs for t
 On Day 1:
 ```bash
 python generate_synthetic_data.py \
-    --output-dir /Volumes/dpdp_poc/bronze/landing/ \
+    --output-dir /Volumes/compliance_pack/bronze/landing/ \
     --seed 42
 ```
 

@@ -28,7 +28,7 @@ from pyspark.sql.types import (
 )
 
 # Add spec schemas/ to path so we can import the pattern library
-sys.path.insert(0, "/Workspace/Repos/dpdp_poc_spec/schemas")
+sys.path.insert(0, "/Workspace/Repos/compliance_pack_spec/schemas")
 sys.path.insert(0, "../schemas")  # relative path from pipelines/
 
 from pii_patterns import (  # noqa: E402
@@ -39,7 +39,7 @@ from pii_patterns import (  # noqa: E402
     REVIEW_REQUIRED_THRESHOLD,
 )
 
-CATALOG = spark.conf.get("catalog", "dpdp_poc")
+CATALOG = spark.conf.get("catalog", "compliance_pack")
 SCAN_JOB_ID = str(uuid.uuid4())  # unique per pipeline run
 
 # First-deploy fallback list. Used only if `bronze.data_sources` doesn't exist

@@ -72,7 +72,7 @@ text_instructions: |
   - "Open gap" = every gap in compliance_gaps is currently open (no
     resolution column in this POC). Counts = full table.
   - "Latest scan" for compliance_gaps =
-      scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.compliance_gaps)
+      scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.compliance_gaps)
   - Use COUNT(DISTINCT gap_id) when joining compliance_gaps to
     discovered_tables on table_name — fan-out is contained by the
     many-to-one relationship, but DISTINCT is safer.
@@ -91,7 +91,7 @@ text_instructions: |
 # ---------------------------------------------------------------------
 filters:
   - name: latest_gap_scan
-    sql: "scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.compliance_gaps)"
+    sql: "scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.compliance_gaps)"
     synonyms: ["latest gaps", "current gaps", "most recent gap scan", "today"]
     instruction: "Apply when the user asks about 'current' or 'latest' exposure without naming a time window."
 
@@ -197,7 +197,7 @@ example_queries:
         ROUND(SUM(CASE severity WHEN 'critical' THEN 250 WHEN 'high' THEN 150
                                WHEN 'medium' THEN 50  WHEN 'low' THEN 5 ELSE 0 END), 1)
           AS penalty_exposure_cr
-      FROM dpdp_poc.silver.compliance_gaps
+      FROM compliance_pack.silver.compliance_gaps
       WHERE regulation='DPDP'
 
   - question: "Show gap counts by severity with per-gap penalty ceilings and totals."
@@ -211,7 +211,7 @@ example_queries:
              CASE severity WHEN 'critical' THEN 250 WHEN 'high' THEN 150
                            WHEN 'medium' THEN 50  WHEN 'low' THEN 5 END
                AS severity_exposure_cr
-      FROM dpdp_poc.silver.compliance_gaps
+      FROM compliance_pack.silver.compliance_gaps
       GROUP BY severity
       ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2
                              WHEN 'medium'   THEN 3 ELSE 4 END
@@ -222,7 +222,7 @@ example_queries:
              SUM(40) AS total_hours,
              SUM(40) * 8000 AS labor_cost_inr,
              ROUND(SUM(40) * 8000 / 10000000.0, 3) AS labor_cost_cr
-      FROM dpdp_poc.silver.compliance_gaps
+      FROM compliance_pack.silver.compliance_gaps
       WHERE severity='critical'
 
   - question: "Estimate remediation hours and cost to close all critical + high gaps."
@@ -232,7 +232,7 @@ example_queries:
              SUM(CASE severity WHEN 'critical' THEN 40 WHEN 'high' THEN 16 END) AS hours,
              SUM(CASE severity WHEN 'critical' THEN 40 WHEN 'high' THEN 16 END) * 8000 AS cost_inr,
              ROUND(SUM(CASE severity WHEN 'critical' THEN 40 WHEN 'high' THEN 16 END) * 8000 / 10000000.0, 3) AS cost_cr
-      FROM dpdp_poc.silver.compliance_gaps
+      FROM compliance_pack.silver.compliance_gaps
       WHERE severity IN ('critical','high')
       GROUP BY severity
       ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 END
@@ -245,8 +245,8 @@ example_queries:
              ROUND(SUM(CASE g.severity WHEN 'critical' THEN 250 WHEN 'high' THEN 150
                                        WHEN 'medium' THEN 50  WHEN 'low' THEN 5 ELSE 0 END), 1)
                AS exposure_cr
-      FROM dpdp_poc.silver.compliance_gaps g
-      LEFT JOIN dpdp_poc.silver.discovered_tables d
+      FROM compliance_pack.silver.compliance_gaps g
+      LEFT JOIN compliance_pack.silver.discovered_tables d
         ON g.table_name = d.table_name
       GROUP BY g.table_name, d.row_count
       ORDER BY exposure_cr DESC
@@ -258,7 +258,7 @@ example_queries:
              ROUND(SUM(CASE severity WHEN 'critical' THEN 250 WHEN 'high' THEN 150
                                      WHEN 'medium' THEN 50  WHEN 'low' THEN 5 ELSE 0 END), 1)
                AS exposure_cr
-      FROM dpdp_poc.silver.compliance_gaps
+      FROM compliance_pack.silver.compliance_gaps
       GROUP BY rule_type, regulation
       ORDER BY exposure_cr DESC
 
@@ -272,7 +272,7 @@ example_queries:
           ROUND(SUM(CASE severity WHEN 'critical' THEN 40  WHEN 'high' THEN 16
                                   WHEN 'medium' THEN 4    WHEN 'low' THEN 1 ELSE 0 END)
                 * 8000 / 10000000.0, 3) AS labor_cost_cr
-        FROM dpdp_poc.silver.compliance_gaps
+        FROM compliance_pack.silver.compliance_gaps
       )
       SELECT penalty_exposure_cr, labor_cost_cr,
              ROUND(penalty_exposure_cr - labor_cost_cr, 1) AS net_value_cr,
@@ -288,7 +288,7 @@ example_queries:
              ROUND(SUM(CASE severity WHEN 'critical' THEN 250 WHEN 'high' THEN 150
                                      WHEN 'medium' THEN 50  WHEN 'low' THEN 5 ELSE 0 END), 1)
                AS exposure_cr
-      FROM dpdp_poc.silver.compliance_gaps
+      FROM compliance_pack.silver.compliance_gaps
       GROUP BY regulation
       ORDER BY exposure_cr DESC
 
@@ -301,8 +301,8 @@ example_queries:
              ROUND(SUM(CASE g.severity WHEN 'critical' THEN 250 WHEN 'high' THEN 150
                                        WHEN 'medium' THEN 50  WHEN 'low' THEN 5 ELSE 0 END), 1)
                AS exposure_cr
-      FROM dpdp_poc.silver.compliance_gaps g
-      LEFT JOIN dpdp_poc.silver.discovered_tables d
+      FROM compliance_pack.silver.compliance_gaps g
+      LEFT JOIN compliance_pack.silver.discovered_tables d
         ON g.table_name = d.table_name
       GROUP BY g.table_name, d.row_count, d.column_count
       ORDER BY exposure_cr DESC
@@ -325,8 +325,8 @@ sql_functions: []
 # covered by the trusted queries.
 manual_joins:
   - name: compliance_gaps_to_discovered_tables
-    left_table: dpdp_poc.silver.compliance_gaps
-    right_table: dpdp_poc.silver.discovered_tables
+    left_table: compliance_pack.silver.compliance_gaps
+    right_table: compliance_pack.silver.discovered_tables
     left_column: table_name
     right_column: table_name
     relationship: "Many to One"

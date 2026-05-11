@@ -70,7 +70,7 @@ The `sla_deadline` is 30 days from submission, per DPDP's default response windo
 
 ### 7.2.3 · Request persistence
 
-Every accepted request is written to Lakebase `public.dsr_requests` which syncs to Delta at `dpdp_poc.compliance.dsr_requests`. Schema:
+Every accepted request is written to Lakebase `public.dsr_requests` which syncs to Delta at `compliance_pack.compliance.dsr_requests`. Schema:
 
 ```sql
 CREATE TABLE IF NOT EXISTS public.dsr_requests (
@@ -125,7 +125,7 @@ WITH principal_id_columns AS (
         ct.column_name,
         f.pii_type
     FROM system.information_schema.column_tags ct
-    JOIN dpdp_poc.silver.pii_findings f
+    JOIN compliance_pack.silver.pii_findings f
         ON f.catalog_name = ct.catalog_name
         AND f.schema_name = ct.schema_name
         AND f.table_name = ct.table_name
@@ -160,7 +160,7 @@ Aggregate discovery results across all tables into a single `discovery_report`:
     "legal_hold_status": "none",  # hardcoded in POC
     "assets_found": [
         {
-            "catalog": "dpdp_poc",
+            "catalog": "compliance_pack",
             "schema": "silver",
             "table": "customers_tagged",
             "rows_matched": 1,
@@ -169,7 +169,7 @@ Aggregate discovery results across all tables into a single `discovery_report`:
             "retention_policy_applied": "no_retention"
         },
         {
-            "catalog": "dpdp_poc",
+            "catalog": "compliance_pack",
             "schema": "silver",
             "table": "transactions_tagged",
             "rows_matched": 14,
@@ -215,10 +215,10 @@ In reality these are nuanced and belong in Module 0's retention catalog; the POC
 For each `erase_immediate` asset, execute:
 
 ```sql
-DELETE FROM dpdp_poc.silver.customers_tagged
+DELETE FROM compliance_pack.silver.customers_tagged
 WHERE customer_id = 'customer_04217';
 
-DELETE FROM dpdp_poc.silver.users_tagged
+DELETE FROM compliance_pack.silver.users_tagged
 WHERE username = '<the user's username>';
 ```
 
@@ -229,8 +229,8 @@ After deletions:
 -- IMPORTANT: this overrides the default 7-day VACUUM retention
 -- It is ONLY appropriate in a POC sandbox; in production we'd wait out the retention
 SET spark.databricks.delta.retentionDurationCheck.enabled = false;
-VACUUM dpdp_poc.silver.customers_tagged RETAIN 0 HOURS;
-VACUUM dpdp_poc.silver.users_tagged RETAIN 0 HOURS;
+VACUUM compliance_pack.silver.customers_tagged RETAIN 0 HOURS;
+VACUUM compliance_pack.silver.users_tagged RETAIN 0 HOURS;
 SET spark.databricks.delta.retentionDurationCheck.enabled = true;
 ```
 
@@ -241,7 +241,7 @@ The retention override is dangerous in production (it makes time travel impossib
 After execution, compose the four-part bundle at:
 
 ```
-/Volumes/dpdp_poc/compliance/dsr_bundles/<request_id>/
+/Volumes/compliance_pack/compliance/dsr_bundles/<request_id>/
 ├── data_export.json
 ├── erasure_certificate.pdf
 ├── retention_schedule.pdf
@@ -306,10 +306,10 @@ Timestamped action sequence:
         { "at": "2026-04-27T10:30:05", "action": "identity_verified", "actor": "stub_idv", "method": "email_match" },
         { "at": "2026-04-27T10:32:00", "action": "discovery_started", "actor": "dpdp-poc-builder" },
         { "at": "2026-04-27T10:32:15", "action": "discovery_complete", "assets_found": 4 },
-        { "at": "2026-04-27T14:12:00", "action": "erasure_executed", "target": "dpdp_poc.silver.customers_tagged", "rows_deleted": 1 },
-        { "at": "2026-04-27T14:12:30", "action": "erasure_executed", "target": "dpdp_poc.silver.users_tagged", "rows_deleted": 1 },
-        { "at": "2026-04-27T14:13:00", "action": "residual_scheduled", "target": "dpdp_poc.silver.transactions_tagged", "purge_date": "2033-04-27" },
-        { "at": "2026-04-27T14:15:00", "action": "bundle_generated", "bundle_path": "/Volumes/dpdp_poc/compliance/dsr_bundles/dsr_7f4a3c2b8e1d4f56/" }
+        { "at": "2026-04-27T14:12:00", "action": "erasure_executed", "target": "compliance_pack.silver.customers_tagged", "rows_deleted": 1 },
+        { "at": "2026-04-27T14:12:30", "action": "erasure_executed", "target": "compliance_pack.silver.users_tagged", "rows_deleted": 1 },
+        { "at": "2026-04-27T14:13:00", "action": "residual_scheduled", "target": "compliance_pack.silver.transactions_tagged", "purge_date": "2033-04-27" },
+        { "at": "2026-04-27T14:15:00", "action": "bundle_generated", "bundle_path": "/Volumes/compliance_pack/compliance/dsr_bundles/dsr_7f4a3c2b8e1d4f56/" }
     ]
 }
 ```
@@ -320,11 +320,11 @@ The integration test confirms the erasure worked by running:
 
 ```sql
 -- Before erasure (should return 1 row)
-SELECT count(*) FROM dpdp_poc.silver.customers_tagged VERSION AS OF <version_before>
+SELECT count(*) FROM compliance_pack.silver.customers_tagged VERSION AS OF <version_before>
 WHERE customer_id = 'customer_04217';
 
 -- After erasure (should return 0 rows)
-SELECT count(*) FROM dpdp_poc.silver.customers_tagged
+SELECT count(*) FROM compliance_pack.silver.customers_tagged
 WHERE customer_id = 'customer_04217';
 ```
 
@@ -335,7 +335,7 @@ The test passes only if both queries return the expected counts. This is the pro
 Assets with `schedule_residual_purge` write an entry to a simplified residual register:
 
 ```sql
-CREATE TABLE IF NOT EXISTS dpdp_poc.compliance.residual_retention_register (
+CREATE TABLE IF NOT EXISTS compliance_pack.compliance.residual_retention_register (
     residual_id             STRING    NOT NULL,
     original_dsr_request_id STRING    NOT NULL,
     principal_identifier    STRING    NOT NULL,

@@ -9,7 +9,7 @@ Detection order:
                       host → CLI config profile
     warehouse id    : DPDP_WAREHOUSE_ID env → first RUNNING serverless
                       warehouse → fail with helpful error
-    catalog         : DPDP_CATALOG env → default "dpdp_poc"
+    catalog         : DPDP_CATALOG env → default "compliance_pack"
 
 All three values are memoized — expensive CLI calls happen once per
 process.
@@ -26,7 +26,7 @@ import sys
 from functools import lru_cache
 
 
-CATALOG_DEFAULT = "dpdp_poc"
+CATALOG_DEFAULT = "compliance_pack"
 
 
 def _run(*cmd: str) -> str:

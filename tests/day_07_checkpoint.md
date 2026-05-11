@@ -47,7 +47,7 @@ Confirm that Module 01 (PII discovery) is demo-ready, and that the Module 02 sca
 
 All of the following must be true to pass the checkpoint:
 
-- [ ] `SELECT COUNT(*) FROM dpdp_poc.compliance.personal_data_register` returns ≥ 20
+- [ ] `SELECT COUNT(*) FROM compliance_pack.compliance.personal_data_register` returns ≥ 20
 - [ ] At least 8 rows in the register have `sensitivity_tier = 'critical'`
 - [ ] At least 15 rows have `classification_confidence >= 0.85`
 - [ ] Every row in the register has a non-null `data_type`, `pii_category`, `pii_type`, `sensitivity_tier`

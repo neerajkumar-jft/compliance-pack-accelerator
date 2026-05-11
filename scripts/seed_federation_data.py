@@ -12,10 +12,10 @@ silver, every run.
 
 Layout produced:
 
-  dpdp_poc.federation_mock.lead_scoring        (Delta, 200 rows)
-  dpdp_poc.federation_mock.campaign_response   (Delta, 100 rows)
-  dpdp_poc.silver.federation_lead_scoring_tagged       (VIEW)
-  dpdp_poc.silver.federation_campaign_response_tagged  (VIEW)
+  compliance_pack.federation_mock.lead_scoring        (Delta, 200 rows)
+  compliance_pack.federation_mock.campaign_response   (Delta, 100 rows)
+  compliance_pack.silver.federation_lead_scoring_tagged       (VIEW)
+  compliance_pack.silver.federation_campaign_response_tagged  (VIEW)
 
 Usage:
     python3 scripts/seed_federation_data.py
@@ -38,7 +38,7 @@ from generate_federation_data import generate  # noqa: E402
 from persona_config import get_warehouse_id  # noqa: E402
 
 WAREHOUSE_ID = get_warehouse_id()
-DEFAULT_CATALOG = "dpdp_poc"
+DEFAULT_CATALOG = "compliance_pack"
 INSERT_BATCH_SIZE = 25
 
 SCHEMAS = {

@@ -27,12 +27,12 @@
 --                   json.JSONDecodeError when validation failed.
 --                   NULL on a clean parse.
 -- Existing workspaces upgrading from Phase 1/2 need a one-time
---   ALTER TABLE dpdp_poc.compliance.dpia_runs
+--   ALTER TABLE compliance_pack.compliance.dpia_runs
 --     ADD COLUMNS (dpia_sections MAP<STRING,STRING>, parse_error STRING);
 -- New workspaces get the Phase 3 schema directly from this DDL.
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS dpdp_poc.compliance.dpia_runs (
+CREATE TABLE IF NOT EXISTS compliance_pack.compliance.dpia_runs (
     run_id              STRING    NOT NULL,
     generated_at        TIMESTAMP NOT NULL,
     generated_by        STRING    NOT NULL,

@@ -33,7 +33,7 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog", "dpdp_poc", "Unity Catalog name")
+dbutils.widgets.text("catalog", "compliance_pack", "Unity Catalog name")
 CATALOG = dbutils.widgets.get("catalog")
 print(f"Catalog: {CATALOG}")
 
@@ -372,7 +372,7 @@ CREATE TABLE IF NOT EXISTS {CATALOG}.compliance.dsr_requests (
 # runs `setup_persona_genie_spaces.py`, which validates that every
 # table in a Genie space's data_sources allowlist actually exists.
 # Without this eager creation, the GC space (which now lists
-# dpdp_poc.compliance.dpia_runs) would 404 on creation, because the
+# compliance_pack.compliance.dpia_runs) would 404 on creation, because the
 # `_ensure_audit_table()` lazy-create path inside
 # `governance_core.dpia.run_dpia_generation` only fires on the FIRST
 # DPIA generation run — which happens AFTER personas setup.

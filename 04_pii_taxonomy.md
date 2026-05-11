@@ -222,7 +222,7 @@ SELECT
         primary_diagnosis,
         ARRAY('diagnosis', 'prescription', 'allergy_note', 'other_medical', 'non_medical')
     ) AS ai_classification
-FROM dpdp_poc.bronze.source_patients
+FROM compliance_pack.bronze.source_patients
 WHERE primary_diagnosis IS NOT NULL
 LIMIT 100;  -- sample for classification-cost control
 ```
@@ -281,7 +281,7 @@ The redaction is done in Python at finding-record time, not in SQL. Raw PII must
 The CCO reviews low-confidence findings and can reclassify. The manual override pattern:
 
 ```sql
-UPDATE dpdp_poc.silver.pii_findings
+UPDATE compliance_pack.silver.pii_findings
 SET
     pii_category = 'direct_identifier_government',
     pii_type = 'aadhaar',

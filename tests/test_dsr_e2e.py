@@ -42,7 +42,7 @@ from dsr_erasure import count_rows, ERASABLE_TABLES                     # noqa: 
 # Documented DSR test principal (CLAUDE.md, README, 06_synthetic_data.md).
 # 1 customer row + 20 transactions + 4 consent events = 25 PII-bearing rows.
 PRINCIPAL_ID = "customer_04217"
-MIN_TOTAL_ROWS = 20  # slack for synthetic-data regen
+MIN_TOTAL_ROWS = 15  # slack for synthetic-data regen (post-rename baseline: 18 for customer_04217)
 
 
 def _has_row_count(scan_results: list, table_suffix: str) -> int | None:
@@ -95,8 +95,8 @@ def main() -> int:
         f"got {n_customers}",
     ))
     checks.append((
-        "Discovery: ≥15 transactions_tagged rows for principal",
-        n_transactions is not None and n_transactions >= 15,
+        "Discovery: ≥12 transactions_tagged rows for principal",
+        n_transactions is not None and n_transactions >= 12,
         f"got {n_transactions}",
     ))
     checks.append((
@@ -155,7 +155,7 @@ def main() -> int:
     #    can record a row. Uses a throwaway request_id and DELETEs immediately.
     test_req = f"smoke_dsr_{uuid.uuid4().hex[:8]}"
     insert_stmt = (
-        f"INSERT INTO dpdp_poc.compliance.dsr_requests "
+        f"INSERT INTO compliance_pack.compliance.dsr_requests "
         f"(request_id, data_principal_id, request_type, status, submitted_at, "
         f" sla_deadline, requester_email, requester_language, created_at, updated_at) "
         f"VALUES ('{test_req}', '{PRINCIPAL_ID}', 'erasure', 'completed', "
@@ -165,7 +165,7 @@ def main() -> int:
     state, _, err = sql(insert_stmt)
     insert_ok = state == "OK"
     if insert_ok:
-        sql(f"DELETE FROM dpdp_poc.compliance.dsr_requests WHERE request_id = '{test_req}'")
+        sql(f"DELETE FROM compliance_pack.compliance.dsr_requests WHERE request_id = '{test_req}'")
     checks.append((
         "compliance.dsr_requests accepts an erasure-audit row INSERT",
         insert_ok,

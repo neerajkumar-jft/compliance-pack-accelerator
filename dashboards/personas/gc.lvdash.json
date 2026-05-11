@@ -4,7 +4,7 @@
       "name": "94dd0476",
       "displayName": "risk_scores",
       "queryLines": [
-        "SELECT risk_score, compliance_score, risk_level FROM dpdp_poc.gold.persona_overview_metrics"
+        "SELECT risk_score, compliance_score, risk_level FROM compliance_pack.gold.persona_overview_metrics"
       ]
     },
     {
@@ -17,8 +17,8 @@
         "    COUNT(*) AS column_count,\n",
         "    COUNT(DISTINCT table_name) AS table_count,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
         "  GROUP BY pii_category, sensitivity_tier\n",
         "  ORDER BY column_count DESC\n"
       ]
@@ -32,8 +32,8 @@
         "    severity,\n",
         "    COUNT(*) AS gap_count,\n",
         "    COUNT(DISTINCT table_name) AS tables_affected\n",
-        "  FROM dpdp_poc.silver.compliance_gaps\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.compliance_gaps)\n",
+        "  FROM compliance_pack.silver.compliance_gaps\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.compliance_gaps)\n",
         "  GROUP BY regulation, severity\n",
         "  ORDER BY gap_count DESC"
       ]
@@ -53,8 +53,8 @@
         "  COUNT(DISTINCT table_name) AS tables_affected,\n",
         "  FIRST(description) AS issue_description,\n",
         "  FIRST(remediation) AS recommended_action\n",
-        "FROM dpdp_poc.silver.compliance_gaps\n",
-        "WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.compliance_gaps)\n",
+        "FROM compliance_pack.silver.compliance_gaps\n",
+        "WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.compliance_gaps)\n",
         "GROUP BY severity, rule_type, regulation\n",
         "ORDER BY priority\n",
         "LIMIT 15;\n"
@@ -70,7 +70,7 @@
         "    SUM(CASE WHEN sensitivity_tier = 'critical' THEN 1 ELSE 0 END) AS critical_count,\n",
         "    SUM(CASE WHEN sensitivity_tier = 'high' THEN 1 ELSE 0 END) AS high_count,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
         "  WHERE discovered_at >= DATE_SUB(CURRENT_DATE(), 30)\n",
         "  GROUP BY DATE(discovered_at)\n",
         "  ORDER BY discovery_date"
@@ -85,8 +85,8 @@
         "    pii_category,\n",
         "    COUNT(*) AS occurrences,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
         "  GROUP BY pii_type, pii_category\n",
         "  ORDER BY occurrences DESC\n",
         "  LIMIT 15\n"
@@ -108,8 +108,8 @@
         "    classifier_source,\n",
         "    regulations,\n",
         "    discovered_at\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
         "  ORDER BY\n",
         "    CASE sensitivity_tier WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,\n",
         "    table_name,\n",
@@ -120,7 +120,7 @@
       "name": "0b22c1cc",
       "displayName": "last_scan_info",
       "queryLines": [
-        "SELECT 'aggregate' AS last_scan_job_id, last_scan_time, 1 AS total_scans, days_since_last_scan FROM dpdp_poc.gold.persona_overview_metrics"
+        "SELECT 'aggregate' AS last_scan_job_id, last_scan_time, 1 AS total_scans, days_since_last_scan FROM compliance_pack.gold.persona_overview_metrics"
       ]
     },
     {
@@ -137,8 +137,8 @@
         "  description,\n",
         "  remediation,\n",
         "  detected_at\n",
-        "FROM dpdp_poc.silver.compliance_gaps\n",
-        "WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.compliance_gaps)\n",
+        "FROM compliance_pack.silver.compliance_gaps\n",
+        "WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.compliance_gaps)\n",
         "ORDER BY\n",
         "  CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,\n",
         "  regulation;\n"
@@ -148,14 +148,14 @@
       "name": "006b6b90",
       "displayName": "executive_summary",
       "queryLines": [
-        "SELECT total_tables AS tables_scanned, pii_columns AS total_pii_columns, critical_pii, high_pii AS high_sensitivity_pii, avg_confidence, total_gaps, critical_gaps FROM dpdp_poc.gold.persona_overview_metrics"
+        "SELECT total_tables AS tables_scanned, pii_columns AS total_pii_columns, critical_pii, high_pii AS high_sensitivity_pii, avg_confidence, total_gaps, critical_gaps FROM compliance_pack.gold.persona_overview_metrics"
       ]
     },
     {
       "name": "ab44b234",
       "displayName": "pii_sensitivity_distribution",
       "queryLines": [
-        "SELECT sensitivity_tier, count FROM dpdp_poc.gold.persona_sensitivity_histogram ORDER BY CASE sensitivity_tier WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END"
+        "SELECT sensitivity_tier, count FROM compliance_pack.gold.persona_sensitivity_histogram ORDER BY CASE sensitivity_tier WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END"
       ]
     },
     {
@@ -176,8 +176,8 @@
         "    END) AS risk_score,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence,\n",
         "    ARRAY_JOIN(ARRAY_DISTINCT(COLLECT_LIST(pii_type)), ', ') AS pii_types\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
         "  GROUP BY catalog_name, schema_name, table_name\n",
         "  ORDER BY risk_score DESC"
       ]
@@ -193,8 +193,8 @@
         "    SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) AS medium_gaps,\n",
         "    COUNT(DISTINCT regulation) AS regulations_affected,\n",
         "    COUNT(DISTINCT table_name) AS tables_affected\n",
-        "  FROM dpdp_poc.silver.compliance_gaps\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.compliance_gaps)\n"
+        "  FROM compliance_pack.silver.compliance_gaps\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.compliance_gaps)\n"
       ]
     },
     {
@@ -206,8 +206,8 @@
         "    COUNT(*) AS gap_count,\n",
         "    COUNT(DISTINCT table_name) AS tables_affected,\n",
         "    COUNT(DISTINCT regulation) AS regulations_count\n",
-        "  FROM dpdp_poc.silver.compliance_gaps\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.compliance_gaps)\n",
+        "  FROM compliance_pack.silver.compliance_gaps\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.compliance_gaps)\n",
         "  GROUP BY rule_type\n",
         "  ORDER BY gap_count DESC"
       ]
@@ -221,8 +221,8 @@
         "    COUNT(*) AS total_columns,\n",
         "    COUNT(DISTINCT pii_type) AS pii_types_found,\n",
         "    COUNT(DISTINCT pii_category) AS categories_found\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)"
+        "  FROM compliance_pack.silver.pii_findings\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)"
       ]
     },
     {
@@ -235,8 +235,8 @@
         "    COUNT(*) AS pii_columns,\n",
         "    SUM(CASE WHEN sensitivity_tier IN ('critical', 'high') THEN 1 ELSE 0 END) AS high_risk_columns,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
         "  GROUP BY schema_name\n",
         "  ORDER BY pii_columns DESC"
       ]
@@ -245,7 +245,7 @@
       "name": "374f7b59",
       "displayName": "high_risk_tables",
       "queryLines": [
-        "SELECT 'Aggregate summary \u2014 table-level breakdown available to CCO' AS full_table_name, pii_columns, critical_pii AS critical_count, high_pii AS high_count, CAST((critical_pii*3 + high_pii*2) AS INT) AS risk_score FROM dpdp_poc.gold.persona_overview_metrics"
+        "SELECT 'Aggregate summary \u2014 table-level breakdown available to CCO' AS full_table_name, pii_columns, critical_pii AS critical_count, high_pii AS high_count, CAST((critical_pii*3 + high_pii*2) AS INT) AS risk_score FROM compliance_pack.gold.persona_overview_metrics"
       ]
     },
     {
@@ -269,8 +269,8 @@
         "    END AS bucket_order,\n",
         "    COUNT(*) AS finding_count,\n",
         "    COUNT(DISTINCT pii_type) AS pii_types\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
         "  GROUP BY 1, 2\n",
         "  ORDER BY bucket_order"
       ]
@@ -285,8 +285,8 @@
         "    ROUND(AVG(confidence), 2) AS avg_confidence,\n",
         "    COUNT(DISTINCT pii_type) AS pii_types_detected,\n",
         "    COUNT(DISTINCT table_name) AS tables_scanned\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
         "  GROUP BY classifier_source\n",
         "  ORDER BY finding_count DESC"
       ]
@@ -301,12 +301,12 @@
         "    COUNT(DISTINCT p.column_name) AS pii_columns,\n",
         "    COUNT(DISTINCT g.gap_id) AS gap_count,\n",
         "    ROUND(COUNT(DISTINCT g.gap_id) * 1.0 / GREATEST(1, COUNT(DISTINCT p.column_name)), 1) AS gaps_per_column\n",
-        "  FROM dpdp_poc.silver.pii_findings p\n",
-        "  LEFT JOIN dpdp_poc.silver.compliance_gaps g\n",
+        "  FROM compliance_pack.silver.pii_findings p\n",
+        "  LEFT JOIN compliance_pack.silver.compliance_gaps g\n",
         "    ON p.table_name = g.table_name\n",
         "    AND p.column_name = g.column_name\n",
         "    AND p.scan_job_id = g.scan_job_id\n",
-        "  WHERE p.scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)\n",
+        "  WHERE p.scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
         "  GROUP BY p.pii_type, p.sensitivity_tier\n",
         "  ORDER BY gap_count DESC"
       ]
@@ -322,8 +322,8 @@
         "    ROUND(AVG(confidence), 2) AS avg_confidence,\n",
         "    ROUND(MIN(confidence), 2) AS min_confidence,\n",
         "    ROUND(MAX(confidence), 2) AS max_confidence\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
         "  GROUP BY pii_type, pii_category\n",
         "  ORDER BY avg_confidence ASC"
       ]
@@ -339,8 +339,8 @@
         "    COUNT(*) AS gap_count,\n",
         "    COUNT(DISTINCT g.table_name) AS tables_affected,\n",
         "    COUNT(DISTINCT g.pii_type) AS pii_types_involved\n",
-        "  FROM dpdp_poc.silver.compliance_gaps g\n",
-        "  WHERE g.scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.compliance_gaps)\n",
+        "  FROM compliance_pack.silver.compliance_gaps g\n",
+        "  WHERE g.scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.compliance_gaps)\n",
         "  GROUP BY g.regulation, g.rule_type, g.severity\n",
         "  ORDER BY\n",
         "    CASE g.severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,\n",
@@ -360,7 +360,7 @@
         "    SUM(CASE WHEN sensitivity_tier = 'high' THEN 1 ELSE 0 END) AS high_count,\n",
         "    COUNT(DISTINCT table_name) AS tables_scanned,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
         "  GROUP BY scan_job_id\n",
         "  ORDER BY scan_start DESC\n",
         "  LIMIT 10"
@@ -376,8 +376,8 @@
         "    COUNT(DISTINCT pii_type) AS pii_types,\n",
         "    SUM(CASE WHEN sensitivity_tier IN ('critical', 'high') THEN 1 ELSE 0 END) AS high_risk_count,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM dpdp_poc.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM dpdp_poc.silver.pii_findings)\n",
+        "  FROM compliance_pack.silver.pii_findings\n",
+        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
         "  GROUP BY column_data_type\n",
         "  ORDER BY pii_count DESC"
       ]
@@ -389,7 +389,7 @@
         "SELECT COUNT(*) AS total_flows,\n",
         "  COALESCE(SUM(CASE WHEN has_pii_flow THEN 1 ELSE 0 END), 0) AS pii_flows,\n",
         "  COALESCE(ROUND(SUM(CASE WHEN has_pii_flow THEN 1 ELSE 0 END) * 100.0 / GREATEST(COUNT(*), 1), 1), 0) AS pii_flow_pct\n",
-        "FROM dpdp_poc.gold.data_lineage\n"
+        "FROM compliance_pack.gold.data_lineage\n"
       ]
     },
     {
@@ -399,7 +399,7 @@
         "SELECT source_table,\n",
         "  COUNT(*) AS downstream_count,\n",
         "  CASE WHEN MAX(CASE WHEN has_pii_flow THEN 1 ELSE 0 END) = 1 THEN 'Yes' ELSE 'No' END AS has_pii\n",
-        "FROM dpdp_poc.gold.data_lineage\n",
+        "FROM compliance_pack.gold.data_lineage\n",
         "GROUP BY source_table ORDER BY downstream_count DESC LIMIT 20\n"
       ]
     },
@@ -410,7 +410,7 @@
         "SELECT source_table, target_table, column_mapping,\n",
         "  CASE WHEN has_pii_flow THEN 'Yes' ELSE 'No' END AS has_pii_flow,\n",
         "  mapped_at\n",
-        "FROM dpdp_poc.gold.data_lineage\n",
+        "FROM compliance_pack.gold.data_lineage\n",
         "ORDER BY source_table, target_table\n"
       ]
     },
@@ -423,7 +423,7 @@
         "  COALESCE(SUM(CASE WHEN exposure_level = 'high' THEN 1 ELSE 0 END), 0) AS high_exposures,\n",
         "  COUNT(DISTINCT grantee) AS unique_principals,\n",
         "  COUNT(DISTINCT table_name) AS unique_tables\n",
-        "FROM dpdp_poc.gold.sensitive_data_exposure\n"
+        "FROM compliance_pack.gold.sensitive_data_exposure\n"
       ]
     },
     {
@@ -431,7 +431,7 @@
       "displayName": "exposure_by_level",
       "queryLines": [
         "SELECT exposure_level, COUNT(*) AS count\n",
-        "FROM dpdp_poc.gold.sensitive_data_exposure\n",
+        "FROM compliance_pack.gold.sensitive_data_exposure\n",
         "GROUP BY exposure_level\n",
         "ORDER BY CASE exposure_level WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END\n"
       ]
@@ -441,7 +441,7 @@
       "displayName": "exposure_by_pii_type",
       "queryLines": [
         "SELECT pii_type, COUNT(*) AS count\n",
-        "FROM dpdp_poc.gold.sensitive_data_exposure\n",
+        "FROM compliance_pack.gold.sensitive_data_exposure\n",
         "GROUP BY pii_type ORDER BY count DESC LIMIT 15\n"
       ]
     },
@@ -450,7 +450,7 @@
       "displayName": "exposure_by_grantee",
       "queryLines": [
         "SELECT grantee, COUNT(*) AS exposure_count\n",
-        "FROM dpdp_poc.gold.sensitive_data_exposure\n",
+        "FROM compliance_pack.gold.sensitive_data_exposure\n",
         "GROUP BY grantee ORDER BY exposure_count DESC LIMIT 10\n"
       ]
     },
@@ -459,7 +459,7 @@
       "displayName": "exposure_detail",
       "queryLines": [
         "SELECT table_name, column_name, pii_type, grantee, privilege, exposure_level, detected_at\n",
-        "FROM dpdp_poc.gold.sensitive_data_exposure\n",
+        "FROM compliance_pack.gold.sensitive_data_exposure\n",
         "ORDER BY CASE exposure_level WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END, table_name\n"
       ]
     },
@@ -471,7 +471,7 @@
         "  COALESCE(SUM(CASE WHEN anomaly_flag = true THEN 1 ELSE 0 END), 0) AS total_anomalous,\n",
         "  COALESCE(COUNT(DISTINCT CASE WHEN has_pii = true THEN user_name END), 0) AS users_accessing_pii,\n",
         "  COALESCE(COUNT(DISTINCT CASE WHEN has_pii = true AND anomaly_flag = true THEN table_name END), 0) AS pii_tables_anomalous\n",
-        "FROM dpdp_poc.gold.access_patterns\n"
+        "FROM compliance_pack.gold.access_patterns\n"
       ]
     },
     {
@@ -481,7 +481,7 @@
         "SELECT user_name,\n",
         "  SUM(access_count) AS total_access,\n",
         "  CASE WHEN MAX(CASE WHEN has_pii = true THEN 1 ELSE 0 END) = 1 THEN 'Yes' ELSE 'No' END AS accesses_pii\n",
-        "FROM dpdp_poc.gold.access_patterns\n",
+        "FROM compliance_pack.gold.access_patterns\n",
         "GROUP BY user_name ORDER BY total_access DESC LIMIT 15\n"
       ]
     },
@@ -493,7 +493,7 @@
         "  CASE WHEN has_pii = true THEN 'Yes' ELSE 'No' END AS has_pii,\n",
         "  CASE WHEN anomaly_flag = true THEN 'Yes' ELSE 'No' END AS anomaly_flag,\n",
         "  analyzed_at\n",
-        "FROM dpdp_poc.gold.access_patterns\n",
+        "FROM compliance_pack.gold.access_patterns\n",
         "ORDER BY access_count DESC\n"
       ]
     },
@@ -511,7 +511,7 @@
         "  CASE WHEN parse_error IS NOT NULL THEN '\u26a0 parse error' ELSE 'OK' END AS parse_status,\n",
         "  prompt_version,\n",
         "  regulation_pack\n",
-        "FROM dpdp_poc.compliance.dpia_runs\n",
+        "FROM compliance_pack.compliance.dpia_runs\n",
         "ORDER BY generated_at DESC\n",
         "LIMIT 1\n"
       ]
@@ -529,7 +529,7 @@
         "  reviewed_at,\n",
         "  ROUND(latency_seconds, 1) AS latency_s,\n",
         "  CASE WHEN parse_error IS NOT NULL THEN '\u26a0 parse error' ELSE 'OK' END AS parse_status\n",
-        "FROM dpdp_poc.compliance.dpia_runs\n",
+        "FROM compliance_pack.compliance.dpia_runs\n",
         "ORDER BY generated_at DESC\n",
         "LIMIT 8\n"
       ]
@@ -539,7 +539,7 @@
       "displayName": "jurisdiction_distinct_for_filter",
       "queryLines": [
         "SELECT jurisdiction, COUNT_IF(jurisdiction IS NOT NULL) AS jurisdiction_associativity\n",
-        "FROM dpdp_poc.silver.customers_tagged\n",
+        "FROM compliance_pack.silver.customers_tagged\n",
         "GROUP BY jurisdiction\n",
         "ORDER BY jurisdiction NULLS LAST\n"
       ]

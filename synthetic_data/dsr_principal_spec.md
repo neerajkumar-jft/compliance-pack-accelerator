@@ -47,7 +47,7 @@ Seeded directly by the consent event generator per §6.7. Events:
 
 ## Expected DSR response bundle
 
-After the Day 11-12 DSR flow completes for this principal, the bundle at `/Volumes/dpdp_poc/compliance/dsr_bundles/<request_id>/` must contain:
+After the Day 11-12 DSR flow completes for this principal, the bundle at `/Volumes/compliance_pack/compliance/dsr_bundles/<request_id>/` must contain:
 
 ### `data_export.json`
 ```json
@@ -83,7 +83,7 @@ Must list:
 
 ### `retention_schedule.pdf`
 Shows the single scheduled residual:
-- Asset: `dpdp_poc.silver.transactions_tagged` — 12-20 rows (exact from manifest)
+- Asset: `compliance_pack.silver.transactions_tagged` — 12-20 rows (exact from manifest)
 - Retention basis: "Banking Regulation Act, 1949 — transaction records retained 7 years"
 - Scheduled purge date: ~2033 (depends on the latest transaction date; the test accepts year 2033)
 
@@ -95,7 +95,7 @@ Action sequence with timestamps showing: request_received → identity_verified 
 Before the DSR executes, capture the current version of `customers_tagged`:
 
 ```sql
-DESCRIBE HISTORY dpdp_poc.silver.customers_tagged LIMIT 1;
+DESCRIBE HISTORY compliance_pack.silver.customers_tagged LIMIT 1;
 -- record the current version number as version_before
 ```
 
@@ -103,11 +103,11 @@ After the DSR executes:
 
 ```sql
 -- Expect 0 rows now
-SELECT COUNT(*) FROM dpdp_poc.silver.customers_tagged
+SELECT COUNT(*) FROM compliance_pack.silver.customers_tagged
 WHERE customer_id = 'customer_04217';
 
 -- Expect 1 row in the prior version
-SELECT COUNT(*) FROM dpdp_poc.silver.customers_tagged VERSION AS OF <version_before>
+SELECT COUNT(*) FROM compliance_pack.silver.customers_tagged VERSION AS OF <version_before>
 WHERE customer_id = 'customer_04217';
 ```
 

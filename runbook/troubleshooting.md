@@ -12,18 +12,18 @@ When you resolve a new failure mode not listed here, *add it to this file* befor
 
 ## Permission errors
 
-### `Permission denied: APPLY TAG on catalog 'dpdp_poc'`
+### `Permission denied: APPLY TAG on catalog 'compliance_pack'`
 
 **Cause**: the service principal was granted table creation but not tagging.
 
 **Fix**:
 ```sql
-GRANT APPLY TAG ON CATALOG dpdp_poc TO `dpdp-poc-builder`;
+GRANT APPLY TAG ON CATALOG compliance_pack TO `dpdp-poc-builder`;
 ```
 
 If the error persists after grant, tags may need up to 60 seconds to propagate. Wait one minute, retry.
 
-### `Permission denied: CREATE TABLE on schema dpdp_poc.silver`
+### `Permission denied: CREATE TABLE on schema compliance_pack.silver`
 
 **Cause**: missing `CREATE TABLE` grant on the schema.
 
@@ -35,7 +35,7 @@ If the error persists after grant, tags may need up to 60 seconds to propagate. 
 
 **Fix**:
 ```sql
-GRANT USE SCHEMA ON SCHEMA dpdp_poc.bronze TO `dpdp-poc-builder`;
+GRANT USE SCHEMA ON SCHEMA compliance_pack.bronze TO `dpdp-poc-builder`;
 -- Repeat for silver, gold, compliance
 ```
 
@@ -84,7 +84,7 @@ GRANT USE SCHEMA ON SCHEMA dpdp_poc.bronze TO `dpdp-poc-builder`;
 **Cause**: either the pattern library doesn't cover the type, or confidence fell below the 0.65 review threshold.
 
 **Fix**:
-1. Check `dpdp_poc.silver.pii_findings` for the column — if `confidence < 0.65` the row is there but below threshold; inspect and decide whether to manually override per §4.8
+1. Check `compliance_pack.silver.pii_findings` for the column — if `confidence < 0.65` the row is there but below threshold; inspect and decide whether to manually override per §4.8
 2. If the column is absent entirely, the pattern library needs an addition. Add a new `PIIPattern` instance in `schemas/pii_patterns.py`, re-run classification.
 
 ### `ai_classify` returning unexpected labels
@@ -148,7 +148,7 @@ Then insert the new version.
 
 **Cause**: the table hasn't been created, or the catalog/schema name is wrong.
 
-**Fix**: run the DDL from `schemas/` — verify the catalog is `dpdp_poc` and the schema is one of bronze/silver/gold/compliance.
+**Fix**: run the DDL from `schemas/` — verify the catalog is `compliance_pack` and the schema is one of bronze/silver/gold/compliance.
 
 ### `VACUUM` refuses to run with RETAIN 0 HOURS
 
@@ -157,7 +157,7 @@ Then insert the new version.
 **Fix**: temporarily disable per §7.6 (and re-enable after):
 ```python
 spark.conf.set("spark.databricks.delta.retentionDurationCheck.enabled", "false")
-spark.sql("VACUUM dpdp_poc.silver.customers_tagged RETAIN 0 HOURS")
+spark.sql("VACUUM compliance_pack.silver.customers_tagged RETAIN 0 HOURS")
 spark.conf.set("spark.databricks.delta.retentionDurationCheck.enabled", "true")
 ```
 
@@ -194,7 +194,7 @@ Only do this for the specific tables being erased as part of a DSR.
 **Cause**: classification didn't run against all 5 tables, or confidence threshold is filtering too many.
 
 **Fix**:
-1. Check `dpdp_poc.silver.discovered_tables` — should have 5 rows
+1. Check `compliance_pack.silver.discovered_tables` — should have 5 rows
 2. Check each table has `pii_column_count > 0`
 3. If a table was skipped, re-run classification for that specific table
 
@@ -211,7 +211,7 @@ Only do this for the specific tables being erased as part of a DSR.
 
 **Cause**: DSR execution failed partway through.
 
-**Fix**: check `dpdp_poc.compliance.dsr_requests` for the request_id — the `status` and `next_action` columns tell you where execution stopped. Review the `audit_trail.json` if the bundle path is populated. Common stop points: identity verification failure, legal hold check failure (shouldn't happen in POC), VACUUM failure (see §7.6 retention override).
+**Fix**: check `compliance_pack.compliance.dsr_requests` for the request_id — the `status` and `next_action` columns tell you where execution stopped. Review the `audit_trail.json` if the bundle path is populated. Common stop points: identity verification failure, legal hold check failure (shouldn't happen in POC), VACUUM failure (see §7.6 retention override).
 
 ### INT-05 shows UPDATE or DELETE operations on consent_events_log
 

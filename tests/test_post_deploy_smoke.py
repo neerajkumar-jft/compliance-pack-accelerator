@@ -40,7 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from _sql import rows_or_raise  # noqa: E402
 
-CATALOG = "dpdp_poc"
+CATALOG = "compliance_pack"
 
 # Expected baselines — picked to fail loudly if a regression knocks
 # something out of the chain. Numbers reflect 2026-04-27 state after
@@ -49,7 +49,7 @@ EXPECTED_SCHEMAS = {"bronze", "silver", "compliance", "gold", "federation_mock"}
 MIN_SILVER_OBJECTS = 10        # 5 base + 3 SF + 2 federation views
 MIN_FINDINGS = 36
 MIN_REGISTER_ROWS = 36
-MIN_NOTICE_VERSIONS = 10
+MIN_NOTICE_VERSIONS = 3        # 3 seeded by phase1; 10 after the optional multilang step
 MIN_AUTO_LOADER_TABLES = 5     # employees/customers/patients/transactions/users
 MIN_SF_TABLES = 3              # sf_leads/sf_contacts/sf_accounts
 MIN_FEDERATION_TABLES = 2      # federation_lead_scoring/federation_campaign_response

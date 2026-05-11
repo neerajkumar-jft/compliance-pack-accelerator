@@ -37,7 +37,7 @@ Discovery + auth
 Same patterns as ``scripts/bootstrap_catalog.py``:
 - Warehouse picked via ``DPDP_WAREHOUSE_ID`` env or ``databricks warehouses
   list``. Stopped serverless warehouses are accepted (they auto-start).
-- Catalog read from ``DPDP_CATALOG`` (default ``dpdp_poc``).
+- Catalog read from ``DPDP_CATALOG`` (default ``compliance_pack``).
 - Auth via the active Databricks CLI profile.
 """
 
@@ -51,7 +51,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-CATALOG = os.environ.get("DPDP_CATALOG", "dpdp_poc")
+CATALOG = os.environ.get("DPDP_CATALOG", "compliance_pack")
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 RUN_ID_RE = re.compile(r"^[0-9a-f]{12}$")

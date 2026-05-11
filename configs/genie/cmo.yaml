@@ -20,7 +20,7 @@ text_instructions: |
 
   **Principal-level queries**
   When a user asks "Can I email customer_XXXXX?", call the SQL
-  function dpdp_poc.compliance.has_active_consent(:principal_id,
+  function compliance_pack.compliance.has_active_consent(:principal_id,
   :purpose). It returns true/false deterministically by reading the
   latest (principal_id, purpose) event in consent_events_log. If the
   user asks without naming a purpose, default to marketing_email.
@@ -204,20 +204,20 @@ example_queries:
   - question: "How many principals are currently eligible for marketing email?"
     sql: |-
       SELECT COUNT(DISTINCT data_principal_id) AS eligible_principals
-      FROM dpdp_poc.gold.marketing_eligible_principals
+      FROM compliance_pack.gold.marketing_eligible_principals
       WHERE purpose = 'marketing_email'
 
   - question: "How many principals are currently eligible for marketing SMS?"
     sql: |-
       SELECT COUNT(DISTINCT data_principal_id) AS eligible_principals
-      FROM dpdp_poc.gold.marketing_eligible_principals
+      FROM compliance_pack.gold.marketing_eligible_principals
       WHERE purpose = 'marketing_sms'
 
   - question: "Show the current consent state by purpose across all principals."
     sql: |-
       SELECT purpose,
              COUNT(DISTINCT data_principal_id) AS eligible_principals
-      FROM dpdp_poc.gold.marketing_eligible_principals
+      FROM compliance_pack.gold.marketing_eligible_principals
       GROUP BY purpose
       ORDER BY eligible_principals DESC
 
@@ -226,12 +226,12 @@ example_queries:
       SELECT
         :principal_id AS principal_id,
         :purpose      AS purpose,
-        dpdp_poc.compliance.has_active_consent(:principal_id, :purpose) AS can_contact
+        compliance_pack.compliance.has_active_consent(:principal_id, :purpose) AS can_contact
 
   - question: "Show a specific principal's consent history."
     sql: |-
       SELECT event_timestamp, purpose, event_type, channel, notice_version
-      FROM dpdp_poc.compliance.consent_events_log
+      FROM compliance_pack.compliance.consent_events_log
       WHERE data_principal_id = :principal_id
       ORDER BY event_timestamp
 
@@ -239,7 +239,7 @@ example_queries:
     sql: |-
       SELECT purpose,
              COUNT(DISTINCT data_principal_id) AS principals_withdrawn
-      FROM dpdp_poc.compliance.consent_events_log
+      FROM compliance_pack.compliance.consent_events_log
       WHERE event_type = 'withdrawn'
         AND purpose IN ('marketing_email','marketing_sms','product_personalization')
         AND event_timestamp >= CURRENT_DATE - INTERVAL 30 DAYS
@@ -250,7 +250,7 @@ example_queries:
     sql: |-
       SELECT channel, event_type,
              COUNT(*) AS event_count
-      FROM dpdp_poc.compliance.consent_events_log
+      FROM compliance_pack.compliance.consent_events_log
       WHERE purpose IN ('marketing_email','marketing_sms','product_personalization')
       GROUP BY channel, event_type
       ORDER BY channel, event_type
@@ -260,7 +260,7 @@ example_queries:
       SELECT DATE_TRUNC('month', event_timestamp) AS month,
              event_type,
              COUNT(*) AS event_count
-      FROM dpdp_poc.compliance.consent_events_log
+      FROM compliance_pack.compliance.consent_events_log
       GROUP BY DATE_TRUNC('month', event_timestamp), event_type
       ORDER BY month, event_type
 
@@ -271,7 +271,7 @@ example_queries:
              COUNT(CASE WHEN event_type='granted' THEN 1 END) AS granted,
              ROUND(100.0 * COUNT(CASE WHEN event_type='granted' THEN 1 END) /
                    NULLIF(COUNT(*),0), 1) AS grant_rate_pct
-      FROM dpdp_poc.compliance.consent_events_log
+      FROM compliance_pack.compliance.consent_events_log
       GROUP BY purpose
       ORDER BY grant_rate_pct DESC
 
@@ -282,7 +282,7 @@ example_queries:
 # CMO has SELECT on consent_events_log, so the UDF executes cleanly.
 # Genie will call it verbatim for "can I contact X?" style questions.
 sql_functions:
-  - identifier: dpdp_poc.compliance.has_active_consent
+  - identifier: compliance_pack.compliance.has_active_consent
 
 
 # ---------------------------------------------------------------------

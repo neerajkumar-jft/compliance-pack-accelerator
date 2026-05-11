@@ -37,7 +37,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-CATALOG = "dpdp_poc"
+CATALOG = "compliance_pack"
 # Keep in sync with scripts/persona_config.py:get_model_endpoint().
 # Override via the 'model_endpoint' notebook widget (created below) or
 # by editing both in one commit if you change the default.

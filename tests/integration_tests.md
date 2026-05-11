@@ -33,17 +33,17 @@ Before running any integration test, verify the workspace state:
 
 ```python
 # Verify the catalog and schemas exist
-spark.sql("SHOW CATALOGS").filter("catalog == 'dpdp_poc'").count() == 1
-spark.sql("SHOW SCHEMAS IN dpdp_poc").collect()  # should include bronze, silver, gold, compliance
+spark.sql("SHOW CATALOGS").filter("catalog == 'compliance_pack'").count() == 1
+spark.sql("SHOW SCHEMAS IN compliance_pack").collect()  # should include bronze, silver, gold, compliance
 
 # Verify the service principal can apply tags
 try:
     spark.sql("""
-        ALTER TABLE dpdp_poc.silver.employees_tagged
+        ALTER TABLE compliance_pack.silver.employees_tagged
         ALTER COLUMN employee_id SET TAGS ('_smoke_test' = 'ok')
     """)
     spark.sql("""
-        ALTER TABLE dpdp_poc.silver.employees_tagged
+        ALTER TABLE compliance_pack.silver.employees_tagged
         ALTER COLUMN employee_id UNSET TAGS ('_smoke_test')
     """)
 except Exception as e:

@@ -30,7 +30,7 @@ def validate_identifier(name, label="identifier"):
         raise ValueError(f"Invalid {label}: {name!r}")
     return name
 
-dbutils.widgets.text("catalog", "dpdp_poc", "Target Catalog")
+dbutils.widgets.text("catalog", "compliance_pack", "Target Catalog")
 dbutils.widgets.dropdown("ingestion_pattern", "lakehouse_federation",
     ["lakehouse_federation", "lakeflow_connect", "auto_loader", "unity_catalog"],
     "Ingestion Pattern")
@@ -319,7 +319,7 @@ if PATTERN == "unity_catalog" and SOURCE_NAME:
 # MAGIC %sql
 # MAGIC SELECT source_id, source_name, source_type, ingestion_pattern,
 # MAGIC        catalog_name, schema_name, is_active, updated_at
-# MAGIC FROM dpdp_poc.bronze.data_sources
+# MAGIC FROM compliance_pack.bronze.data_sources
 # MAGIC ORDER BY updated_at DESC
 
 # COMMAND ----------

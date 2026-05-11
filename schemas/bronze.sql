@@ -5,7 +5,7 @@
 -- ============================================================================
 -- employees
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_employees (
+CREATE TABLE IF NOT EXISTS compliance_pack.bronze.source_employees (
     employee_id         STRING,
     first_name          STRING,
     last_name           STRING,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_employees (
 -- ============================================================================
 -- customers
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_customers (
+CREATE TABLE IF NOT EXISTS compliance_pack.bronze.source_customers (
     customer_id         STRING,
     full_name           STRING,
     email_address       STRING,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_customers (
 -- ============================================================================
 -- patients
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_patients (
+CREATE TABLE IF NOT EXISTS compliance_pack.bronze.source_patients (
     patient_id              STRING,
     medical_record_number   STRING,
     full_name               STRING,
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_patients (
 -- ============================================================================
 -- transactions
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_transactions (
+CREATE TABLE IF NOT EXISTS compliance_pack.bronze.source_transactions (
     transaction_id          STRING,
     customer_id             STRING,
     transaction_date        STRING,
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_transactions (
 -- ============================================================================
 -- users
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_users (
+CREATE TABLE IF NOT EXISTS compliance_pack.bronze.source_users (
     user_id             STRING,
     username            STRING,
     email               STRING,
@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.source_users (
 -- the classifier in pipelines/classification_dlt.py reads
 -- silver_table_name from here to discover which silver objects to scan.
 -- ingestion_pattern values: 'auto_loader' | 'direct_write' | 'federation_view'.
-CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.data_sources (
+CREATE TABLE IF NOT EXISTS compliance_pack.bronze.data_sources (
     source_id           STRING    NOT NULL,
     source_name         STRING    NOT NULL,
     source_type         STRING    NOT NULL,

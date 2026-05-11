@@ -40,28 +40,28 @@ PERSONA_DEFS = {
         "title": "DPDP — CCO Agent",
         "description": "Chief Compliance Officer agent. Answers questions about PII inventory, compliance gaps, and remediation priorities across the DPDP data estate.",
         "tables": [
-            "dpdp_poc.compliance.personal_data_register",
-            "dpdp_poc.silver.pii_findings",
-            "dpdp_poc.silver.compliance_gaps",
-            "dpdp_poc.silver.discovered_tables",
-            "dpdp_poc.gold.consent_coverage_summary",
+            "compliance_pack.compliance.personal_data_register",
+            "compliance_pack.silver.pii_findings",
+            "compliance_pack.silver.compliance_gaps",
+            "compliance_pack.silver.discovered_tables",
+            "compliance_pack.gold.consent_coverage_summary",
             # Scorecard + histogram views — CCO already has SELECT on these
             # via SHARED_OVERVIEW_TABLES in apply_persona_uc_grants.py. Adding
             # them to the Genie lets questions like "what's my risk score?"
             # answer from a single-row view instead of hand-aggregating the
             # raw silver tables.
-            "dpdp_poc.gold.persona_overview_metrics",
-            "dpdp_poc.gold.persona_sensitivity_histogram",
+            "compliance_pack.gold.persona_overview_metrics",
+            "compliance_pack.gold.persona_sensitivity_histogram",
             # Lakeflow Connect simulation (Salesforce) — silver tables. CCO sees
             # PII columns masked (mask UDFs in compliance.mask_*).
-            "dpdp_poc.silver.sf_leads_tagged",
-            "dpdp_poc.silver.sf_contacts_tagged",
-            "dpdp_poc.silver.sf_accounts_tagged",
+            "compliance_pack.silver.sf_leads_tagged",
+            "compliance_pack.silver.sf_contacts_tagged",
+            "compliance_pack.silver.sf_accounts_tagged",
             # Lakehouse Federation simulation — silver views over federation_mock.
             # Same governance: masks live on the federation_mock backing tables
             # so reads through the views inherit them.
-            "dpdp_poc.silver.federation_lead_scoring_tagged",
-            "dpdp_poc.silver.federation_campaign_response_tagged",
+            "compliance_pack.silver.federation_lead_scoring_tagged",
+            "compliance_pack.silver.federation_campaign_response_tagged",
         ],
         "instructions": (
             "You are the DPDP compliance assistant for the Chief Compliance Officer.\n\n"
@@ -89,14 +89,14 @@ PERSONA_DEFS = {
         "title": "DPDP — GC Agent",
         "description": "General Counsel agent. Answers legal-exposure questions about DPDP obligations, consent withdrawals, notice-version history, and DPIA generation history.",
         "tables": [
-            "dpdp_poc.silver.compliance_gaps",
-            "dpdp_poc.compliance.consent_events_log",
-            "dpdp_poc.compliance.notice_versions",
-            "dpdp_poc.compliance.dsr_requests",
+            "compliance_pack.silver.compliance_gaps",
+            "compliance_pack.compliance.consent_events_log",
+            "compliance_pack.compliance.notice_versions",
+            "compliance_pack.compliance.dsr_requests",
             # GC owns DPDP §10 sign-off — DPIA history is the artifact they
             # approve. Scoped to GC only; CCO sees status via the dashboard
             # tile, CMO/CFO have no business need.
-            "dpdp_poc.compliance.dpia_runs",
+            "compliance_pack.compliance.dpia_runs",
         ],
         "instructions": (
             "You are the DPDP legal assistant for the General Counsel.\n\n"
@@ -128,8 +128,8 @@ PERSONA_DEFS = {
         "title": "DPDP — CMO Agent",
         "description": "Chief Marketing Officer agent. Answers questions about marketing-eligible audience, consent by purpose, and campaign-safe segmentation.",
         "tables": [
-            "dpdp_poc.gold.marketing_eligible_principals",
-            "dpdp_poc.compliance.consent_events_log",
+            "compliance_pack.gold.marketing_eligible_principals",
+            "compliance_pack.compliance.consent_events_log",
         ],
         "instructions": (
             "You are the DPDP marketing assistant for the Chief Marketing Officer.\n\n"
@@ -160,8 +160,8 @@ PERSONA_DEFS = {
         "title": "DPDP — CFO Agent",
         "description": "Chief Financial Officer agent. Answers questions about DPDP penalty exposure, gap counts weighted by penalty ceilings, and remediation cost estimates.",
         "tables": [
-            "dpdp_poc.silver.compliance_gaps",
-            "dpdp_poc.silver.discovered_tables",
+            "compliance_pack.silver.compliance_gaps",
+            "compliance_pack.silver.discovered_tables",
         ],
         "instructions": (
             "You are the DPDP risk-quantification assistant for the Chief Financial Officer.\n\n"

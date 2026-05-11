@@ -27,7 +27,7 @@ resources:
     # Triggers the DLT pipeline. Runs Bronze (Auto Loader) → Silver (typed)
     # → pii_findings + discovered_tables.
     run_medallion:
-      name: dpdp_poc_run_medallion
+      name: compliance_pack_run_medallion
       description: "Trigger the medallion DLT pipeline. Produces Bronze + Silver + pii_findings."
       max_concurrent_runs: 1
 
@@ -50,7 +50,7 @@ resources:
     # compliance.retention_audit for DPIA / regulator evidence.
     # Safe default: mode=dry-run. Schedule weekly.
     retention_enforcement:
-      name: dpdp_poc_retention_enforcement
+      name: compliance_pack_retention_enforcement
       description: "DPDP §8(7): identify + delete consent events past their retention deadline. Produces compliance.retention_audit evidence."
       max_concurrent_runs: 1
 
@@ -81,7 +81,7 @@ resources:
     #   gold.marketing_eligible_principals + gold.consent_coverage_summary views.
     # Idempotent: MERGE + TRUNCATE+INSERT patterns inside.
     phase1_bootstrap:
-      name: dpdp_poc_phase1_bootstrap
+      name: compliance_pack_phase1_bootstrap
       description: "Populate bronze.compliance_rules + silver.compliance_gaps + consent events + notice versions + gold views. Run once after run_medallion on a fresh workspace."
       max_concurrent_runs: 1
 
@@ -124,7 +124,7 @@ resources:
     # silently fails to generate. Today the bundle's run_as is the deployer
     # (workspace user), so this isn't required for the POC.
     dpia_generator:
-      name: dpdp_poc_dpia_generator
+      name: compliance_pack_dpia_generator
       description: "Quarterly DPIA generation. Reads UC metadata, writes JSON artifact + audit row in compliance.dpia_runs (status='draft'). Approve drafts via scripts/approve_dpia.py."
       max_concurrent_runs: 1
 

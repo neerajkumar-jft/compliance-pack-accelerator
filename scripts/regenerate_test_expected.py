@@ -48,7 +48,7 @@ sys.path.insert(0, str(REPO_ROOT / "tests"))
 from _sql import rows_or_raise  # noqa: E402
 
 BASELINE_PATH = REPO_ROOT / "tests" / "_baseline.json"
-CATALOG = "dpdp_poc"
+CATALOG = "compliance_pack"
 
 
 # ---------------------------------------------------------------------------

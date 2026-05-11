@@ -1,7 +1,7 @@
 """Apply Unity Catalog grants to the 4 persona demo users.
 
 Each persona user gets:
-  - USE_CATALOG on dpdp_poc
+  - USE_CATALOG on compliance_pack
   - USE_SCHEMA on every schema whose tables it needs
   - SELECT on the allowlisted tables for that persona
 
@@ -40,40 +40,40 @@ WAREHOUSE_ID = get_warehouse_id()
 # i.e. the agent boundary. Keep in sync with the Genie setup script.
 PERSONA_TABLES: dict[str, list[str]] = {
     "cco": [
-        "dpdp_poc.compliance.personal_data_register",
-        "dpdp_poc.silver.pii_findings",
-        "dpdp_poc.silver.compliance_gaps",
-        "dpdp_poc.silver.discovered_tables",
-        "dpdp_poc.gold.consent_coverage_summary",
+        "compliance_pack.compliance.personal_data_register",
+        "compliance_pack.silver.pii_findings",
+        "compliance_pack.silver.compliance_gaps",
+        "compliance_pack.silver.discovered_tables",
+        "compliance_pack.gold.consent_coverage_summary",
         # Lakeflow Connect simulation (silver tables)
-        "dpdp_poc.silver.sf_leads_tagged",
-        "dpdp_poc.silver.sf_contacts_tagged",
-        "dpdp_poc.silver.sf_accounts_tagged",
+        "compliance_pack.silver.sf_leads_tagged",
+        "compliance_pack.silver.sf_contacts_tagged",
+        "compliance_pack.silver.sf_accounts_tagged",
         # Federation simulation — silver views + their federation_mock backing
         # tables (UC requires SELECT on both layers when the view's underlying
         # rows are queried at runtime, depending on runtime behavior).
-        "dpdp_poc.silver.federation_lead_scoring_tagged",
-        "dpdp_poc.silver.federation_campaign_response_tagged",
-        "dpdp_poc.federation_mock.lead_scoring",
-        "dpdp_poc.federation_mock.campaign_response",
+        "compliance_pack.silver.federation_lead_scoring_tagged",
+        "compliance_pack.silver.federation_campaign_response_tagged",
+        "compliance_pack.federation_mock.lead_scoring",
+        "compliance_pack.federation_mock.campaign_response",
     ],
     "gc": [
-        "dpdp_poc.silver.compliance_gaps",
-        "dpdp_poc.compliance.consent_events_log",
-        "dpdp_poc.compliance.notice_versions",
-        "dpdp_poc.compliance.dsr_requests",
+        "compliance_pack.silver.compliance_gaps",
+        "compliance_pack.compliance.consent_events_log",
+        "compliance_pack.compliance.notice_versions",
+        "compliance_pack.compliance.dsr_requests",
         # GC owns DPDP §10 sign-off — DPIA history is the artifact they
         # approve. Kept in sync with the Genie data_sources allowlist in
         # scripts/setup_persona_genie_spaces.py PERSONA_DEFS['gc']['tables'].
-        "dpdp_poc.compliance.dpia_runs",
+        "compliance_pack.compliance.dpia_runs",
     ],
     "cmo": [
-        "dpdp_poc.gold.marketing_eligible_principals",
-        "dpdp_poc.compliance.consent_events_log",
+        "compliance_pack.gold.marketing_eligible_principals",
+        "compliance_pack.compliance.consent_events_log",
     ],
     "cfo": [
-        "dpdp_poc.silver.compliance_gaps",
-        "dpdp_poc.silver.discovered_tables",
+        "compliance_pack.silver.compliance_gaps",
+        "compliance_pack.silver.discovered_tables",
     ],
 }
 
@@ -91,8 +91,8 @@ PERSONA_TABLES: dict[str, list[str]] = {
 # (CMO/GC/CFO could SELECT pii_type, source_column FROM pii_findings)
 # is closed for CMO entirely and for GC/CFO on pii_findings.
 SHARED_OVERVIEW_TABLES: list[str] = [
-    "dpdp_poc.gold.persona_overview_metrics",
-    "dpdp_poc.gold.persona_sensitivity_histogram",
+    "compliance_pack.gold.persona_overview_metrics",
+    "compliance_pack.gold.persona_sensitivity_histogram",
 ]
 
 EMAILS_FILE = REPO_ROOT / "dashboards" / "personas" / ".persona_emails.json"

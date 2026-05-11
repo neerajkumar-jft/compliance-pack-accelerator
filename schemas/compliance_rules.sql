@@ -4,7 +4,7 @@
 -- ============================================================================
 -- compliance_rules - what compliance gaps to detect
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.compliance_rules (
+CREATE TABLE IF NOT EXISTS compliance_pack.bronze.compliance_rules (
     rule_id                 STRING      NOT NULL,
     rule_type               STRING      NOT NULL,
     severity                STRING      NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.bronze.compliance_rules (
 -- ============================================================================
 -- compliance_gaps - detected gaps per PII finding × rule
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS dpdp_poc.silver.compliance_gaps (
+CREATE TABLE IF NOT EXISTS compliance_pack.silver.compliance_gaps (
     gap_id          STRING      NOT NULL,
     scan_job_id     STRING      NOT NULL,
     table_name      STRING      NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS dpdp_poc.silver.compliance_gaps (
 -- ============================================================================
 
 -- Encryption rules
-MERGE INTO dpdp_poc.bronze.compliance_rules t
+MERGE INTO compliance_pack.bronze.compliance_rules t
 USING (SELECT 'ENC-001' AS rule_id) s ON t.rule_id = s.rule_id
 WHEN NOT MATCHED THEN INSERT VALUES (
     'ENC-001', 'encryption', 'high',
@@ -51,7 +51,7 @@ WHEN NOT MATCHED THEN INSERT VALUES (
     true
 );
 
-MERGE INTO dpdp_poc.bronze.compliance_rules t
+MERGE INTO compliance_pack.bronze.compliance_rules t
 USING (SELECT 'ENC-002' AS rule_id) s ON t.rule_id = s.rule_id
 WHEN NOT MATCHED THEN INSERT VALUES (
     'ENC-002', 'encryption', 'critical',
@@ -63,7 +63,7 @@ WHEN NOT MATCHED THEN INSERT VALUES (
 );
 
 -- Consent rules
-MERGE INTO dpdp_poc.bronze.compliance_rules t
+MERGE INTO compliance_pack.bronze.compliance_rules t
 USING (SELECT 'CNS-001' AS rule_id) s ON t.rule_id = s.rule_id
 WHEN NOT MATCHED THEN INSERT VALUES (
     'CNS-001', 'consent', 'critical',
@@ -74,7 +74,7 @@ WHEN NOT MATCHED THEN INSERT VALUES (
     true
 );
 
-MERGE INTO dpdp_poc.bronze.compliance_rules t
+MERGE INTO compliance_pack.bronze.compliance_rules t
 USING (SELECT 'CNS-002' AS rule_id) s ON t.rule_id = s.rule_id
 WHEN NOT MATCHED THEN INSERT VALUES (
     'CNS-002', 'consent', 'high',
@@ -86,7 +86,7 @@ WHEN NOT MATCHED THEN INSERT VALUES (
 );
 
 -- Retention rules
-MERGE INTO dpdp_poc.bronze.compliance_rules t
+MERGE INTO compliance_pack.bronze.compliance_rules t
 USING (SELECT 'RET-001' AS rule_id) s ON t.rule_id = s.rule_id
 WHEN NOT MATCHED THEN INSERT VALUES (
     'RET-001', 'retention', 'high',
@@ -98,7 +98,7 @@ WHEN NOT MATCHED THEN INSERT VALUES (
 );
 
 -- Access control rules
-MERGE INTO dpdp_poc.bronze.compliance_rules t
+MERGE INTO compliance_pack.bronze.compliance_rules t
 USING (SELECT 'ACC-001' AS rule_id) s ON t.rule_id = s.rule_id
 WHEN NOT MATCHED THEN INSERT VALUES (
     'ACC-001', 'access_control', 'high',
@@ -109,7 +109,7 @@ WHEN NOT MATCHED THEN INSERT VALUES (
     true
 );
 
-MERGE INTO dpdp_poc.bronze.compliance_rules t
+MERGE INTO compliance_pack.bronze.compliance_rules t
 USING (SELECT 'ACC-002' AS rule_id) s ON t.rule_id = s.rule_id
 WHEN NOT MATCHED THEN INSERT VALUES (
     'ACC-002', 'access_control', 'medium',
@@ -121,7 +121,7 @@ WHEN NOT MATCHED THEN INSERT VALUES (
 );
 
 -- DSR rules
-MERGE INTO dpdp_poc.bronze.compliance_rules t
+MERGE INTO compliance_pack.bronze.compliance_rules t
 USING (SELECT 'DSR-001' AS rule_id) s ON t.rule_id = s.rule_id
 WHEN NOT MATCHED THEN INSERT VALUES (
     'DSR-001', 'data_subject_rights', 'critical',
@@ -133,7 +133,7 @@ WHEN NOT MATCHED THEN INSERT VALUES (
 );
 
 -- Breach notification rules
-MERGE INTO dpdp_poc.bronze.compliance_rules t
+MERGE INTO compliance_pack.bronze.compliance_rules t
 USING (SELECT 'BRN-001' AS rule_id) s ON t.rule_id = s.rule_id
 WHEN NOT MATCHED THEN INSERT VALUES (
     'BRN-001', 'breach_notification', 'critical',

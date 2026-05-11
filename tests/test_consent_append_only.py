@@ -32,7 +32,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _sql import rows_or_raise  # noqa: E402
 
-TABLE = "dpdp_poc.compliance.consent_events_log"
+TABLE = "compliance_pack.compliance.consent_events_log"
 
 # An UPDATE is "supersession-scoped" if its predicate targets event_id.
 # Example predicate from Delta history:

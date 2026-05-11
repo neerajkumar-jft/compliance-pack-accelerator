@@ -1,5 +1,5 @@
 -- Lakebase consent_events DDL - the load-bearing schema (§5.4)
--- Runs in the Lakebase instance `dpdp-poc-consent`, database `dpdp_poc_consent`, schema `public`
+-- Runs in the Lakebase instance `dpdp-poc-consent`, database `compliance_pack_consent`, schema `public`
 
 -- ============================================================================
 -- data_principals - minimal principal registry

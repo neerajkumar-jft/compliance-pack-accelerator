@@ -19,7 +19,7 @@ tests/
 ## Running the unit tests
 
 ```bash
-cd /path/to/dpdp_poc_spec
+cd /path/to/compliance_pack_spec
 python -m pytest tests/unit/ -v
 ```
 

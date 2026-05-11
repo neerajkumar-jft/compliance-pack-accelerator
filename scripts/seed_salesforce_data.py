@@ -13,7 +13,7 @@ data is regenerated deterministically from seed=43.
 Usage:
     python3 scripts/seed_salesforce_data.py
     python3 scripts/seed_salesforce_data.py --dry-run
-    python3 scripts/seed_salesforce_data.py --catalog dpdp_poc
+    python3 scripts/seed_salesforce_data.py --catalog compliance_pack
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from generate_salesforce_data import generate  # noqa: E402
 from persona_config import get_warehouse_id  # noqa: E402
 
 WAREHOUSE_ID = get_warehouse_id()
-DEFAULT_CATALOG = "dpdp_poc"
+DEFAULT_CATALOG = "compliance_pack"
 INSERT_BATCH_SIZE = 25  # keeps each INSERT statement under ~30KB
 
 # ---------------------------------------------------------------------------

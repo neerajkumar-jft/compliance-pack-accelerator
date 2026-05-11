@@ -343,8 +343,8 @@ EXTRA_BUILDERS = {
 # scripts/apply_persona_uc_grants.py → SHARED_OVERVIEW_TABLES. To keep the
 # Executive Overview tiles rendering for those personas, we rewrite 5
 # datasets to query aggregate Gold views created by phase1_bootstrap.py:
-#   - dpdp_poc.gold.persona_overview_metrics       (1-row scorecard)
-#   - dpdp_poc.gold.persona_sensitivity_histogram  (4-row tier breakdown)
+#   - compliance_pack.gold.persona_overview_metrics       (1-row scorecard)
+#   - compliance_pack.gold.persona_sensitivity_histogram  (4-row tier breakdown)
 #
 # Each rewrite emits the same output columns as the original so widgets
 # keep their field bindings. CCO keeps raw SQL because it also queries
@@ -352,21 +352,21 @@ EXTRA_BUILDERS = {
 DATASET_REWRITES_NON_CCO: dict[str, str] = {
     "risk_scores": (
         "SELECT risk_score, compliance_score, risk_level "
-        "FROM dpdp_poc.gold.persona_overview_metrics"
+        "FROM compliance_pack.gold.persona_overview_metrics"
     ),
     "last_scan_info": (
         "SELECT 'aggregate' AS last_scan_job_id, last_scan_time, "
         "1 AS total_scans, days_since_last_scan "
-        "FROM dpdp_poc.gold.persona_overview_metrics"
+        "FROM compliance_pack.gold.persona_overview_metrics"
     ),
     "executive_summary": (
         "SELECT total_tables AS tables_scanned, pii_columns AS total_pii_columns, "
         "critical_pii, high_pii AS high_sensitivity_pii, avg_confidence, "
         "total_gaps, critical_gaps "
-        "FROM dpdp_poc.gold.persona_overview_metrics"
+        "FROM compliance_pack.gold.persona_overview_metrics"
     ),
     "pii_sensitivity_distribution": (
-        "SELECT sensitivity_tier, count FROM dpdp_poc.gold.persona_sensitivity_histogram "
+        "SELECT sensitivity_tier, count FROM compliance_pack.gold.persona_sensitivity_histogram "
         "ORDER BY CASE sensitivity_tier WHEN 'critical' THEN 1 WHEN 'high' THEN 2 "
         "WHEN 'medium' THEN 3 ELSE 4 END"
     ),
@@ -376,7 +376,7 @@ DATASET_REWRITES_NON_CCO: dict[str, str] = {
         "SELECT 'Aggregate summary — table-level breakdown available to CCO' "
         "AS full_table_name, pii_columns, critical_pii AS critical_count, "
         "high_pii AS high_count, CAST((critical_pii*3 + high_pii*2) AS INT) AS risk_score "
-        "FROM dpdp_poc.gold.persona_overview_metrics"
+        "FROM compliance_pack.gold.persona_overview_metrics"
     ),
 }
 

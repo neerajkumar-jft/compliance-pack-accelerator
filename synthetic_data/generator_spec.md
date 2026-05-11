@@ -4,10 +4,10 @@ Detailed implementation notes extending §6 of the main spec. Read §6 first.
 
 ## Expected file output layout
 
-After running `python generate_synthetic_data.py --output-dir /Volumes/dpdp_poc/bronze/landing/ --seed 42`:
+After running `python generate_synthetic_data.py --output-dir /Volumes/compliance_pack/bronze/landing/ --seed 42`:
 
 ```
-/Volumes/dpdp_poc/bronze/landing/
+/Volumes/compliance_pack/bronze/landing/
 ├── employees/
 │   └── employees_20260417.csv.gz       (~2000 rows + header)
 ├── customers/

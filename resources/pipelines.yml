@@ -12,7 +12,7 @@
 resources:
   pipelines:
     medallion_pipeline:
-      name: dpdp_poc_medallion
+      name: compliance_pack_medallion
       catalog: ${var.catalog_name}
       target: silver  # default target schema for tables created in the pipeline
       development: true  # trial workspace — avoids full refresh on every run

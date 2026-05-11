@@ -55,7 +55,7 @@ import streamlit as st
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.sql import StatementState
 
-CATALOG = os.environ.get("DPDP_CATALOG", "dpdp_poc")
+CATALOG = os.environ.get("DPDP_CATALOG", "compliance_pack")
 TABLE = f"{CATALOG}.compliance.dpia_runs"
 PERSONA_EMAILS_PATH = Path("dashboards/personas/.persona_emails.json")
 
@@ -558,7 +558,7 @@ def render_pdf(row: dict) -> bytes:
         "This document was rendered from the structured output of an LLM-based "
         "DPIA generator and must be reviewed by a qualified privacy officer "
         "before submission to a regulator. The audit row in "
-        "<font face='Courier'>dpdp_poc.compliance.dpia_runs</font> with run_id "
+        "<font face='Courier'>compliance_pack.compliance.dpia_runs</font> with run_id "
         f"<font face='Courier'>{row.get('run_id', '')}</font> is the "
         "authoritative system-of-record.",
         body,
@@ -594,7 +594,7 @@ def render_pdf(row: dict) -> bytes:
     story.append(Paragraph(
         f"<font color='#888888' size='8'>Rendered at "
         f"{datetime.now(timezone.utc).isoformat()} by the DPIA Review app. "
-        f"Authoritative source: <font face='Courier'>dpdp_poc.compliance.dpia_runs.run_id "
+        f"Authoritative source: <font face='Courier'>compliance_pack.compliance.dpia_runs.run_id "
         f"= '{row.get('run_id', '')}'</font></font>",
         body,
     ))
@@ -671,7 +671,7 @@ def render_docx(row: dict) -> bytes:
     intro = doc.add_paragraph(
         "This document was rendered from the structured output of an LLM-based "
         "DPIA generator and must be reviewed by a qualified privacy officer before "
-        "submission to a regulator. The audit row in dpdp_poc.compliance.dpia_runs "
+        "submission to a regulator. The audit row in compliance_pack.compliance.dpia_runs "
         f"with run_id {row.get('run_id', '')} is the authoritative system-of-record."
     )
     for run in intro.runs:
@@ -786,7 +786,7 @@ def render_docx(row: dict) -> bytes:
     doc.add_paragraph()
     footer = doc.add_paragraph(
         f"Rendered at {datetime.now(timezone.utc).isoformat()} by the DPIA "
-        f"Review app. Authoritative source: dpdp_poc.compliance.dpia_runs.run_id "
+        f"Review app. Authoritative source: compliance_pack.compliance.dpia_runs.run_id "
         f"= '{row.get('run_id', '')}'"
     )
     for run in footer.runs:

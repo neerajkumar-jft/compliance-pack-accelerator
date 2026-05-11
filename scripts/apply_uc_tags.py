@@ -1,6 +1,6 @@
 """Apply Unity Catalog column tags based on silver.pii_findings.
 
-For each row in `dpdp_poc.silver.pii_findings`, runs
+For each row in `compliance_pack.silver.pii_findings`, runs
 `ALTER TABLE ... ALTER COLUMN ... SET TAGS (pii_type=..., pii_category=...,
 sensitivity=...)` against the corresponding silver table.
 
@@ -30,7 +30,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from persona_config import get_warehouse_id  # noqa: E402
 
 WAREHOUSE_ID = get_warehouse_id()
-CATALOG = "dpdp_poc"
+CATALOG = "compliance_pack"
 SCHEMA = "silver"
 
 
