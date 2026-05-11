@@ -1,0 +1,46 @@
+# UK GDPR — Retention defaults per consent purpose.
+#
+# UK GDPR Art. 5(1)(e) (storage limitation) requires personal data not be kept
+# in identifiable form longer than necessary for the purposes for which it is
+# processed. The Act sets no fixed limits; the values below reflect ICO
+# guidance and prevailing UK industry practice for each purpose.
+#
+# These are SHORTER than the DPDP defaults (e.g., marketing 90 vs 730 days)
+# because UK ICO has historically pushed back on long marketing retention
+# absent positive re-consent. This is exactly the behaviour ADR-0001's
+# per-data-subject routing preserves: a UK principal under this pack gets
+# 90-day marketing retention; an Indian principal under DPDP gets 730 — same
+# database, different policies per row.
+
+defaults:
+  core_service:              365      # 1 year — duration of active customer relationship
+  marketing_email:            90      # 3 months — re-consent required after this
+  marketing_sms:              90
+  product_personalization:   180      # 6 months
+  analytics:                 180      # 6 months — tighter than DPDP's 730
+  third_party_sharing:        90      # Shortest
+
+# Statutory overrides — UK retention legally mandated by other Acts.
+# Take precedence over the defaults above; the retention-enforcement job must
+# honour these before deleting.
+statutory_overrides:
+  - law: "Companies Act 2006 §388"
+    description: "Accounting records — 6 years for private companies, 3 for public"
+    applies_to_purposes: [core_service]
+    retention_days: 2190                # 6 years
+  - law: "Money Laundering Regulations 2017"
+    description: "AML / KYC records — 5 years from end of business relationship"
+    applies_to_purposes: [core_service]
+    retention_days: 1825                # 5 years
+  - law: "Limitation Act 1980 §5"
+    description: "Contractual claim limitation — 6 years from cause of action"
+    applies_to_purposes: [core_service]
+    retention_days: 2190                # 6 years
+  - law: "HMRC Finance Act 2008"
+    description: "Tax-relevant records — 6 years"
+    applies_to_purposes: [core_service]
+    retention_days: 2190
+  - law: "PECR Reg. 5 / 6"
+    description: "Cookie consent records — 6-12 months between re-consent prompts"
+    applies_to_purposes: [analytics, marketing_email, marketing_sms, product_personalization]
+    retention_days: 365

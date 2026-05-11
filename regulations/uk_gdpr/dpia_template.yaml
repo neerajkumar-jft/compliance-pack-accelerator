@@ -1,0 +1,81 @@
+# DPIA template for UK GDPR (retained EU GDPR + DPA 2018).
+#
+# Used by governance_core/agent_prompts.py to render the DPIA system prompt
+# + user prompt. The Pydantic schema for the 8 sections is regulation-
+# agnostic and lives in governance_core/dpia.py::DPIASections — section keys
+# stay stable across packs so the dashboard tile renders consistently
+# regardless of which regulation is active. This file controls:
+#
+#   - Which legal framework the model is told it's drafting under
+#   - Which citation style the model uses for section references
+#   - The system prompt that frames the agent's role
+#   - Optional per-section description overrides that get merged into the
+#     JSON schema fed to the model
+#
+# For multi-jurisdiction activities (an Indian SaaS processing both Indian
+# and UK principals), the DPIA generator selects this template if UK
+# principals appear in the activity's data scope. If both DPDP and UK GDPR
+# principals are present, the primary pack drives the narrative and the
+# other pack's citations appear inline (ADR-0001 Decision §"DPIA generator
+# output is per-processing-activity").
+
+legal_framework_name: "UK General Data Protection Regulation + Data Protection Act 2018"
+section_citation_style: "UK GDPR Art. <article_number> (or DPA 2018 §<section>)"
+
+system_prompt: |
+  You are a Data Protection Impact Assessment (DPIA) generator for the UK
+  General Data Protection Regulation (UK GDPR) and the Data Protection Act
+  2018. Produce a formal DPIA in valid JSON conforming to the provided
+  schema, grounded strictly in the metadata supplied in the user message.
+  Do not invent facts; quote only specific table names, column names, gap
+  counts, and rule_ids from the provided context. Where applicable, cite UK
+  GDPR articles (for example UK GDPR Art. 5, Art. 6, Art. 17, Art. 32,
+  Art. 33-34, Art. 35) and DPA 2018 sections (for example DPA 2018 §10,
+  §35). UK GDPR Art. 35 prescribes when a DPIA is mandatory — note this
+  explicitly in the necessity assessment when the criteria in Art. 35(3)
+  are met (systematic and extensive evaluation of personal aspects through
+  automated processing; large-scale processing of special-category data;
+  systematic monitoring of publicly accessible areas). Output exactly one
+  JSON object — no preamble, no markdown fences, no trailing text.
+
+section_descriptions:
+  necessity_assessment: |
+    Apply the UK GDPR Art. 35(3) criteria to determine whether a DPIA is
+    mandatory: (a) systematic and extensive evaluation of personal aspects
+    based on automated processing including profiling, leading to legal or
+    similarly significant effects; (b) large-scale processing of
+    special-category (Art. 9) or criminal-conviction (Art. 10) data; (c)
+    systematic monitoring of publicly accessible areas on a large scale.
+    If none apply, the DPIA is recommended best practice but not mandatory
+    — state this conclusion and the reasoning. Reference the ICO's
+    "examples of processing 'likely to result in high risk'" list.
+
+  compliance_gap_analysis: |
+    Gaps against UK GDPR obligations. Cite specific rule_id values
+    (UK-LAW-001 / UK-CNS-001 / UK-RET-001 / etc.) and UK GDPR articles
+    from the provided compliance_rules metadata. Group findings by
+    severity (critical / high / medium). Quote exact gap counts from the
+    provided gaps_summary; do not estimate. Note any DPA 2018 §10
+    special-category obligations triggered.
+
+  remediation_plan: |
+    Prioritised remediation actions, each tied to a specific rule_id and
+    the UK GDPR article it addresses (and DPA 2018 section where the UK
+    derogations apply). Order critical → high → medium. Each action should
+    reference the table or column from the provided metadata where the gap
+    manifests, and propose a concrete control (column mask, consent
+    capture, retention rule, residency filter, IDTA for transfers, etc.).
+
+  consent_status: |
+    Coverage of consent across the purposes registered with the controller.
+    Use the provided consent_coverage metadata to report grant rates,
+    withdrawal rates, and any purposes with anomalously low coverage. Note
+    any UK GDPR Art. 7 obligations on consent capture or Art. 21 obligations
+    on objection that current coverage does not yet satisfy.
+
+  international_transfers: |
+    Where transfers outside the UK occur, identify the destination country
+    and the safeguard relied upon (UK adequacy decision, IDTA, UK Addendum
+    to EU SCCs, BCRs, or Art. 49 derogation). Flag transfers to countries
+    not on the UK adequacy list that lack an explicit safeguard. Reference
+    UK GDPR Chapter V and the residency.yaml allowed_countries list.

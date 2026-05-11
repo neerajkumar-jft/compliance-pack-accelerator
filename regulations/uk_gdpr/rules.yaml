@@ -1,0 +1,147 @@
+# UK GDPR + Data Protection Act 2018 — Compliance rules.
+#
+# Source of truth for the UK GDPR rows in bronze.compliance_rules. Loaded by
+# pipelines/phase1_bootstrap.py via governance_core.pack_loader; MERGE'd
+# into the bronze.compliance_rules Delta table alongside DPDP rules under
+# multi-pack mode (ADR-0001).
+#
+# Each rule fires per principal — the gap-engine query joins
+# silver.pii_findings to silver.customers_tagged.jurisdiction = 'GB' before
+# evaluating these rules; Indian principals are governed by DPDP rules
+# instead.
+#
+# Schema per entry:
+#   rule_id               — stable identifier, prefix maps to rule_type
+#   rule_type             — one of: encryption, consent, retention,
+#                           access_control, data_subject_rights,
+#                           breach_notification, lawfulness, transparency
+#   severity              — critical / high / medium / low
+#   regulations           — list of regulations this rule speaks to
+#   applicable_categories — PII categories this rule applies to
+#   description           — plain-English requirement
+#   remediation           — concrete action to close a gap
+#   citation              — primary article / section reference
+
+rules:
+  # -------------------------------------------------------------------------
+  # Lawfulness, fairness and transparency (Art. 5(1)(a), Art. 6, Art. 7)
+  # -------------------------------------------------------------------------
+  - rule_id: UK-LAW-001
+    rule_type: lawfulness
+    severity: critical
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, direct_gov, direct_fin, indirect, sensitive]
+    citation: "UK GDPR Art. 6"
+    description: "Every processing activity must rest on at least one of the six lawful bases in Art. 6(1) (consent, contract, legal obligation, vital interests, public task, legitimate interests)."
+    remediation: "Document the lawful basis per processing activity in the Record of Processing Activities (Art. 30); make it visible in the privacy notice."
+
+  - rule_id: UK-CNS-001
+    rule_type: consent
+    severity: critical
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, indirect, sensitive]
+    citation: "UK GDPR Art. 7 + Recital 32"
+    description: "Where lawful basis is consent, the consent must be freely given, specific, informed and unambiguous, with a clear affirmative action — pre-ticked boxes and silence are not consent."
+    remediation: "Capture consent through a granular per-purpose UI with no pre-checked boxes; record the timestamp, purpose, and version of the notice the user saw."
+
+  - rule_id: UK-CNS-002
+    rule_type: consent
+    severity: high
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, indirect, sensitive]
+    citation: "UK GDPR Art. 7(3)"
+    description: "Withdrawal of consent must be as easy as giving it; downstream processing must stop without undue delay following withdrawal."
+    remediation: "Expose a one-click withdrawal flow on every channel where consent is captured; ensure CDF-driven propagation invalidates marketing/analytics views within minutes."
+
+  - rule_id: UK-TRN-001
+    rule_type: transparency
+    severity: high
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, indirect, sensitive]
+    citation: "UK GDPR Art. 13-14"
+    description: "Provide privacy information at the point of collection (Art. 13) or within one month if collected indirectly (Art. 14): identity of controller, purposes, lawful basis, recipients, retention, rights, complaint route, automated-decision logic."
+    remediation: "Publish a layered privacy notice; ensure version-tracked notice rendering at consent-capture time is logged in compliance.notice_versions."
+
+  # -------------------------------------------------------------------------
+  # Storage limitation (Art. 5(1)(e))
+  # -------------------------------------------------------------------------
+  - rule_id: UK-RET-001
+    rule_type: retention
+    severity: high
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, indirect, sensitive]
+    citation: "UK GDPR Art. 5(1)(e)"
+    description: "Personal data may not be kept longer than necessary for the purposes for which it is processed (storage limitation principle). A defined retention period per purpose is required."
+    remediation: "Set a per-purpose retention default in retention_defaults.yaml; run pipelines/retention_enforcement.py on schedule; document statutory overrides separately."
+
+  - rule_id: UK-RET-002
+    rule_type: retention
+    severity: medium
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, indirect, sensitive]
+    citation: "UK GDPR Art. 5(1)(e) + Art. 32"
+    description: "Where personal data is retained beyond the necessary period for archival/research purposes, appropriate technical and organisational measures (pseudonymisation, access restriction) must apply."
+    remediation: "Separate active and archival storage; pseudonymise archived rows; restrict access via UC grants on the archival schema."
+
+  # -------------------------------------------------------------------------
+  # Integrity and confidentiality (Art. 5(1)(f), Art. 32)
+  # -------------------------------------------------------------------------
+  - rule_id: UK-ENC-001
+    rule_type: encryption
+    severity: critical
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [sensitive, direct_gov, direct_fin]
+    citation: "UK GDPR Art. 32"
+    description: "Implement appropriate technical measures to ensure the security of personal data, including (where appropriate) pseudonymisation and encryption of personal data."
+    remediation: "Enable Unity Catalog column masks (5 mask UDFs) on critical PII columns; enforce TLS for in-transit; verify Delta encryption-at-rest is on at the storage layer."
+
+  - rule_id: UK-ACC-001
+    rule_type: access_control
+    severity: critical
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, direct_gov, direct_fin, sensitive]
+    citation: "UK GDPR Art. 32(1)(b)"
+    description: "Ensure ongoing confidentiality, integrity, availability and resilience of processing systems — only personnel with a documented need-to-know may access personal data."
+    remediation: "Per-persona UC grants (CCO/GC/CMO/CFO), bronze-is-pipeline-only fence, persona-boundary CI test that fails any PR widening access."
+
+  # -------------------------------------------------------------------------
+  # Data subject rights (Art. 15-22)
+  # -------------------------------------------------------------------------
+  - rule_id: UK-DSR-001
+    rule_type: data_subject_rights
+    severity: critical
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, indirect, sensitive]
+    citation: "UK GDPR Art. 12(3)"
+    description: "Respond to data-subject requests (access, rectification, erasure, restriction, portability, objection) within one month of receipt; extendable to three months for complex or numerous requests with notification to the requester."
+    remediation: "Track every request in compliance.dsr_requests with received_at, due_at = received_at + 30 days, status. Alert when due_at < current_date + 7 days."
+
+  - rule_id: UK-DSR-002
+    rule_type: data_subject_rights
+    severity: high
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, indirect, sensitive]
+    citation: "UK GDPR Art. 17"
+    description: "Erase personal data without undue delay when: consent withdrawn (and no other lawful basis), data no longer necessary for the purpose, data processed unlawfully, legal obligation requires erasure, child's data collected under Art. 8."
+    remediation: "scripts/dsr_erasure.py performs Delta DELETE + VACUUM with audit-bundle JSON; preserve list honours legal retention overrides."
+
+  # -------------------------------------------------------------------------
+  # Breach notification (Art. 33-34)
+  # -------------------------------------------------------------------------
+  - rule_id: UK-BRC-001
+    rule_type: breach_notification
+    severity: critical
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, direct_gov, direct_fin, sensitive]
+    citation: "UK GDPR Art. 33"
+    description: "Notify the ICO of a personal data breach within 72 hours of becoming aware, unless the breach is unlikely to result in a risk to data subjects' rights and freedoms."
+    remediation: "Maintain a breach-response runbook with the 72h clock; route through breach_sla.yaml's authority/contact_point fields; document the risk assessment if not notifying."
+
+  - rule_id: UK-BRC-002
+    rule_type: breach_notification
+    severity: high
+    regulations: [UK_GDPR, GDPR]
+    applicable_categories: [direct_contact, sensitive]
+    citation: "UK GDPR Art. 34"
+    description: "Where a breach is likely to result in a high risk to data subjects, communicate the breach to those affected without undue delay, in clear plain language."
+    remediation: "Trigger principal-notification workflow alongside the ICO notification; use multi-language notice rendering for affected jurisdictions."

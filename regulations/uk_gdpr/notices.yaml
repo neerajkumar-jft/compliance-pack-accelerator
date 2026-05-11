@@ -1,0 +1,86 @@
+# UK GDPR — Consent notices seeded into compliance.notice_versions.
+#
+# Each entry becomes one row in the notice_versions Delta table at bootstrap.
+# The en-GB body below is hand-authored against UK GDPR Art. 13 / 14
+# transparency requirements (controller identity, purposes, lawful basis,
+# recipients, retention, rights, complaint route, automated-decision logic).
+#
+# cy-GB and gd-GB notices are not seeded by the POC — the multi-language
+# generator (scripts/generate_multilang_notices.py) populates them via the
+# foundation-model agent with human_review_required = true.
+
+default_purposes_covered: &default_purposes
+  - core_service
+  - marketing_email
+  - marketing_sms
+  - analytics
+  - third_party_sharing
+  - product_personalization
+
+default_effective_from: &default_effective_from "2026-01-01T00:00:00+00:00"
+default_created_at:     &default_created_at     "2026-01-01T00:00:00+00:00"
+default_approved_by:    &default_approved_by    "dpo@example.com"
+
+notices:
+  - notice_version_id: "nv_uk_marketing_v1_en-GB"
+    notice_id: uk_marketing_notice
+    version_number: 1
+    language: en-GB
+    legal_basis: consent
+    purposes_covered: *default_purposes
+    effective_from: *default_effective_from
+    effective_to: null
+    approved_by: *default_approved_by
+    created_at: *default_created_at
+    notice_text: |-
+      Privacy Notice — UK Data Subjects
+
+      Controller: <Company Name> ("we", "us"), registered in England and
+      Wales. Our Data Protection Officer can be contacted at
+      dpo@example.com.
+
+      What we collect and why:
+      1. Core service delivery — your account details, transaction history,
+         and contact information. Lawful basis: contractual necessity
+         (UK GDPR Art. 6(1)(b)).
+      2. Marketing email — your email address, name, and preference data.
+         Lawful basis: your consent (UK GDPR Art. 6(1)(a)). You can
+         withdraw consent at any time, as easily as you gave it.
+      3. Marketing SMS — your mobile number and preferences. Lawful basis:
+         your consent (UK GDPR Art. 6(1)(a)).
+      4. Analytics — pseudonymised behaviour signals and device data. Lawful
+         basis: legitimate interests (UK GDPR Art. 6(1)(f)) where the
+         analysis cannot reasonably be done with consent-only data.
+      5. Personalisation — derived preferences for product recommendations.
+         Lawful basis: your consent (UK GDPR Art. 6(1)(a)).
+      6. Third-party sharing — only with your explicit consent and only with
+         partners listed at example.com/partners.
+
+      Retention: each purpose has its own retention period (3-12 months for
+      marketing/analytics; 6 years for core-service records under the
+      Companies Act 2006). Statutory retention periods (HMRC, AML) supersede
+      the marketing/analytics defaults where they apply.
+
+      Your rights under UK GDPR:
+      - Right of access (Art. 15) — request a copy of your personal data
+      - Right to rectification (Art. 16) — correct inaccurate data
+      - Right to erasure (Art. 17, "right to be forgotten")
+      - Right to restriction of processing (Art. 18)
+      - Right to data portability (Art. 20) — receive your data in a
+        structured, machine-readable format
+      - Right to object to processing (Art. 21)
+      - Right not to be subject to a decision based solely on automated
+        processing (Art. 22)
+      - Right to lodge a complaint with the Information Commissioner's
+        Office (ico.org.uk; 0303 123 1113)
+
+      We respond to all requests within one month, extendable to three
+      months for complex cases (UK GDPR Art. 12(3)).
+
+      International transfers: we transfer data outside the UK only to
+      countries with a UK adequacy decision, or under a UK Standard
+      Contractual Clause / International Data Transfer Agreement. The
+      current list of destination countries is at example.com/transfers.
+
+      Automated decision-making: we do not make legally significant
+      decisions based solely on automated processing.
