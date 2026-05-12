@@ -1,0 +1,131 @@
+# CCPA/CPRA — Consent notices seeded into compliance.notice_versions.
+#
+# Each entry becomes one row in the notice_versions Delta table at bootstrap.
+# The `en` body below is hand-authored against CCPA §1798.100(b) (Notice at
+# Collection) and §1798.130(a)(5) (privacy policy) requirements — categories
+# of PI collected, sources, business purposes, sale/sharing status,
+# retention, rights, contact details, "Do Not Sell or Share" link.
+#
+# Spanish is the most consequential second language by California
+# demographics; both Notice at Collection and the §1798.135 DNS-DSS link
+# must be available in the languages the business uses for contracts /
+# disclaimers / sales communications (§1798.135(a)(2)(B)). The Spanish
+# notice is not seeded by the POC — the multi-language generator
+# (scripts/generate_multilang_notices.py) populates it with
+# human_review_required = true.
+
+default_purposes_covered: &default_purposes
+  - core_service
+  - marketing_email
+  - marketing_sms
+  - analytics
+  - third_party_sharing
+  - product_personalization
+
+default_effective_from: &default_effective_from "2026-01-01T00:00:00+00:00"
+default_created_at:     &default_created_at     "2026-01-01T00:00:00+00:00"
+default_approved_by:    &default_approved_by    "privacy@example.com"
+
+notices:
+  - notice_version_id: "nv_ccpa_marketing_v1_en"
+    notice_id: ccpa_marketing_notice
+    version_number: 1
+    language: en
+    legal_basis: opt_out                              # CCPA's central model — opt-out unless SPI or minor
+    purposes_covered: *default_purposes
+    effective_from: *default_effective_from
+    effective_to: null
+    approved_by: *default_approved_by
+    created_at: *default_created_at
+    notice_text: |-
+      Privacy Notice for California Residents — CCPA/CPRA
+
+      This notice supplements the information in our Privacy Policy and
+      applies solely to California residents under the California
+      Consumer Privacy Act of 2018, as amended by the California Privacy
+      Rights Act of 2020 ("CCPA/CPRA"). Business contact: privacy@example.com.
+
+      Categories of personal information we collect:
+      1. Identifiers — name, email, postal address, phone, account ID,
+         IP address (§1798.140(v)(1)(A)).
+      2. Customer records — transaction history, payment method (truncated),
+         service preferences (Cal. Civ. Code §1798.80(e)).
+      3. Commercial information — products/services purchased, considered,
+         or otherwise interacted with (§1798.140(v)(1)(D)).
+      4. Internet or network activity — browsing history on our site,
+         search history, interaction with our advertising
+         (§1798.140(v)(1)(F)).
+      5. Geolocation data — approximate location derived from IP address.
+         Precise geolocation (within 1,850 feet) is "sensitive personal
+         information" under §1798.140(ae)(1)(G) and is subject to the
+         "limit use" right (§1798.121).
+      6. Inferences — preferences, predispositions, behaviour derived from
+         the above (§1798.140(v)(1)(K)).
+
+      Sensitive personal information (CPRA §1798.140(ae)) we may collect:
+      - Account log-in credentials in combination with passwords
+      - Precise geolocation (when permitted by the user)
+      - We do NOT collect government ID numbers, race/ethnicity, religious
+        beliefs, union membership, communications content, genetic or
+        biometric data, health data, or sex-life/sexual-orientation data
+        as part of this service.
+
+      Purposes for which PI is used:
+      - Core service delivery: identifiers + customer records + commercial.
+      - Marketing email/SMS: identifiers; you may opt-out at any time.
+      - Analytics: internet/network activity + inferences; retention 180
+        days; we do not sell or share analytics PI with third parties.
+      - Personalisation: inferences + commercial; you may opt-out.
+      - Third-party sharing: only with our contracted service providers
+        and only for the service-provision purposes listed at
+        example.com/partners.
+
+      Sale or sharing of PI: we do not "sell" personal information for
+      monetary consideration. We may "share" (as defined in §1798.140(ah))
+      PI with advertising partners for cross-context behavioural advertising.
+      You may exercise your right to opt-out of this sharing at any time:
+      see the "Do Not Sell or Share My Personal Information" link in our
+      site footer, or send a request to privacy@example.com. We honour the
+      Global Privacy Control (GPC) browser signal as a valid opt-out
+      request (CPPA Reg. §7025).
+
+      Retention: each category has its own retention period (3-6 months for
+      marketing/analytics; up to 7 years for core-service records under
+      IRS / California Franchise Tax Board requirements). The full per-
+      category schedule is in our Privacy Policy.
+
+      Your rights under CCPA/CPRA:
+      - Right to know (§§1798.100, 1798.110, 1798.115) — request the
+        categories and specific pieces of PI we have collected, sold, or
+        shared in the prior 12 months
+      - Right to delete (§1798.105) — request deletion of your PI subject
+        to nine statutory exceptions
+      - Right to correct (§1798.106) — request correction of inaccurate PI
+      - Right to opt-out of sale or sharing (§1798.120) — see DNS-DSS link
+      - Right to limit use of sensitive PI (§1798.121) — direct us to use
+        SPI only for service-necessary purposes
+      - Right to data portability (§1798.130(a)(2)) — receive PI in a
+        structured, commonly-used, machine-readable format
+      - Right to non-discrimination (§1798.125) — exercising any right
+        will not result in denial of service, differential pricing, or
+        different quality of service
+      - Right to lodge a complaint with the California Privacy Protection
+        Agency (cppa.ca.gov) or California Attorney General
+        (oag.ca.gov/privacy)
+
+      We respond to verifiable requests within 45 days, extendable by one
+      further 45-day period for complex cases with notice to you within
+      the initial 45 days (§1798.130(a)(2)).
+
+      Children under 16: we do not sell or share the personal information
+      of consumers we know to be under 16 without affirmative opt-in. For
+      consumers under 13, we obtain verifiable parental consent under
+      COPPA-aligned procedures.
+
+      Authorised agents: you may designate an authorised agent to submit
+      requests on your behalf (§1798.135(c)(1)) — we require signed
+      permission and verification of the consumer's identity.
+
+      How to submit a request: email privacy@example.com, call
+      1-800-PRIVACY (toll-free), or use the webform at
+      example.com/privacy/request.

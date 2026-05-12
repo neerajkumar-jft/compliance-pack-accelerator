@@ -1,0 +1,62 @@
+# CCPA/CPRA — Retention defaults per consent purpose.
+#
+# CPRA §1798.100(a)(3) requires disclosure of the retention period (or the
+# criteria used to determine it) per category of PI in the Notice at
+# Collection. There is no statute-defined ceiling — the rule is simply
+# "no longer than reasonably necessary for the disclosed purpose".
+#
+# The defaults below reflect prevailing US industry practice for each
+# purpose under FTC consent-decree guidance and CPPA enforcement signals
+# (cookie/analytics retention came up in the Sephora 2022 enforcement
+# action; marketing retention came up in the DoorDash 2024 action).
+#
+# These are SHORTER than DPDP's marketing default (90 vs 730 days) and
+# MATCH the UK/EU GDPR defaults — California's posture has converged with
+# the EDPB on marketing recency. ADR-0001's per-data-subject routing means
+# a US principal under this pack gets 90-day marketing retention while an
+# IN principal under DPDP gets 730 — same database, different policies per row.
+
+defaults:
+  core_service:              365      # 1 year — duration of active customer relationship
+  marketing_email:            90      # 3 months — re-consent / opt-in refresh
+  marketing_sms:              90
+  product_personalization:   180
+  analytics:                 180
+  third_party_sharing:        90      # CCPA's central "sale/sharing" purpose
+
+# Statutory overrides — US federal + California state law that retroactively
+# mandates retention beyond the CPRA-default purpose limit. Take precedence
+# over the defaults above; the retention-enforcement job must honour these
+# before deleting.
+statutory_overrides:
+  # Federal
+  - law: "IRC §6001 + Treas. Reg. §1.6001-1 (US Federal tax records)"
+    description: "Books and records to support income, deductions, credits — generally 3 years from filing (7 years if substantial understatement, indefinite for unfiled returns)"
+    applies_to_purposes: [core_service]
+    retention_days: 2555              # 7 years to cover substantial-understatement window
+  - law: "29 CFR §1602 (EEOC employment records)"
+    description: "Personnel and employment records — 1 year from termination; 2 years for apprenticeship; payroll 3 years (FLSA)"
+    applies_to_purposes: [core_service]
+    retention_days: 1095
+  - law: "31 CFR §1010.430 (Bank Secrecy Act / FinCEN)"
+    description: "Financial institution records for AML / KYC — 5 years from account closure or transaction"
+    applies_to_purposes: [core_service]
+    retention_days: 1825
+  # California
+  - law: "Cal. Code Regs. tit. 18 §17569 (California Franchise Tax Board)"
+    description: "California state tax records — 4 years from filing (matches Cal. Rev. & Tax. Code §19087 audit window)"
+    applies_to_purposes: [core_service]
+    retention_days: 1460
+  - law: "Cal. Lab. Code §1174 (California payroll records)"
+    description: "Employee payroll records — 3 years"
+    applies_to_purposes: [core_service]
+    retention_days: 1095
+  - law: "Cal. Civ. Code §1798.130(a)(7) (CCPA recordkeeping)"
+    description: "Records of consumer requests and the business's response — 24 months from the date of the request"
+    applies_to_purposes: [core_service]
+    retention_days: 730
+  # Sector-specific
+  - law: "HIPAA 45 CFR §164.530(j) (Healthcare, where applicable)"
+    description: "HIPAA documentation — 6 years from creation or last effective date (California medical records: longer per Cal. Code Regs. tit. 22 §72543)"
+    applies_to_purposes: [core_service]
+    retention_days: 2190

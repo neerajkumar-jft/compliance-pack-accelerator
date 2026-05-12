@@ -1,0 +1,106 @@
+# CCPA/CPRA — Data subject rights activated by this pack.
+#
+# References governance_core/rights.RIGHT_CATALOGUE by code. CCPA §1798.130(a)(2)
+# sets the SLA at 45 days from receipt of a verifiable request, extendable by
+# one further 45-day period "when reasonably necessary" with notice to the
+# consumer within the initial 45 days. The pack ships 45 days as the default
+# and 90 days as the hard ceiling.
+#
+# Vocabulary mapping (canonical code -> CCPA term):
+#   access         -> right to know (§§1798.100, 1798.110, 1798.115)
+#   rectification  -> right to correct (CPRA §1798.106)
+#   erasure        -> right to delete (§1798.105)
+#   portability    -> right to data portability (§1798.130(a)(2))
+#   objection      -> right to opt-out of sale or sharing (§1798.120)
+#   restriction    -> right to limit use of sensitive PI (CPRA §1798.121)
+#   no_auto_decision -> ADMT opt-out (CPPA rulemaking in progress, CPRA §1798.185(a)(16))
+#   grievance      -> complaint to CPPA / California AG
+
+rights:
+  - code: access
+    citation: "CCPA §1798.100 + §1798.110 + §1798.115 ('right to know')"
+    sla_days: 45
+    extendable_to_days: 90
+    exemptions:
+      - manifestly_unfounded_or_excessive   # §1798.145(g)(3) — repeat / unfounded requests
+      - identity_unverifiable               # §1798.130(a)(7) — verifiable consumer request required
+      - law_enforcement_investigation       # §1798.145(a)(1)
+    default_reason_text: "CCPA §1798.110 right to know what personal information is collected, used, sold, or disclosed"
+    implemented_in: scripts/dsr_discovery.py
+
+  - code: rectification
+    citation: "CPRA §1798.106 ('right to correct')"
+    sla_days: 45
+    extendable_to_days: 90
+    exemptions:
+      - manifestly_unfounded_or_excessive
+      - identity_unverifiable
+    default_reason_text: "CPRA §1798.106 right to correct inaccurate personal information"
+    implemented_in: null              # Phase 2 — DSR scripts add rectification
+
+  - code: erasure
+    citation: "CCPA §1798.105 ('right to delete')"
+    sla_days: 45
+    extendable_to_days: 90
+    exemptions:
+      - transaction_completion              # §1798.105(d)(1)
+      - security_incident_detection         # §1798.105(d)(2)
+      - debug_error_correction              # §1798.105(d)(3)
+      - free_speech                         # §1798.105(d)(4)
+      - cmia_compliance                     # §1798.105(d)(5) — California Electronic Communications Privacy Act
+      - research_public_interest            # §1798.105(d)(6)
+      - internal_aligned_use                # §1798.105(d)(7)
+      - legal_obligation                    # §1798.105(d)(8)
+      - internal_lawful_consumer_expected   # §1798.105(d)(9)
+    default_reason_text: "CCPA §1798.105 right to deletion of personal information"
+    implemented_in: scripts/dsr_erasure.py
+
+  - code: portability
+    citation: "CCPA §1798.130(a)(2)"
+    sla_days: 45
+    extendable_to_days: 90
+    exemptions:
+      - identity_unverifiable
+      - manifestly_unfounded_or_excessive
+    default_reason_text: "CCPA §1798.130(a)(2) right to receive personal information in a structured, commonly-used, machine-readable format"
+    implemented_in: null              # Phase 2 — structured-export endpoint
+
+  - code: objection
+    citation: "CCPA §1798.120 ('right to opt-out of sale or sharing')"
+    sla_days: 15                      # §1798.135(c)(4) — within 15 business days of receipt
+    extendable_to_days: null          # No extension; the 15-day clock is firm
+    exemptions:
+      - consumer_under_16_opt_in_already_required   # §1798.120(c) — opt-in regime, not opt-out
+    default_reason_text: "CCPA §1798.120 right to opt-out of the sale or sharing of personal information"
+    implemented_in: null              # Phase 2 — opt-out endpoint + GPC handler
+
+  - code: restriction
+    citation: "CPRA §1798.121 ('right to limit use and disclosure of sensitive PI')"
+    sla_days: 15                      # Same 15-day clock as §1798.135 sale/share opt-out
+    extendable_to_days: null
+    exemptions:
+      - purpose_necessary_for_services      # §1798.121(a)(1)-(8) — service-necessary uses preserved
+      - security_fraud_prevention           # §1798.121(a)(2)
+      - safety_protection                   # §1798.121(a)(3)
+      - short_term_transient_use            # §1798.121(a)(4)
+    default_reason_text: "CPRA §1798.121 right to limit the use and disclosure of sensitive personal information"
+    implemented_in: null              # Phase 2 — SPI row-filter UDF
+
+  - code: no_auto_decision
+    citation: "CPRA §1798.185(a)(16) — CPPA ADMT regulations (in progress 2024-25)"
+    sla_days: 45
+    extendable_to_days: 90
+    exemptions:
+      - contract_necessity                  # Likely mirrored from GDPR Art. 22(2)(a) in CPPA rule
+      - explicit_consent
+      - law_authorised
+    default_reason_text: "CPRA Automated Decision-Making Technology (ADMT) opt-out and pre-use notice (CPPA rules pending)"
+    implemented_in: null              # Phase 2 — once CPPA finalises ADMT regulations
+
+  - code: grievance
+    citation: "CCPA §1798.199.45 + §1798.199.55 (CPPA enforcement) + §1798.150 (private right of action for breaches)"
+    sla_days: null                    # Routed externally; no internal SLA
+    extendable_to_days: null
+    exemptions: []
+    default_reason_text: "Complaint to the California Privacy Protection Agency (cppa.ca.gov) or California Attorney General (oag.ca.gov/privacy)"
+    implemented_in: null
