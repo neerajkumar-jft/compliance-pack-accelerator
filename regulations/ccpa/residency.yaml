@@ -1,0 +1,98 @@
+# CCPA/CPRA — Cross-border data transfer controls.
+#
+# CCPA/CPRA does NOT impose a Chapter V-style cross-border transfer regime
+# analogous to GDPR. The statute regulates the relationship between the
+# business and the recipient (sale / sharing / service-provider /
+# contractor — §§1798.140(ad)(ag)(j)) rather than the destination
+# geography. Cross-border safeguards (encryption, contractual restrictions,
+# audit rights) are the same regardless of where the recipient sits.
+#
+# That said, CPPA enforcement signals from 2024 indicate scrutiny of:
+#   - Transfers to recipients in jurisdictions without adequate
+#     enforcement mechanisms for downstream CCPA flow-down obligations.
+#   - Sale/sharing arrangements involving recipients subject to foreign
+#     government access laws (e.g., PRC PIPL Art. 41-42 government access).
+#
+# The platform's residency filter (M3) reads this file and restricts
+# non-admin reads of US principals' data to rows whose `country` is in
+# the allowed list — but allowed_countries is intentionally broad to
+# match the statute. Customers tightening this for their own risk policy
+# can override at deploy time.
+
+# Countries the platform considers acceptable destinations for US-principal
+# PI under CCPA. Default: broad — CCPA itself doesn't restrict geography.
+# Customers in regulated sectors (healthcare under HIPAA, finance under
+# GLBA) may want to tighten this further at deploy time.
+allowed_countries:
+  - United States                       # Primary jurisdiction
+  # Five Eyes intelligence-sharing partners (commercial transfers OK; FISA-equivalent risk noted)
+  - Canada
+  - United Kingdom
+  - Australia
+  - New Zealand
+  # Major US-trading partners with mature privacy regimes
+  - Japan
+  - South Korea
+  - Singapore
+  # EU/EEA — GDPR-protected, generally compatible with CCPA flow-down clauses
+  - Austria
+  - Belgium
+  - Bulgaria
+  - Croatia
+  - Cyprus
+  - Czech Republic
+  - Denmark
+  - Estonia
+  - Finland
+  - France
+  - Germany
+  - Greece
+  - Hungary
+  - Iceland
+  - Ireland
+  - Italy
+  - Latvia
+  - Liechtenstein
+  - Lithuania
+  - Luxembourg
+  - Malta
+  - Netherlands
+  - Norway
+  - Poland
+  - Portugal
+  - Romania
+  - Slovakia
+  - Slovenia
+  - Spain
+  - Sweden
+  - Switzerland
+  # Adequacy-equivalent jurisdictions
+  - Israel
+
+# Sectoral restrictions — placeholder. HIPAA-covered entities and GLBA
+# financial institutions may have stricter destination rules under federal
+# law (e.g., HHS guidance on cloud-hosted PHI offshoring).
+restricted_countries_by_sector: []
+
+# Countries explicitly blocked. US sanctions (OFAC) maintain a Specially
+# Designated Nationals list and country-level sanctions (Cuba, Iran,
+# North Korea, Russia partial, Syria, Venezuela partial). Customer-defined
+# risk policy can extend.
+blocked_countries:
+  - Cuba
+  - Iran
+  - North Korea
+  - Syria
+
+# Apply this residency filter to these (table, column) pairs at silver-read
+# time. The row filter UDF blocks reads of rows whose `country` is not in
+# allowed_countries unless the reader is in the admins group.
+apply_filter_to:
+  - table: customers_tagged
+    column: country
+  - table: users_tagged
+    column: country
+  - table: patients_tagged
+    column: country
+  - table: employees_tagged
+    column: country

@@ -1,0 +1,45 @@
+# CCPA/CPRA — Languages covered by this pack's notice generator.
+#
+# CCPA §1798.135(a)(2)(B) requires the "Do Not Sell or Share My Personal
+# Information" notice to be available in the same languages in which the
+# business "provides contracts, disclaimers, sale announcements, and other
+# information to consumers in California". Cal. Gov. Code §7290 et seq.
+# (Dymally-Alatorre Bilingual Services Act) sets the California-specific
+# baseline for state-government translations — Spanish, Chinese,
+# Vietnamese, Korean, Tagalog, Russian, Armenian, Farsi, Khmer, Punjabi,
+# and others depending on county-level prevalence.
+#
+# Phase 0 baseline: en is hand-authored. Spanish is the most consequential
+# second language by California demographics (~28% Spanish-speaking
+# households per US Census 2020). The other tier-1 California languages
+# are machine-translated with human_review_required = true so a
+# California deployment can upgrade to a hand-authored notice for the
+# top three (English/Spanish/Chinese) without a code change.
+#
+# Fields:
+#   code                    — IETF BCP 47 (en, es, zh-Hans, ...)
+#   script                  — Unicode script name
+#   speakers_l1_millions    — approximate L1 speakers in California
+#   model_support_tier      — strong / good / fair / unsupported
+#   human_review_required   — true for low-resource / regulated languages
+
+languages:
+  # Hand-authored
+  - { code: en,      script: Latin,      speakers_l1_millions: 22,   model_support_tier: strong,  human_review_required: false, seeded_by_poc: true,  notes: "English — California's de facto primary language; default fallback." }
+
+  # Tier-1: largest non-English language by California demographics
+  - { code: es,      script: Latin,      speakers_l1_millions: 11,   model_support_tier: strong,  human_review_required: true,  seeded_by_poc: false, notes: "Spanish — 28% of California households speak Spanish at home (US Census 2020). Required surface for any consumer-facing notice." }
+
+  # Tier-2: significant Asian-language populations under Dymally-Alatorre
+  - { code: zh-Hans, script: HanSimplified, speakers_l1_millions: 1.3, model_support_tier: strong,  human_review_required: true, seeded_by_poc: false, notes: "Simplified Chinese — California's second-largest non-Hispanic ethnic-language group; mandated in Los Angeles + San Francisco county notices." }
+  - { code: zh-Hant, script: HanTraditional, speakers_l1_millions: 0.9, model_support_tier: strong,  human_review_required: true, seeded_by_poc: false, notes: "Traditional Chinese — predominant among Taiwanese / Hong Kong heritage; required in San Francisco." }
+  - { code: vi,      script: Latin,      speakers_l1_millions: 0.6,  model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Vietnamese — large diaspora in Orange County / Santa Clara." }
+  - { code: ko,      script: Hangul,     speakers_l1_millions: 0.5,  model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Korean — concentrated in Los Angeles (Koreatown) and Orange County." }
+  - { code: tl,      script: Latin,      speakers_l1_millions: 0.6,  model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Tagalog (Filipino) — large California Filipino population (Daly City, San Diego)." }
+
+  # Tier-3: additional California-prevalent languages
+  - { code: ru,      script: Cyrillic,   speakers_l1_millions: 0.15, model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Russian — concentrated in Sacramento and West Hollywood." }
+  - { code: hy,      script: Armenian,   speakers_l1_millions: 0.2,  model_support_tier: fair,    human_review_required: true,  seeded_by_poc: false, notes: "Armenian — large California Armenian community (Glendale, Los Angeles)." }
+  - { code: fa,      script: Arabic,     speakers_l1_millions: 0.2,  model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Farsi (Persian) — concentrated in Los Angeles (Tehrangeles) and Orange County." }
+  - { code: km,      script: Khmer,      speakers_l1_millions: 0.07, model_support_tier: fair,    human_review_required: true,  seeded_by_poc: false, notes: "Khmer (Cambodian) — large California Cambodian community (Long Beach, Stockton)." }
+  - { code: pa,      script: Gurmukhi,   speakers_l1_millions: 0.1,  model_support_tier: fair,    human_review_required: true,  seeded_by_poc: false, notes: "Punjabi — concentrated in Central Valley (Yuba City, Fresno)." }

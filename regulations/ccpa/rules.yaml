@@ -1,0 +1,207 @@
+# CCPA/CPRA — Compliance rules (Cal. Civ. Code §§1798.100-1798.199.100).
+#
+# Source of truth for the CCPA rows in bronze.compliance_rules. Loaded by
+# pipelines/phase1_bootstrap.py via governance_core.pack_loader; MERGE'd
+# into bronze.compliance_rules alongside DPDP / UK GDPR / EU GDPR under
+# multi-pack mode (ADR-0001).
+#
+# Each rule fires per principal — the gap-engine query joins
+# silver.pii_findings to silver.customers_tagged.jurisdiction = 'US' before
+# evaluating these rules; IN principals are governed by DPDP, GB by UK GDPR,
+# EU/EEA principals by EU GDPR.
+#
+# Rule IDs use the US- prefix; otherwise the schema matches other packs.
+# Major CCPA-specific concepts captured here:
+#   - "Right to know" / "right to delete" / "right to opt-out" terminology
+#     instead of GDPR access/erasure/objection.
+#   - Sale/sharing opt-out is the central control (§1798.120), enforced via
+#     a "Do Not Sell or Share My Personal Information" link + GPC signal.
+#   - Sensitive personal information (CPRA §1798.121) gets its own limit-use
+#     right — partial restriction.
+#   - 45-day DSR response SLA (not 30 days as in GDPR).
+#   - Breach notification under Cal. Civ. Code §1798.82 ("most expedient
+#     time possible and without unreasonable delay") — no fixed 72h clock.
+
+rules:
+  # -------------------------------------------------------------------------
+  # Notice at Collection + Privacy Policy (§§1798.100(b), 1798.130(a)(5))
+  # -------------------------------------------------------------------------
+  - rule_id: US-TRN-001
+    rule_type: transparency
+    severity: critical
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, indirect_identifier, health]
+    citation: "Cal. Civ. Code §1798.100(b)"
+    description: "Provide a Notice at Collection at or before the point of personal information collection — categories of PI to be collected, purposes for use, whether the PI is sold or shared, length of retention per category, link to the privacy policy."
+    remediation: "Render the Notice at Collection on every signup / data-capture surface; version it; record the version presented per consent event in compliance.notice_versions."
+
+  - rule_id: US-TRN-002
+    rule_type: transparency
+    severity: high
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, indirect_identifier, health]
+    citation: "Cal. Civ. Code §1798.130(a)(5)"
+    description: "Maintain a public privacy policy describing consumers' CCPA/CPRA rights, categories of PI collected/sold/shared/disclosed in the prior 12 months, sources, business/commercial purposes, and the methods to submit requests. Update at least annually."
+    remediation: "Publish the layered policy at /privacy; embed a last-updated timestamp; run an annual diff against the canonical compliance.notice_versions row and re-approve via dpo@example.com."
+
+  # -------------------------------------------------------------------------
+  # Right to opt-out of Sale / Sharing (§1798.120 + §1798.135)
+  # -------------------------------------------------------------------------
+  - rule_id: US-OPT-001
+    rule_type: consent
+    severity: critical
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, indirect_identifier]
+    citation: "Cal. Civ. Code §1798.120 + §1798.135"
+    description: "Honour the consumer's right to opt-out of the sale or sharing of personal information. A 'Do Not Sell or Share My Personal Information' link must be present on the homepage and the privacy policy; the Global Privacy Control (GPC) browser signal must be treated as a valid opt-out request (CPPA Reg. §7025)."
+    remediation: "Expose the DNS-DSS link sitewide; wire the request to compliance.opt_out_log; honour incoming GPC headers at the edge; CDF-driven propagation removes opted-out principals from sale/sharing audiences within 15 days (§1798.135(c)(4))."
+
+  - rule_id: US-OPT-002
+    rule_type: consent
+    severity: high
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, indirect_identifier]
+    citation: "Cal. Civ. Code §1798.135(c)(4)"
+    description: "Once an opt-out request is received, the business shall wait at least 12 months before requesting that the consumer authorise the sale or sharing of their personal information (opt-back-in cool-off)."
+    remediation: "Stamp opt_out_at on the consumer's profile row; block re-consent prompts via a UI gate keyed to opt_out_at + 365 days."
+
+  # -------------------------------------------------------------------------
+  # Sensitive Personal Information — limit use & disclosure (CPRA §1798.121)
+  # -------------------------------------------------------------------------
+  - rule_id: US-SPI-001
+    rule_type: consent
+    severity: high
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_government, direct_identifier_financial, health, sensitive_demographic, biometric]
+    citation: "Cal. Civ. Code §1798.121"
+    description: "Consumers may direct a business that collects sensitive personal information (SSN, DL, financial account, precise geolocation, racial/ethnic origin, religious beliefs, union membership, communications content, genetic/biometric, health, sex life or sexual orientation) to limit its use and disclosure to that necessary to perform the services reasonably expected."
+    remediation: "Tag SPI columns in silver.pii_findings with sensitivity=critical and pii_category in the SPI set; expose a 'Limit the Use of My Sensitive Personal Information' link; route through compliance.spi_limit_requests; enforce via a row filter on downstream marketing/analytics views."
+
+  # -------------------------------------------------------------------------
+  # Right to know (§§1798.100, 1798.110, 1798.115)
+  # -------------------------------------------------------------------------
+  - rule_id: US-DSR-001
+    rule_type: data_subject_rights
+    severity: critical
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, indirect_identifier, health]
+    citation: "Cal. Civ. Code §1798.130(a)(2)"
+    description: "Respond to verifiable consumer requests (right to know, right to delete, right to correct, right to opt-out, right to limit) within 45 days of receipt. Extendable by one further 45-day period when reasonably necessary, with notice to the consumer within the initial 45 days."
+    remediation: "Track every request in compliance.dsr_requests with received_at, due_at = received_at + 45 days, status. Alert when due_at < current_date + 10 days; document the extension justification in writing before notifying."
+
+  # -------------------------------------------------------------------------
+  # Right to delete (§1798.105)
+  # -------------------------------------------------------------------------
+  - rule_id: US-DSR-002
+    rule_type: data_subject_rights
+    severity: high
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, indirect_identifier, health]
+    citation: "Cal. Civ. Code §1798.105"
+    description: "Delete personal information collected from the consumer (and direct service providers / contractors to do the same) upon verifiable request, subject to nine statutory exceptions (§1798.105(d)): completion of transaction, security incidents, legal compliance, free speech, research, internal uses reasonably aligned with consumer expectations, etc."
+    remediation: "scripts/dsr_erasure.py performs Delta DELETE + VACUUM with audit-bundle JSON; preserve list cites the §1798.105(d) exception when applicable; downstream service-provider delete-flow via the §1798.105(c) flow-down clause in their DPA."
+
+  # -------------------------------------------------------------------------
+  # Right to correct (CPRA §1798.106)
+  # -------------------------------------------------------------------------
+  - rule_id: US-DSR-003
+    rule_type: data_subject_rights
+    severity: medium
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, indirect_identifier]
+    citation: "Cal. Civ. Code §1798.106"
+    description: "Correct inaccurate personal information upon verifiable request, taking into account the nature of the PI and the purposes of processing. Direct service providers / contractors to correct in turn."
+    remediation: "Phase 2 — scripts/dsr_rectification.py with audit-bundle JSON; document the verifiability check in compliance.dsr_requests.verification_log."
+
+  # -------------------------------------------------------------------------
+  # Non-discrimination (§1798.125)
+  # -------------------------------------------------------------------------
+  - rule_id: US-NDC-001
+    rule_type: lawfulness
+    severity: high
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, indirect_identifier]
+    citation: "Cal. Civ. Code §1798.125"
+    description: "A business shall not discriminate against a consumer for exercising any CCPA right: no denial of goods/services, no differential pricing, no different quality, no suggestion that exercise will result in any of the above — except where a financial incentive program is offered with notice + opt-in + reasonable relationship to PI value."
+    remediation: "Audit pricing/access logic in compliance.rights_exercise_log; CI guard fails any PR that introduces a feature flag keyed to dsr_status / opt_out_status without a §1798.125(b) financial-incentive opt-in record."
+
+  # -------------------------------------------------------------------------
+  # Minor protection — opt-IN for under-16 (§1798.120(c))
+  # -------------------------------------------------------------------------
+  - rule_id: US-MIN-001
+    rule_type: consent
+    severity: critical
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, indirect_identifier, children_marker]
+    citation: "Cal. Civ. Code §1798.120(c)"
+    description: "A business shall not sell or share the personal information of consumers known to be under 16 years of age without affirmative opt-IN: from the consumer if 13-15; from the parent/guardian if under 13 (COPPA-aligned)."
+    remediation: "Capture date_of_birth at signup; gate any sale/sharing audience on age >= 16 OR an opt_in_event row sourced from the appropriate consenter; under-13 routed through a verifiable parental-consent flow."
+
+  # -------------------------------------------------------------------------
+  # Service-provider contracts (§§1798.140(ag), 1798.140(j))
+  # -------------------------------------------------------------------------
+  - rule_id: US-SPC-001
+    rule_type: access_control
+    severity: high
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, indirect_identifier, health]
+    citation: "Cal. Civ. Code §1798.140(ag) + §1798.140(j)"
+    description: "A disclosure of PI to a third party is not a 'sale' if governed by a written contract that (a) prohibits the recipient from selling/sharing the PI, (b) restricts use to the specified business purposes, (c) requires compliance with applicable CCPA obligations, and (d) grants the business audit/cease-and-correct rights."
+    remediation: "Maintain compliance.processor_contracts with each service-provider/contractor; CI guard fails any data-egress endpoint added to the codebase without a matching contract row."
+
+  # -------------------------------------------------------------------------
+  # Security (CPRA §1798.150(a)(1) + reasonable security per §1798.81.5)
+  # -------------------------------------------------------------------------
+  - rule_id: US-ENC-001
+    rule_type: encryption
+    severity: critical
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_government, direct_identifier_financial, health]
+    citation: "Cal. Civ. Code §1798.150(a)(1) + §1798.81.5"
+    description: "Implement and maintain reasonable security procedures and practices appropriate to the nature of the personal information. Failure to do so triggers a private right of action where unencrypted, non-redacted PI is subject to unauthorised access ($100-$750 per consumer per incident)."
+    remediation: "Enable Unity Catalog column masks on SSN / DL / financial-account / health columns; enforce TLS in transit; confirm Delta encryption-at-rest is on at the storage layer; document the §1798.81.5 security-program assessment annually."
+
+  - rule_id: US-ACC-001
+    rule_type: access_control
+    severity: critical
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, health]
+    citation: "Cal. Civ. Code §1798.100(e)"
+    description: "Implement reasonable security procedures and practices appropriate to the nature of the personal information to protect from unauthorised or illegal access, destruction, use, modification, or disclosure."
+    remediation: "Per-persona UC grants (CCO/GC/CMO/CFO), bronze-is-pipeline-only fence, persona-boundary CI test that fails any PR widening access."
+
+  # -------------------------------------------------------------------------
+  # Risk assessments + cybersecurity audits (CPRA §1798.185(a)(15))
+  # -------------------------------------------------------------------------
+  - rule_id: US-RSK-001
+    rule_type: access_control
+    severity: medium
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, indirect_identifier, health]
+    citation: "Cal. Civ. Code §1798.185(a)(15) + CPPA draft regulations"
+    description: "Conduct annual cybersecurity audits and risk assessments where processing presents significant risk to consumers' privacy or security (CPPA regulations in progress; finalisation ongoing in 2024-25). Submit assessments to the CPPA on request."
+    remediation: "Generate the risk-assessment artifact from compliance.dpia_runs + silver.pii_findings; expose via the GC persona's Genie space; refresh annually."
+
+  # -------------------------------------------------------------------------
+  # Storage limitation (CPRA §1798.100(a)(3))
+  # -------------------------------------------------------------------------
+  - rule_id: US-RET-001
+    rule_type: retention
+    severity: high
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, indirect_identifier, health]
+    citation: "Cal. Civ. Code §1798.100(a)(3)"
+    description: "Disclose to consumers the length of time the business intends to retain each category of PI, or the criteria used to determine that period. Retention must not exceed what is reasonably necessary for the disclosed purpose."
+    remediation: "Surface per-category retention in the Notice at Collection; align silver retention rules to retention_defaults.yaml; run pipelines/retention_enforcement.py on schedule; document statutory overrides (Cal. Code Regs. tit. 18 §17569 for tax records, etc.) separately."
+
+  # -------------------------------------------------------------------------
+  # Breach notification (Cal. Civ. Code §1798.82)
+  # -------------------------------------------------------------------------
+  - rule_id: US-BRC-001
+    rule_type: breach_notification
+    severity: critical
+    regulations: [CCPA, CPRA]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, health]
+    citation: "Cal. Civ. Code §1798.82"
+    description: "Disclose any breach of unencrypted personal information to affected California residents in the most expedient time possible and without unreasonable delay (no fixed clock; case law treats >60 days as presumptively unreasonable). Notify the California Attorney General if >500 California residents affected by a single incident."
+    remediation: "Maintain a breach-response runbook with the §1798.82(d) content checklist (incident description, PI categories, timing, contact, mitigation steps); route AG notification through oag.ca.gov/privacy/databreach/report when affected count >= 500."

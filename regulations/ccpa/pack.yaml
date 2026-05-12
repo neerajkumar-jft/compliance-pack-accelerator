@@ -1,0 +1,116 @@
+# Pack metadata — California Consumer Privacy Act of 2018 + California Privacy
+# Rights Act of 2020 (CCPA / CPRA, Cal. Civ. Code §§1798.100-1798.199.100).
+#
+# CCPA took effect 1 Jan 2020; CPRA amendments took effect 1 Jan 2023 and
+# created the California Privacy Protection Agency (CPPA) as the dedicated
+# enforcement and rulemaking body, sharing jurisdiction with the California
+# Attorney General. This pack covers both statutes as one consolidated body
+# of law — practitioners refer to it as "CCPA/CPRA" or just "CCPA" loosely.
+#
+# Applicability threshold (Cal. Civ. Code §1798.140(d)): a business that
+# (a) had $26.625M+ annual gross revenues in the preceding calendar year
+# (CCPA-CPI-adjusted ceiling, refreshed annually), OR (b) buys/sells/shares
+# the personal information of 100,000+ California consumers or households,
+# OR (c) derives 50%+ of annual revenues from selling/sharing consumers'
+# personal information. This pack assumes a covered business — the platform
+# doesn't currently enforce the applicability test programmatically.
+#
+# Structural divergences from the GDPR family the platform handles here:
+#   - Penalty model is per-violation, not per-infringement-tier: $2,500
+#     standard + $7,500 intentional / minor-involving (CCPA §1798.155).
+#   - Rights vocabulary differs: "right to know" (access), "right to delete"
+#     (erasure), "right to opt-out of sale/sharing" (objection), "right to
+#     correct" (rectification, CPRA addition), "right to limit use and
+#     disclosure of sensitive PI" (CPRA addition, partial restriction).
+#   - DSR response SLA is 45 days (CCPA §1798.130(a)(2)), extendable by one
+#     further 45-day period — different from GDPR's one-month / two-month.
+#   - Minor protection threshold is 16 (CCPA §1798.120(c)) — opt-IN required
+#     for selling/sharing PI of consumers under 16; parental consent below 13.
+#   - No comprehensive cross-border transfer regime; Cal. Civ. Code §1798.82
+#     governs breach notifications (no fixed 72-hour clock — disclosure must
+#     be "in the most expedient time possible and without unreasonable delay").
+#   - No federal "DPO" concept; CPRA introduces a "qualified privacy
+#     professional" expectation for risk assessments but no mandatory role.
+
+name: "California Consumer Privacy Act + California Privacy Rights Act (CCPA/CPRA)"
+code: ccpa
+jurisdiction: US                                      # ISO 3166-1 alpha-2 — matches derive_jurisdiction()'s US mapping
+effective_date: "2020-01-01"                          # CCPA in force; CPRA amendments effective 2023-01-01
+supervising_authority: "California Privacy Protection Agency (CPPA) + California Attorney General"
+primary_locale: en-US
+
+# Penalty structure — per-violation, civil penalties recoverable by the
+# California Attorney General or CPPA in an enforcement action
+# (Cal. Civ. Code §1798.155(b)). No turnover-percentage cap; statutory
+# damages also available in private right of action for data breaches under
+# §1798.150 ($100-$750 per consumer per incident, or actual damages, whichever
+# is greater).
+penalty_structure: per_violation
+max_penalty:
+  - amount: 7_500                                     # USD per intentional / minor-involving violation
+    currency: USD
+    trigger: "intentional violation or any violation involving the personal information of consumers under 16 (§1798.155(b))"
+    turnover_percent: null
+  - amount: 2_500                                     # USD per non-intentional violation
+    currency: USD
+    trigger: "non-intentional violation (§1798.155(b)); civil penalty per violation, no aggregate cap"
+    turnover_percent: null
+  - amount: 750                                       # USD per consumer per breach (private right of action)
+    currency: USD
+    trigger: "data breach involving unencrypted, non-redacted personal information (§1798.150); $100-$750 per consumer per incident or actual damages, whichever is greater"
+    turnover_percent: null
+
+# Which platform features this pack activates. Each activation line corresponds
+# to a canonical element defined in governance_core/*.
+activates:
+  # Rights from governance_core.rights.RIGHT_CATALOGUE. CCPA/CPRA gives
+  # California consumers seven core rights; the eighth (`grievance`) is the
+  # statutory complaint route to the CPPA + AG.
+  rights:
+    - access                # CCPA §1798.100 + §1798.110 + §1798.115 ("right to know")
+    - rectification         # CPRA §1798.106 ("right to correct"); CPRA addition
+    - erasure               # CCPA §1798.105 ("right to delete")
+    - portability           # CCPA §1798.130(a)(2) — structured, portable, usable format
+    - objection             # CCPA §1798.120 ("right to opt-out of sale or sharing"); CPRA expanded to sharing
+    - restriction           # CPRA §1798.121 ("right to limit use and disclosure of sensitive PI"); CPRA addition
+    - no_auto_decision      # CPRA §1798.185(a)(16) ADMT rulemaking (CPPA regulations in progress, 2024-25 cycle)
+    - grievance             # Complaint route to CPPA / California AG
+
+  # Region-specific PII pattern pack. Universal patterns come from
+  # governance_core.pii_patterns.universal; US-specific from
+  # regulations/ccpa/pii_patterns.py (SSN, ITIN, EIN, DL, US passport, ZIP+4,
+  # California-DL specifics).
+  pii_pattern_packs:
+    - us
+
+  # CCPA/CPRA has no federally mandatory DPO equivalent. CPRA §1798.185(a)(15)
+  # directs the CPPA to issue regulations on "cybersecurity audits" and
+  # "risk assessments" that effectively require a qualified privacy
+  # professional to attest — but no statutory DPO role like GDPR Art. 37.
+  # `optional` flags that the platform should not enforce a DPO grant in UC.
+  requires_dpo: optional
+
+  # Minor protection — CCPA §1798.120(c): opt-IN required for the sale or
+  # sharing of personal information of consumers known to be less than 16
+  # years of age. For under-13s, parental/guardian consent is required.
+  # The platform models 16 as the per-pack threshold; under-13 carve-out is
+  # captured in rules.yaml (US-MIN-001).
+  minor_age: 16
+
+  # Consent default — CCPA is fundamentally an OPT-OUT regime for sale /
+  # sharing (the consumer is presumed-opted-in unless they exercise the
+  # opt-out). Sensitive personal information (CPRA §1798.121) and minors
+  # (§1798.120(c)) require opt-IN. The pack ships `opt_out` as the default;
+  # rules cite the opt-IN exceptions per category.
+  consent_default: opt_out
+
+  # CCPA does not impose a Chapter V-style cross-border transfer regime.
+  # Service-provider and contractor arrangements (§1798.140(ag), §1798.140(j))
+  # require contractual safeguards regardless of destination country. The
+  # transfer_mechanisms list reflects what controllers commonly rely on for
+  # routing PI to third parties; residency.yaml leaves allowed_countries
+  # broad in line with the statute's silence on geography.
+  transfer_mechanisms:
+    - service_provider_contract     # §1798.140(ag) — written contract restricting use, no "sale"
+    - contractor_agreement          # §1798.140(j) — written contract restricting use
+    - third_party_disclosure        # Notice + opt-out required if it constitutes a "sale" or "sharing"

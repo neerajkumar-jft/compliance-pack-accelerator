@@ -1,0 +1,119 @@
+# DPIA template for CCPA/CPRA (Cal. Civ. Code §§1798.100-1798.199.100).
+#
+# CCPA/CPRA does not use the EU GDPR "DPIA" vocabulary; CPRA introduces
+# "risk assessments" under §1798.185(a)(15) and "cybersecurity audits"
+# under the same delegation (CPPA regulations finalisation in progress
+# 2024-25). The same artifact serves both — the platform calls it a DPIA
+# for consistency across packs and renames it per-pack at output time.
+#
+# Used by governance_core/agent_prompts.py to render the DPIA system prompt
+# + user prompt. The Pydantic schema for the 8 sections is regulation-
+# agnostic and lives in governance_core/dpia.py::DPIASections — section keys
+# stay stable across packs so the dashboard tile renders consistently
+# regardless of which regulation is active. This file controls:
+#
+#   - Which legal framework the model is told it's drafting under
+#   - Which citation style the model uses for section references
+#   - The system prompt that frames the agent's role
+#   - Optional per-section description overrides that get merged into the
+#     JSON schema fed to the model
+#
+# For multi-jurisdiction activities (a controller processing principals
+# from US AND EU AND UK AND/or IN), governance_core/dpia_template_merge.py
+# picks this template if US principals appear in the activity's data
+# scope; if multiple packs apply, the primary pack drives the narrative
+# and this pack's citations appear inline (ADR-0001 Decision §"DPIA
+# generator output is per-processing-activity").
+
+legal_framework_name: "California Consumer Privacy Act + California Privacy Rights Act (CCPA/CPRA, Cal. Civ. Code §§1798.100-1798.199.100)"
+section_citation_style: "Cal. Civ. Code §<section_number>"
+
+system_prompt: |
+  You are a Risk Assessment / Cybersecurity Audit generator for the
+  California Consumer Privacy Act of 2018, as amended by the California
+  Privacy Rights Act of 2020. Produce a formal assessment in valid JSON
+  conforming to the provided schema, grounded strictly in the metadata
+  supplied in the user message. Do not invent facts; quote only specific
+  table names, column names, gap counts, and rule_ids from the provided
+  context. Where applicable, cite Cal. Civ. Code sections (for example
+  §1798.100, §1798.105, §1798.106, §1798.120, §1798.121, §1798.125,
+  §1798.130, §1798.135, §1798.140, §1798.150, §1798.155, §1798.185, and
+  §1798.81.5 for the reasonable-security duty) and the California
+  Privacy Protection Agency's draft and final regulations (Cal. Code
+  Regs. tit. 11, Div. 6) by reference. Note that CPRA §1798.185(a)(15)
+  directs the CPPA to issue regulations on risk assessments and
+  cybersecurity audits; the CPPA's draft regulations (as last published)
+  identify processing presenting "significant risk" — automated
+  decision-making with legal/similar effects, large-scale processing of
+  sensitive PI, systematic monitoring of publicly accessible places,
+  and processing the PI of minors — as triggers for mandatory
+  assessment. Output exactly one JSON object — no preamble, no markdown
+  fences, no trailing text.
+
+section_descriptions:
+  necessity_assessment: |
+    Apply the CPPA's draft-regulation criteria for significant-risk
+    processing. If the activity involves any of (a) automated
+    decision-making producing legal or similarly significant effects,
+    (b) large-scale processing of sensitive personal information
+    (§1798.140(ae)), (c) systematic monitoring of publicly accessible
+    places, (d) processing the PI of consumers under 16, or (e) selling
+    or sharing PI, the risk assessment is mandatory under CPPA Reg.
+    §7152. Cite the specific trigger. If none apply, the assessment is
+    discretionary best practice — state this conclusion and the
+    reasoning. Reference CPPA Reg. §7150-7157 (risk-assessment
+    requirements) and §7120-7126 (cybersecurity-audit requirements)
+    where relevant.
+
+  compliance_gap_analysis: |
+    Gaps against CCPA/CPRA obligations. Cite specific rule_id values
+    (US-OPT-001 / US-DSR-001 / US-SPI-001 / US-MIN-001 / etc.) and the
+    Cal. Civ. Code section from the provided compliance_rules metadata.
+    Group findings by severity (critical / high / medium). Quote exact
+    gap counts from the provided gaps_summary; do not estimate. Note
+    any §1798.140(ae) sensitive-PI obligations triggered (the "limit
+    use" right under §1798.121).
+
+  remediation_plan: |
+    Prioritised remediation actions, each tied to a specific rule_id and
+    the Cal. Civ. Code section it addresses. Order critical → high →
+    medium. Each action should reference the table or column from the
+    provided metadata where the gap manifests, and propose a concrete
+    control (column mask, "Do Not Sell or Share" link, opt-out flow,
+    consent capture for under-16, sensitive-PI limit-use UI, service-
+    provider contract amendment, etc.). Cite the §1798.105(d) deletion-
+    exception or §1798.121(a) limit-use exception where applicable.
+
+  consent_status: |
+    Coverage of opt-out signals across the sale / sharing surfaces.
+    Use the provided consent_coverage metadata to report opt-out rates,
+    GPC-signal honour rates, and any sale/sharing audiences with
+    anomalously low opt-out propagation. Note any §1798.120(c) under-16
+    opt-IN obligations not currently satisfied. Where SPI is processed,
+    quote the §1798.121(a)(1)-(8) service-necessity carve-out the
+    business relies on to continue use after a limit-use request.
+
+  international_transfers: |
+    CCPA/CPRA does not impose a Chapter V-style cross-border transfer
+    regime, but service-provider / contractor relationships (§§1798.140(ag)
+    + 1798.140(j)) require written contracts regardless of destination
+    geography. Identify each onward recipient, the contractual basis
+    (service-provider / contractor / third-party-sale-recipient), and
+    whether the contract contains the §1798.140(ag)(1)-(7) flow-down
+    provisions. Flag any data-egress endpoint without a matching
+    compliance.processor_contracts row. Reference residency.yaml's
+    blocked_countries and OFAC sanctions where applicable.
+
+  retention_and_disposal: |
+    Retention disclosed in the Notice at Collection (§1798.100(a)(3))
+    must match retention enforced in pipelines/retention_enforcement.py.
+    Cite the retention_defaults.yaml per-purpose values and any
+    statutory_overrides in force. Note the §1798.130(a)(7) 24-month
+    DSR-records retention obligation as a floor independent of purpose.
+
+  monitoring_and_accountability: |
+    Annual cybersecurity-audit (CPPA Reg. §7120) and risk-assessment
+    (§7152) cadence. Reference compliance.dpia_runs as the audit-trail
+    source-of-truth. Note the CPPA's authority to require submission of
+    assessments on request (§1798.185(a)(15)) and the recommendation to
+    treat each assessment as a board-level governance artifact.

@@ -1,0 +1,88 @@
+# CCPA/CPRA — Personal-data breach notification SLA.
+#
+# Unlike GDPR's fixed 72-hour clock, California's breach-notification regime
+# is timed by qualitative language: Cal. Civ. Code §1798.82 requires
+# disclosure "in the most expedient time possible and without unreasonable
+# delay". Case law and AG guidance treat anything beyond 60 days from
+# discovery as presumptively unreasonable absent a specific law-enforcement
+# delay request (§1798.82(c)).
+#
+# Additional notification to the California Attorney General is required
+# whenever a single breach affects 500 or more California residents
+# (§1798.82(f)) — submitted electronically at
+# oag.ca.gov/privacy/databreach/report.
+#
+# For multi-jurisdiction incidents affecting US + EU + UK principals, the
+# company notifies the CPPA / CA AG (under CCPA) in parallel to the lead
+# EU SA (under EU GDPR Art. 33) and the UK ICO (under UK GDPR Art. 33) —
+# see ADR-0001 §"Per-deployment / per-company rules".
+
+notification:
+  to_authority:
+    authority: "California Attorney General (notification mandatory when 500+ California residents affected) + California Privacy Protection Agency on request"
+    deadline_hours: null              # No fixed hour clock — "expedient + without unreasonable delay" (§1798.82)
+    deadline_qualitative: "most expedient time possible and without unreasonable delay; AG case-law treats >60 days from discovery as presumptively unreasonable"
+    mandatory_threshold_residents: 500   # §1798.82(f) — AG notification mandatory at this threshold
+    channel: "Online submission at oag.ca.gov/privacy/databreach/report (sample electronic copy of the consumer notice)"
+    content_requirements:
+      - date_or_estimated_date_of_breach
+      - description_of_incident
+      - categories_of_pi_subject_to_breach
+      - approx_number_of_california_residents_affected
+      - whether_law_enforcement_delay_invoked
+      - contact_information_for_inquiries
+      - mitigation_steps_taken_or_proposed
+      - sample_copy_of_consumer_notice
+    risk_exemption: |
+      Disclosure may be delayed only at the explicit, documented request
+      of a law-enforcement agency where notice would impede a criminal
+      investigation (§1798.82(c)). Encryption-rendered-unintelligible
+      data is exempt from the consumer-notification trigger entirely
+      (§1798.82(a) — "unencrypted, non-redacted personal information").
+
+  to_data_subjects:
+    mandatory_if: "unencrypted, non-redacted personal information of any California resident is reasonably believed to have been acquired by an unauthorised person (§1798.82(a))"
+    deadline: "most expedient time possible and without unreasonable delay"
+    deadline_hours: null              # No hard hours; AG enforcement signal: <=60 days from discovery
+    channel: "Written notice to last known address, or electronic notice consistent with E-SIGN Act; substitute notice (statewide media + website + notice to AG) permitted when cost > $250k or affected > 500k or insufficient contact info"
+    content_requirements:
+      - name_and_contact_of_business
+      - types_of_pi_subject_to_breach
+      - date_or_date_range_of_breach
+      - date_of_notice
+      - whether_notice_delayed_by_law_enforcement
+      - general_description_of_incident
+      - toll_free_credit_reporting_agency_numbers
+      - advice_to_remain_vigilant_for_identity_theft
+    high_risk_exemptions:
+      - encryption_renders_data_unintelligible       # §1798.82(a) — encrypted data not subject to notification
+      - redacted_data_only                           # §1798.82(a) — redacted PI not subject
+
+  # Additional cross-jurisdictional / sectoral obligations the company may
+  # face in parallel — not platform-enforced today, listed for the
+  # multi-regulator response runbook.
+  parallel_obligations:
+    - name: "HIPAA Breach Notification Rule (45 CFR §164.400-414)"
+      authority: "US Department of Health and Human Services (HHS) Office for Civil Rights"
+      deadline_hours: 1440              # 60 days from discovery
+      scope: "Covered entities and business associates handling Protected Health Information"
+    - name: "GLBA Safeguards Rule (16 CFR §314.4(j))"
+      authority: "Federal Trade Commission"
+      deadline_hours: 720               # 30 days for incidents affecting 500+ consumers
+      scope: "Non-bank financial institutions covered by GLBA"
+    - name: "SEC Cybersecurity Disclosure Rule (17 CFR §229.106)"
+      authority: "US Securities and Exchange Commission"
+      deadline_hours: 96                # 4 business days from materiality determination on Form 8-K Item 1.05
+      scope: "Public companies registered with the SEC"
+    - name: "State breach laws (49 other US states + DC + territories)"
+      authority: "Per-state attorneys general"
+      deadline_hours: null              # Varies — typically 30-90 days; some states (e.g., Florida §501.171) specify 30
+      scope: "Where affected consumers reside outside California"
+
+# Documentation requirement — §1798.82(d)(2)(G) requires the notice to
+# describe mitigation steps and ongoing investigation status. The
+# business-side log captures the source-of-truth for AG follow-up.
+internal_log:
+  required: true
+  table: compliance.breach_log              # Phase 2 — schema to be added
+  retention_days: 1825                      # 5 years (covers most state SOLs for breach-related private actions)
