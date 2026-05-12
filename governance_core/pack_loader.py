@@ -445,3 +445,92 @@ def reset_cache() -> None:
     global _all_packs_cache
     _cache.clear()
     _all_packs_cache = None
+
+
+# ---------------------------------------------------------------------------
+# Jurisdiction-code validation (ADR-0001 Q3)
+# ---------------------------------------------------------------------------
+#
+# When a customer-level silver row's ``jurisdiction`` column doesn't match any
+# loaded pack's declared ``jurisdiction``, that row's compliance rules can't
+# be routed and the principal is operationally "ungoverned". This is the
+# "unmapped principals" failure mode ADR-0001 §"Identity and jurisdiction"
+# anticipates. The validator below scans the live silver layer, classifies
+# each distinct jurisdiction value into one of four buckets, and returns a
+# report that callers (typically phase1_bootstrap or a CI guard) consume to
+# fail-or-warn.
+
+def validate_jurisdictions(
+    observed: set[str | None],
+    packs: list[Pack] | None = None,
+) -> dict:
+    """Classify each observed jurisdiction code against the loaded pack set.
+
+    ``observed`` is the distinct set of values from a customer-level
+    ``jurisdiction`` column (e.g.,
+    ``{j for (j,) in spark.sql("SELECT DISTINCT jurisdiction FROM
+    silver.customers_tagged").collect()}``).
+
+    Returns a dict with four keys, each mapping to a list of jurisdiction
+    codes (or to ``None`` for the NULL bucket):
+
+      - ``mapped`` — code matches a loaded pack's ``jurisdiction`` declared
+        in pack.yaml. Routable; nothing to do.
+      - ``null`` — NULL/None present. Indicates rows with no jurisdiction
+        captured at all (the "unmapped principals" gap).
+      - ``unmapped_known`` — code is in ``COUNTRY_TO_JURISDICTION``'s value
+        set (e.g., ``'US'``) but no loaded pack declares that jurisdiction.
+        Indicates a missing pack — author it or remove those principals.
+      - ``unmapped_unknown`` — code is not in either ``COUNTRY_TO_JURISDICTION``
+        values or any loaded pack. Indicates bad data — the row's
+        ``jurisdiction`` value was set to something the platform doesn't
+        recognise (typo, stale code, untranslated country string).
+
+    Pure function — no Spark / Databricks dependency. The caller is
+    responsible for collecting the ``observed`` set.
+    """
+    if packs is None:
+        packs = loaded_packs()
+    declared_jurisdictions = {(p.jurisdiction or "").upper() for p in packs if p.jurisdiction}
+    known_codes = set(COUNTRY_TO_JURISDICTION.values())
+
+    mapped: list[str] = []
+    null_bucket: list[None] = []
+    unmapped_known: list[str] = []
+    unmapped_unknown: list[str] = []
+
+    for raw in observed:
+        if raw is None or (isinstance(raw, str) and not raw.strip()):
+            null_bucket.append(None)
+            continue
+        code = raw.strip().upper()
+        if code in declared_jurisdictions:
+            mapped.append(code)
+        elif code in known_codes:
+            unmapped_known.append(code)
+        else:
+            unmapped_unknown.append(code)
+
+    return {
+        "mapped": sorted(set(mapped)),
+        "null": null_bucket,
+        "unmapped_known": sorted(set(unmapped_known)),
+        "unmapped_unknown": sorted(set(unmapped_unknown)),
+    }
+
+
+def format_validation_report(report: dict, observed_count: int | None = None) -> str:
+    """Return a human-readable summary of a validate_jurisdictions() result.
+
+    Suitable for phase1_bootstrap stdout or a CI guard's failure message.
+    The format is deliberately stable so log-scrapers can rely on it.
+    """
+    parts: list[str] = []
+    parts.append("Jurisdiction validation (ADR-0001 Q3):")
+    if observed_count is not None:
+        parts.append(f"  observed distinct values: {observed_count}")
+    parts.append(f"  ✓ mapped:           {report['mapped'] or '(none)'}")
+    parts.append(f"  ⚠ NULL/blank:       {len(report['null'])} bucket(s)")
+    parts.append(f"  ⚠ unmapped (known): {report['unmapped_known'] or '(none)'}")
+    parts.append(f"  ✗ unmapped (unknown): {report['unmapped_unknown'] or '(none)'}")
+    return "\n".join(parts)

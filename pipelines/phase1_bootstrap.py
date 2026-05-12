@@ -598,6 +598,29 @@ if _pack is None:
         "(e.g., regulations/dpdp_2023/) must be present for phase1_bootstrap."
     )
 
+# ADR-0001 Q3: validate that every jurisdiction value present in the live
+# silver layer corresponds to a loaded pack. Observational only — never
+# fails phase1; the report prints to stdout for the deploy log + CI guard.
+try:
+    from governance_core.pack_loader import (
+        validate_jurisdictions,
+        format_validation_report,
+    )
+    _observed_rows = spark.sql(
+        f"SELECT DISTINCT jurisdiction FROM {CATALOG}.silver.customers_tagged"
+    ).collect()
+    _observed = {r["jurisdiction"] for r in _observed_rows}
+    _validation_report = validate_jurisdictions(_observed, packs=_packs)
+    print(format_validation_report(_validation_report, observed_count=len(_observed)))
+    if _validation_report["unmapped_unknown"]:
+        print(
+            f"  ⚠ WARNING: {len(_validation_report['unmapped_unknown'])} unknown jurisdiction "
+            f"code(s) present in silver.customers_tagged — author the corresponding "
+            f"pack(s) or fix the data."
+        )
+except Exception as _e:  # noqa: BLE001
+    print(f"  (jurisdiction validation skipped: {type(_e).__name__}: {_e})")
+
 ALL_RULES: list[tuple[dict, str]] = []
 for _p in _packs:
     rules_in_pack = _p.rules()
