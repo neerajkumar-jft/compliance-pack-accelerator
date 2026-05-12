@@ -49,7 +49,7 @@ variables:
 
   catalog_name:
     description: Unity Catalog name for the POC
-    default: dpdp_poc
+    default: compliance_pack
 
   catalog_storage_root:
     description: >
@@ -75,7 +75,7 @@ variables:
 
   lakebase_database_name:
     description: Database name within the Lakebase instance
-    default: dpdp_poc_consent
+    default: compliance_pack_consent
 
   service_principal_name:
     description: Service principal that runs all bundle resources
