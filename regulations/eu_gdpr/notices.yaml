@@ -1,0 +1,95 @@
+# EU GDPR — Consent notices seeded into compliance.notice_versions.
+#
+# Each entry becomes one row in the notice_versions Delta table at bootstrap.
+# The `en` body below is hand-authored against EU GDPR Art. 13 / 14
+# transparency requirements (controller identity, DPO contact, purposes,
+# lawful basis, recipients, third-country transfers, retention, rights,
+# complaint route, automated-decision logic).
+#
+# The 23 other EU official languages are not seeded by the POC — the
+# multi-language generator (scripts/generate_multilang_notices.py) populates
+# them via the foundation-model agent with human_review_required = true.
+
+default_purposes_covered: &default_purposes
+  - core_service
+  - marketing_email
+  - marketing_sms
+  - analytics
+  - third_party_sharing
+  - product_personalization
+
+default_effective_from: &default_effective_from "2026-01-01T00:00:00+00:00"
+default_created_at:     &default_created_at     "2026-01-01T00:00:00+00:00"
+default_approved_by:    &default_approved_by    "dpo@example.com"
+
+notices:
+  - notice_version_id: "nv_eu_marketing_v1_en"
+    notice_id: eu_marketing_notice
+    version_number: 1
+    language: en
+    legal_basis: consent
+    purposes_covered: *default_purposes
+    effective_from: *default_effective_from
+    effective_to: null
+    approved_by: *default_approved_by
+    created_at: *default_created_at
+    notice_text: |-
+      Privacy Notice — EU/EEA Data Subjects
+
+      Controller: <Company Name> ("we", "us"). Our Data Protection Officer
+      can be contacted at dpo@example.com. Lead supervisory authority:
+      determined by our main establishment under the one-stop-shop
+      mechanism (Art. 56 GDPR).
+
+      What we collect and why:
+      1. Core service delivery — your account details, transaction history,
+         and contact information. Lawful basis: contractual necessity
+         (GDPR Art. 6(1)(b)).
+      2. Marketing email — your email address, name, and preference data.
+         Lawful basis: your consent (GDPR Art. 6(1)(a)). You can withdraw
+         consent at any time, as easily as you gave it (Art. 7(3)).
+      3. Marketing SMS — your mobile number and preferences. Lawful basis:
+         your consent (GDPR Art. 6(1)(a)).
+      4. Analytics — pseudonymised behaviour signals and device data. Lawful
+         basis: legitimate interests (GDPR Art. 6(1)(f)) where the analysis
+         cannot reasonably be done with consent-only data; legitimate-
+         interests assessment available on request.
+      5. Personalisation — derived preferences for product recommendations.
+         Lawful basis: your consent (GDPR Art. 6(1)(a)).
+      6. Third-party sharing — only with your explicit consent and only with
+         partners listed at example.com/partners.
+
+      Retention: each purpose has its own retention period (3-12 months for
+      marketing/analytics; up to 10 years for core-service records under
+      member-state accounting law — German HGB §257, French Code de
+      commerce, Italian Codice Civile art. 2220, etc.). Statutory retention
+      periods supersede the marketing/analytics defaults where they apply.
+
+      Your rights under EU GDPR:
+      - Right of access (Art. 15) — request a copy of your personal data
+      - Right to rectification (Art. 16) — correct inaccurate data
+      - Right to erasure (Art. 17, "right to be forgotten")
+      - Right to restriction of processing (Art. 18)
+      - Right to data portability (Art. 20)
+      - Right to object to processing (Art. 21)
+      - Right not to be subject to a decision based solely on automated
+        processing (Art. 22)
+      - Right to lodge a complaint (Art. 77) with the supervisory authority
+        of your habitual residence, place of work, or place of alleged
+        infringement
+
+      We respond to all requests within one month, extendable by two further
+      months for complex cases (Art. 12(3)).
+
+      International transfers: we transfer data outside the EU/EEA only to
+      countries with a Commission adequacy decision (Art. 45), or under
+      Standard Contractual Clauses (Commission Decision 2021/914), Binding
+      Corporate Rules, or specific Art. 49 derogations. The current list of
+      destination countries is at example.com/transfers.
+
+      Automated decision-making: we do not make legally significant
+      decisions based solely on automated processing.
+
+      Children: we do not knowingly process the personal data of children
+      below the consent age applicable in your member state (16 by default,
+      possibly lower per Art. 8(1)).
