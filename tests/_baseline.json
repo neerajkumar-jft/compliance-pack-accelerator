@@ -3,23 +3,23 @@
   "column_tags_distinct_columns": 36,
   "compliance_gaps": {
     "by_rule_type": {
-      "access_control": 61,
-      "breach_notification": 72,
-      "consent": 102,
-      "data_subject_rights": 80,
-      "encryption": 31,
-      "lawfulness": 36,
-      "retention": 58,
-      "transparency": 22
+      "access_control": 119,
+      "breach_notification": 130,
+      "consent": 168,
+      "data_subject_rights": 124,
+      "encryption": 81,
+      "lawfulness": 72,
+      "retention": 80,
+      "transparency": 44
     },
     "by_severity": {
-      "critical": 252,
-      "high": 174,
-      "medium": 36
+      "critical": 418,
+      "high": 306,
+      "medium": 94
     },
-    "total": 462
+    "total": 818
   },
-  "compliance_rules": 21,
+  "compliance_rules": 35,
   "consent": {
     "distinct_channels": 4,
     "distinct_principals": 240,

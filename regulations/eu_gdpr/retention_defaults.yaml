@@ -1,0 +1,64 @@
+# EU GDPR — Retention defaults per consent purpose.
+#
+# EU GDPR Art. 5(1)(e) (storage limitation) requires personal data not be
+# kept in identifiable form longer than necessary for the purposes for which
+# it is processed. The Act sets no fixed limits; the values below reflect
+# EDPB guidance and prevailing EU industry practice for each purpose, and
+# match the UK GDPR pack's defaults since the UK retained EU GDPR's storage-
+# limitation principle without amendment.
+#
+# These are SHORTER than the DPDP defaults (marketing 90 vs 730 days) because
+# the EDPB has historically pushed back on long marketing retention absent
+# positive re-consent — the same posture UK ICO took. This is exactly the
+# behaviour ADR-0001's per-data-subject routing preserves: an EU principal
+# under this pack gets 90-day marketing retention; an Indian principal under
+# DPDP gets 730 — same database, different policies per row.
+
+defaults:
+  core_service:              365      # 1 year — duration of active customer relationship
+  marketing_email:            90      # 3 months — re-consent required after this
+  marketing_sms:              90
+  product_personalization:   180
+  analytics:                 180
+  third_party_sharing:        90
+
+# Statutory overrides — EU member-state legislation that retroactively
+# mandates retention beyond the GDPR-default purpose limit. Member-state
+# specific; the list below names the most common heavy hitters. Take
+# precedence over the defaults above; the retention-enforcement job must
+# honour these before deleting.
+statutory_overrides:
+  # Germany
+  - law: "HGB §257 + AO §147 (Germany)"
+    description: "Commercial books, invoices, accounting records — 10 years; correspondence 6 years"
+    applies_to_purposes: [core_service]
+    retention_days: 3650
+  # France
+  - law: "Code de commerce art. L123-22 (France)"
+    description: "Accounting documents and supporting evidence — 10 years"
+    applies_to_purposes: [core_service]
+    retention_days: 3650
+  # Italy
+  - law: "Codice Civile art. 2220 (Italy)"
+    description: "Accounting records and invoices — 10 years"
+    applies_to_purposes: [core_service]
+    retention_days: 3650
+  # Spain
+  - law: "Código de Comercio art. 30 (Spain)"
+    description: "Commercial books and supporting documents — 6 years"
+    applies_to_purposes: [core_service]
+    retention_days: 2190
+  # Netherlands
+  - law: "Burgerlijk Wetboek art. 2:10 + AWR art. 52 (Netherlands)"
+    description: "Administrative records and tax documents — 7 years"
+    applies_to_purposes: [core_service]
+    retention_days: 2555
+  # EU-wide
+  - law: "Directive 2015/849 (AMLD5) — KYC / AML records"
+    description: "5 years from end of business relationship; member states may extend to 10"
+    applies_to_purposes: [core_service]
+    retention_days: 1825
+  - law: "ePrivacy Directive 2002/58/EC + national PECR equivalents"
+    description: "Cookie / electronic-communications consent records — re-prompt every 6-12 months"
+    applies_to_purposes: [analytics, marketing_email, marketing_sms, product_personalization]
+    retention_days: 365

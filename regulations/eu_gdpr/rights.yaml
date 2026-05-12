@@ -1,0 +1,90 @@
+# EU GDPR — Data subject rights activated by this pack.
+#
+# References governance_core/rights.RIGHT_CATALOGUE by code. EU GDPR Art. 12(3)
+# sets the SLA at "one month from receipt of the request", extendable by two
+# further months "where necessary, taking into account the complexity and
+# number of the requests". This pack uses 30 days as the default SLA and
+# 60-day extension cap (hard ceiling of 90 days), matching UK GDPR.
+
+rights:
+  - code: access
+    citation: "EU GDPR Art. 15"
+    sla_days: 30
+    extendable_to_days: 90
+    exemptions:
+      - legal_obligation                # Art. 23 derogations (national security, defence, etc.)
+      - law_enforcement_investigation   # Directive (EU) 2016/680 carve-out
+      - manifestly_unfounded_or_excessive   # Art. 12(5)
+    default_reason_text: "EU GDPR Art. 15 right of access by the data subject"
+    implemented_in: scripts/dsr_discovery.py
+
+  - code: rectification
+    citation: "EU GDPR Art. 16"
+    sla_days: 30
+    extendable_to_days: 90
+    exemptions:
+      - manifestly_unfounded_or_excessive
+    default_reason_text: "EU GDPR Art. 16 right to rectification"
+    implemented_in: null              # Phase 2 — DSR scripts add rectification
+
+  - code: erasure
+    citation: "EU GDPR Art. 17 ('right to be forgotten')"
+    sla_days: 30
+    extendable_to_days: 90
+    exemptions:
+      - freedom_of_expression           # Art. 17(3)(a)
+      - legal_obligation                # Art. 17(3)(b) — e.g., tax retention
+      - public_interest_health          # Art. 17(3)(c)
+      - archiving_research              # Art. 17(3)(d)
+      - legal_claims                    # Art. 17(3)(e)
+    default_reason_text: "EU GDPR Art. 17 right to erasure"
+    implemented_in: scripts/dsr_erasure.py
+
+  - code: restriction
+    citation: "EU GDPR Art. 18"
+    sla_days: 30
+    extendable_to_days: 90
+    exemptions:
+      - legal_claims
+      - public_interest
+    default_reason_text: "EU GDPR Art. 18 right to restriction of processing"
+    implemented_in: null              # Phase 2
+
+  - code: portability
+    citation: "EU GDPR Art. 20"
+    sla_days: 30
+    extendable_to_days: 90
+    exemptions:
+      - public_task                     # Not applicable when basis is public task
+      - legal_obligation                # Not applicable when basis is legal obligation
+    default_reason_text: "EU GDPR Art. 20 right to data portability"
+    implemented_in: null              # Phase 2 — structured-export endpoint
+
+  - code: objection
+    citation: "EU GDPR Art. 21"
+    sla_days: 30
+    extendable_to_days: 90
+    exemptions:
+      - compelling_legitimate_grounds   # Art. 21(1) — controller demonstrates
+      - legal_claims                    # Art. 21(1)
+    default_reason_text: "EU GDPR Art. 21 right to object to processing"
+    implemented_in: null              # Phase 2
+
+  - code: no_auto_decision
+    citation: "EU GDPR Art. 22"
+    sla_days: 30
+    extendable_to_days: 90
+    exemptions:
+      - contract_necessity              # Art. 22(2)(a)
+      - explicit_consent                # Art. 22(2)(c)
+      - law_authorised                  # Art. 22(2)(b) — Union or member-state law
+    default_reason_text: "EU GDPR Art. 22 right not to be subject to a decision based solely on automated processing"
+    implemented_in: null              # Phase 2 — once an automated-decision system exists
+
+  - code: grievance
+    citation: "EU GDPR Art. 77 (right to lodge a complaint with a supervisory authority)"
+    sla_days: null                    # Routed externally; no internal SLA
+    extendable_to_days: null
+    exemptions: []
+    default_reason_text: "Direct lodgement with the supervisory authority of habitual residence, place of work, or place of alleged infringement (Art. 77(1))"
+    implemented_in: null

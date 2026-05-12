@@ -1,0 +1,73 @@
+# EU GDPR — Personal-data breach notification SLA (Art. 33-34).
+#
+# Art. 33: notify the competent supervisory authority within 72 hours of
+# becoming aware, unless the breach is unlikely to result in a risk to the
+# rights and freedoms of natural persons. The competent authority is the
+# controller's main-establishment supervisory authority under the
+# one-stop-shop mechanism (Art. 56).
+#
+# Art. 34: where the breach is likely to result in a HIGH risk, additionally
+# notify the affected data subjects without undue delay, in clear plain
+# language.
+#
+# For multi-jurisdiction incidents affecting both EU and UK principals, the
+# company notifies BOTH the lead EU SA (under EU GDPR Art. 33) and the UK
+# ICO (under UK GDPR Art. 33) in parallel — see ADR-0001 §"Per-deployment /
+# per-company rules".
+
+notification:
+  to_authority:
+    authority: "Lead supervisory authority (one-stop-shop, Art. 56) — typically the SA of the controller's main establishment"
+    deadline_hours: 72
+    mandatory: true
+    channel: "national SA breach-notification portal (varies per member state) or e-mail to the SA"
+    content_requirements:
+      - description_of_breach
+      - categories_and_approx_number_of_data_subjects
+      - categories_and_approx_number_of_records
+      - data_protection_officer_or_contact_point
+      - likely_consequences
+      - measures_taken_or_proposed
+    risk_exemption: |
+      Notification may be omitted if the breach is unlikely to result in a
+      risk to the rights and freedoms of natural persons (Art. 33(1)).
+      Document the risk assessment regardless.
+
+  to_data_subjects:
+    mandatory_if: "high risk to the rights and freedoms of natural persons (Art. 34)"
+    deadline: "without undue delay"
+    deadline_hours: null                # No hard hours; EDPB guidance: ASAP
+    channel: "direct communication (email, post, in-app) in clear plain language; member-state language requirements apply"
+    content_requirements:
+      - description_of_breach_in_clear_plain_language
+      - name_and_contact_details_of_dpo
+      - likely_consequences
+      - measures_taken_or_proposed
+    high_risk_exemptions:
+      - technical_organisational_measures_render_data_unintelligible   # e.g., strong encryption
+      - subsequent_measures_eliminate_risk
+      - disproportionate_effort_to_notify_each_subject                 # use public communication instead
+
+  # Additional cross-border / sectoral obligations the company may face in
+  # parallel — not platform-enforced today, listed for the multi-regulator
+  # response runbook.
+  parallel_obligations:
+    - name: "NIS 2 Directive (EU) 2022/2555 — operators of essential services"
+      authority: "National CSIRT + sector-specific competent authority"
+      deadline_hours: 24                # Early warning within 24h, incident notification 72h
+    - name: "DORA Regulation (EU) 2022/2554 — financial entities"
+      authority: "Competent financial authority"
+      deadline_hours: 4                 # Initial notification (severe incidents)
+      scope: "Banks, insurers, ICT third-party providers serving the financial sector"
+    - name: "ePrivacy Directive 2002/58/EC — publicly available electronic communications service providers"
+      authority: "Competent national authority (e.g., German BNetzA, French ARCEP)"
+      deadline_hours: 24
+      scope: "Telcos and similar communications service providers only"
+
+# Documentation requirement — Art. 33(5) requires the controller to document
+# any personal data breaches, comprising the facts, effects, and remedial
+# action taken, regardless of whether notification was made.
+internal_log:
+  required: true
+  table: compliance.breach_log              # Phase 2 — schema to be added
+  retention_days: 3650                      # 10 years (covers HGB §257 / Code de commerce / etc.)

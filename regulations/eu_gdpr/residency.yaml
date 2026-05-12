@@ -1,0 +1,90 @@
+# EU GDPR — Cross-border data transfer controls (Chapter V).
+#
+# Art. 44 prohibits transfer of personal data to third countries or
+# international organisations unless one of these conditions is met:
+#   - Art. 45 — Commission adequacy decision
+#   - Art. 46 — appropriate safeguards (SCCs, BCRs, certification, codes)
+#   - Art. 49 — specific derogations (explicit consent, contract performance,
+#               legal claims, vital interests, public-interest grounds)
+#
+# This file lists the countries the platform considers "safe" for direct
+# transfer. The residency-filter UDF (M3 work) reads this and restricts
+# non-admin reads of EU principals' data to rows whose `country` is in the
+# allowed list. Rows in restricted countries surface as a high-severity
+# compliance gap (EU-LAW-001 / EU-ROP-001 cited).
+
+# Countries with current Commission adequacy decisions. Source:
+# https://commission.europa.eu/law/law-topic/data-protection/international-dimension-data-protection/adequacy-decisions_en
+# As of 2026-Q2 — refresh annually; adequacy is revocable.
+allowed_countries:
+  # EU 27 (intra-EU transfers don't require Chapter V analysis)
+  - Austria
+  - Belgium
+  - Bulgaria
+  - Croatia
+  - Cyprus
+  - Czech Republic
+  - Denmark
+  - Estonia
+  - Finland
+  - France
+  - Germany
+  - Greece
+  - Hungary
+  - Ireland
+  - Italy
+  - Latvia
+  - Lithuania
+  - Luxembourg
+  - Malta
+  - Netherlands
+  - Poland
+  - Portugal
+  - Romania
+  - Slovakia
+  - Slovenia
+  - Spain
+  - Sweden
+  # EEA non-EU — GDPR applies via EEA Agreement
+  - Iceland
+  - Liechtenstein
+  - Norway
+  # Adequacy decisions (Art. 45)
+  - Andorra
+  - Argentina
+  - Canada                              # commercial activities under PIPEDA
+  - Faroe Islands
+  - Guernsey
+  - Isle of Man
+  - Israel
+  - Japan
+  - Jersey
+  - New Zealand
+  - South Korea
+  - Switzerland
+  - United Kingdom                      # post-Brexit adequacy decision (renewed 2024)
+  - Uruguay
+  # US — adequacy under the EU-US Data Privacy Framework (2023)
+  - United States                       # via DPF participation only; non-DPF importers need SCCs
+
+# Sectoral restrictions — placeholder. Special-category Art. 9 data and
+# criminal-conviction Art. 10 data may have stricter destination rules under
+# member-state law (e.g., German health data residency).
+restricted_countries_by_sector: []
+
+# Countries explicitly blocked. EU GDPR doesn't maintain a formal blocklist;
+# this is for customer-defined risk policy (e.g., EU sanctions lists).
+blocked_countries: []
+
+# Apply this residency filter to these (table, column) pairs at silver-read
+# time. The row filter UDF blocks reads of rows whose `country` is not in
+# allowed_countries unless the reader is in the admins group.
+apply_filter_to:
+  - table: customers_tagged
+    column: country
+  - table: users_tagged
+    column: country
+  - table: patients_tagged
+    column: country
+  - table: employees_tagged
+    column: country

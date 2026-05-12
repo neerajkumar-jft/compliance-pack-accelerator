@@ -1,0 +1,54 @@
+# EU GDPR — Languages covered by this pack's notice generator.
+#
+# The EU has 24 official languages (Regulation No 1 of 1958, as amended).
+# Notices to data subjects must be in "clear and plain language" (Art. 12(1))
+# AND in the language of the data subject where reasonably practicable.
+# Member-state law adds language requirements (e.g., Belgium requires
+# Dutch/French/German per region; Luxembourg adds Luxembourgish; Catalonia
+# adds Catalan beyond Spanish).
+#
+# Phase 0 baseline: en is hand-authored (acts as the lingua-franca version
+# for in-house DPOs and as a fallback). The 23 other EU official languages
+# are machine-translated with human_review_required = true so a
+# member-state deployment can upgrade to a hand-authored notice without a
+# code change.
+#
+# Fields:
+#   code                    — IETF BCP 47 (en, de, fr, ...)
+#   script                  — Unicode script name
+#   speakers_l1_millions    — approximate L1 speaker population in the EU
+#   model_support_tier      — strong / good / fair / unsupported
+#   human_review_required   — true for low-resource / regulated languages
+
+languages:
+  # Hand-authored
+  - { code: en,    script: Latin,      speakers_l1_millions: 75,   model_support_tier: strong,  human_review_required: false, seeded_by_poc: true,  notes: "EU lingua franca for DPO documentation; default fallback when subject language unknown." }
+
+  # Tier-1: strong model support, large speaker base — first wave of machine translation
+  - { code: de,    script: Latin,      speakers_l1_millions: 95,   model_support_tier: strong,  human_review_required: true,  seeded_by_poc: false, notes: "German — Germany, Austria, Liechtenstein, parts of Belgium/Italy." }
+  - { code: fr,    script: Latin,      speakers_l1_millions: 80,   model_support_tier: strong,  human_review_required: true,  seeded_by_poc: false, notes: "French — France, Belgium (Wallonia), Luxembourg." }
+  - { code: es,    script: Latin,      speakers_l1_millions: 46,   model_support_tier: strong,  human_review_required: true,  seeded_by_poc: false, notes: "Spanish — Spain (Castilian)." }
+  - { code: it,    script: Latin,      speakers_l1_millions: 60,   model_support_tier: strong,  human_review_required: true,  seeded_by_poc: false, notes: "Italian — Italy, parts of Switzerland (non-EU)." }
+  - { code: nl,    script: Latin,      speakers_l1_millions: 25,   model_support_tier: strong,  human_review_required: true,  seeded_by_poc: false, notes: "Dutch — Netherlands, Belgium (Flanders), Suriname." }
+  - { code: pl,    script: Latin,      speakers_l1_millions: 38,   model_support_tier: strong,  human_review_required: true,  seeded_by_poc: false, notes: "Polish — Poland." }
+  - { code: pt,    script: Latin,      speakers_l1_millions: 10,   model_support_tier: strong,  human_review_required: true,  seeded_by_poc: false, notes: "Portuguese — Portugal." }
+
+  # Tier-2: good model support
+  - { code: ro,    script: Latin,      speakers_l1_millions: 17,   model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Romanian — Romania." }
+  - { code: el,    script: Greek,      speakers_l1_millions: 11,   model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Greek — Greece, Cyprus." }
+  - { code: hu,    script: Latin,      speakers_l1_millions: 10,   model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Hungarian — Hungary." }
+  - { code: cs,    script: Latin,      speakers_l1_millions: 10,   model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Czech — Czech Republic." }
+  - { code: sv,    script: Latin,      speakers_l1_millions: 9,    model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Swedish — Sweden, Finland (official minority)." }
+  - { code: bg,    script: Cyrillic,   speakers_l1_millions: 7,    model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Bulgarian — Bulgaria." }
+  - { code: da,    script: Latin,      speakers_l1_millions: 5,    model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Danish — Denmark." }
+  - { code: fi,    script: Latin,      speakers_l1_millions: 5,    model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Finnish — Finland." }
+  - { code: sk,    script: Latin,      speakers_l1_millions: 5,    model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Slovak — Slovakia." }
+  - { code: hr,    script: Latin,      speakers_l1_millions: 5,    model_support_tier: good,    human_review_required: true,  seeded_by_poc: false, notes: "Croatian — Croatia." }
+
+  # Tier-3: fair model support, smaller speaker base — likely needs human review for regulatory text
+  - { code: sl,    script: Latin,      speakers_l1_millions: 2,    model_support_tier: fair,    human_review_required: true,  seeded_by_poc: false, notes: "Slovenian — Slovenia." }
+  - { code: lt,    script: Latin,      speakers_l1_millions: 3,    model_support_tier: fair,    human_review_required: true,  seeded_by_poc: false, notes: "Lithuanian — Lithuania." }
+  - { code: lv,    script: Latin,      speakers_l1_millions: 1.5,  model_support_tier: fair,    human_review_required: true,  seeded_by_poc: false, notes: "Latvian — Latvia." }
+  - { code: et,    script: Latin,      speakers_l1_millions: 1,    model_support_tier: fair,    human_review_required: true,  seeded_by_poc: false, notes: "Estonian — Estonia." }
+  - { code: mt,    script: Latin,      speakers_l1_millions: 0.5,  model_support_tier: fair,    human_review_required: true,  seeded_by_poc: false, notes: "Maltese — Malta. Only Semitic language with EU official status." }
+  - { code: ga,    script: Latin,      speakers_l1_millions: 0.2,  model_support_tier: fair,    human_review_required: true,  seeded_by_poc: false, notes: "Irish (Gaeilge) — Ireland. Full EU official status since 2022." }

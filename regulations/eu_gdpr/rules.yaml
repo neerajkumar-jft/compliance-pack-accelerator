@@ -1,0 +1,166 @@
+# EU GDPR — Compliance rules.
+#
+# Source of truth for the EU GDPR rows in bronze.compliance_rules. Loaded by
+# pipelines/phase1_bootstrap.py via governance_core.pack_loader; MERGE'd
+# into the bronze.compliance_rules Delta table alongside DPDP and UK GDPR
+# rules under multi-pack mode (ADR-0001).
+#
+# Each rule fires per principal — the gap engine joins silver.pii_findings
+# to silver.customers_tagged.jurisdiction = 'EU' before evaluating these
+# rules; IN principals are governed by DPDP, GB by UK GDPR.
+#
+# Rule IDs use the EU- prefix; otherwise the schema matches DPDP and UK GDPR
+# rule rows. EU GDPR retained the same article structure as UK GDPR (UK GDPR
+# IS retained EU GDPR with minor amendments), so the rule set largely mirrors
+# the UK pack; differences captured here:
+#   - Citations point at "EU GDPR Art. <n>" (not "UK GDPR Art. <n>").
+#   - Transfer rule cites Standard Contractual Clauses (Commission Decision
+#     2021/914) rather than UK IDTA.
+#   - Penalty tier references map to Art. 83(4) standard / Art. 83(5) higher.
+#   - Minor-protection rule cites the EU default age 16 with member-state
+#     derogations to 13.
+
+rules:
+  # -------------------------------------------------------------------------
+  # Lawfulness, fairness and transparency (Art. 5, 6, 7)
+  # -------------------------------------------------------------------------
+  - rule_id: EU-LAW-001
+    rule_type: lawfulness
+    severity: critical
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, indirect_identifier, health]
+    citation: "EU GDPR Art. 6"
+    description: "Every processing activity must rest on at least one of the six lawful bases in Art. 6(1) (consent, contract, legal obligation, vital interests, public task, legitimate interests)."
+    remediation: "Document the lawful basis per processing activity in the Record of Processing Activities (Art. 30); make it visible in the Art. 13/14 privacy notice."
+
+  - rule_id: EU-CNS-001
+    rule_type: consent
+    severity: critical
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, indirect_identifier, health]
+    citation: "EU GDPR Art. 7 + Recital 32"
+    description: "Where consent is the lawful basis, it must be freely given, specific, informed and unambiguous, with a clear affirmative action. Pre-ticked boxes, silence, or inactivity do not constitute consent (Recital 32)."
+    remediation: "Capture consent through a granular per-purpose UI with no pre-checked boxes; record timestamp, purpose, lawful basis, and notice version per event."
+
+  - rule_id: EU-CNS-002
+    rule_type: consent
+    severity: high
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, indirect_identifier, health]
+    citation: "EU GDPR Art. 7(3)"
+    description: "Withdrawal of consent must be as easy as giving it; the data subject must be informed of the right to withdraw before consent is given. Downstream processing must stop without undue delay following withdrawal."
+    remediation: "Expose a one-click withdrawal flow on every channel where consent is captured; ensure CDF-driven propagation invalidates marketing/analytics views within minutes."
+
+  - rule_id: EU-MIN-001
+    rule_type: consent
+    severity: high
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, indirect_identifier]
+    citation: "EU GDPR Art. 8"
+    description: "Information Society Services offered directly to a child require parental consent below age 16 (default; member states may legislate down to 13). Controllers must make reasonable efforts to verify parental consent."
+    remediation: "Capture date_of_birth at signup; route under-age users through a parental-consent flow keyed to the applicable member-state age threshold; do not process under-age data without that consent."
+
+  - rule_id: EU-TRN-001
+    rule_type: transparency
+    severity: high
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, indirect_identifier, health]
+    citation: "EU GDPR Art. 13-14"
+    description: "Provide privacy information at the point of collection (Art. 13) or within one month if collected indirectly (Art. 14): identity of controller, DPO contact, purposes, lawful basis, recipients, third-country transfers, retention, rights, complaint route, automated-decision logic and consequences."
+    remediation: "Publish a layered privacy notice in the language of the data subject; record the version presented per consent event in compliance.notice_versions."
+
+  # -------------------------------------------------------------------------
+  # Storage limitation (Art. 5(1)(e))
+  # -------------------------------------------------------------------------
+  - rule_id: EU-RET-001
+    rule_type: retention
+    severity: high
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, indirect_identifier, health]
+    citation: "EU GDPR Art. 5(1)(e)"
+    description: "Personal data may not be kept in identifiable form longer than necessary for the purposes for which it is processed (storage limitation). Define and document a retention period per purpose."
+    remediation: "Set per-purpose retention defaults in retention_defaults.yaml; run pipelines/retention_enforcement.py on schedule; honour member-state statutory overrides separately."
+
+  # -------------------------------------------------------------------------
+  # Integrity, confidentiality, security (Art. 5(1)(f), 25, 32)
+  # -------------------------------------------------------------------------
+  - rule_id: EU-ENC-001
+    rule_type: encryption
+    severity: critical
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [health, direct_identifier_government, direct_identifier_financial]
+    citation: "EU GDPR Art. 32"
+    description: "Implement appropriate technical and organisational measures to ensure security of processing, including pseudonymisation and encryption of personal data where appropriate, considering state-of-the-art and risk."
+    remediation: "Enable Unity Catalog column masks on critical PII columns; enforce TLS in transit; confirm Delta encryption-at-rest is on at the storage layer; document the risk assessment behind the measure choice."
+
+  - rule_id: EU-PBD-001
+    rule_type: encryption
+    severity: medium
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, health]
+    citation: "EU GDPR Art. 25"
+    description: "Data protection by design and by default: only personal data necessary for each specific processing purpose is processed by default; appropriate technical and organisational measures are implemented at the time of processing-system design."
+    remediation: "Run a DPIA (Art. 35) for any new processing activity at design time; minimise PII captured at source; pseudonymise where the use case allows; document the design decision in the activity's Record of Processing."
+
+  - rule_id: EU-ACC-001
+    rule_type: access_control
+    severity: critical
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, health]
+    citation: "EU GDPR Art. 32(1)(b)"
+    description: "Ensure ongoing confidentiality, integrity, availability and resilience of processing systems — only personnel with a documented need-to-know may access personal data."
+    remediation: "Per-persona UC grants (CCO/GC/CMO/CFO), bronze-is-pipeline-only fence, persona-boundary CI test that fails any PR widening access."
+
+  # -------------------------------------------------------------------------
+  # Data subject rights (Art. 12-22)
+  # -------------------------------------------------------------------------
+  - rule_id: EU-DSR-001
+    rule_type: data_subject_rights
+    severity: critical
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, indirect_identifier, health]
+    citation: "EU GDPR Art. 12(3)"
+    description: "Respond to data-subject requests (access, rectification, erasure, restriction, portability, objection) within one month of receipt; extendable by two further months for complex or numerous requests with notification to the requester within the initial month."
+    remediation: "Track every request in compliance.dsr_requests with received_at, due_at = received_at + 30 days, status. Alert when due_at < current_date + 7 days; document the complexity-justified extension in writing."
+
+  - rule_id: EU-DSR-002
+    rule_type: data_subject_rights
+    severity: high
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, indirect_identifier, health]
+    citation: "EU GDPR Art. 17"
+    description: "Erase personal data without undue delay where: consent withdrawn (no other lawful basis), data no longer necessary for the purpose, data processed unlawfully, legal obligation requires erasure, child's data collected under Art. 8."
+    remediation: "scripts/dsr_erasure.py performs Delta DELETE + VACUUM with audit-bundle JSON; preserve list honours legal retention overrides cited in retention_defaults.yaml statutory_overrides."
+
+  # -------------------------------------------------------------------------
+  # Records and accountability (Art. 30)
+  # -------------------------------------------------------------------------
+  - rule_id: EU-ROP-001
+    rule_type: access_control
+    severity: medium
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, indirect_identifier, health]
+    citation: "EU GDPR Art. 30"
+    description: "Controllers (and processors) must maintain a Record of Processing Activities (RoPA) covering: name and contact of controller / DPO, purposes, categories of data subjects and data, recipients, transfers, retention, security measures."
+    remediation: "Generate the RoPA from compliance.consent_events_log + silver.pii_findings + compliance.dpia_runs; expose via the GC persona's Genie space."
+
+  # -------------------------------------------------------------------------
+  # Breach notification (Art. 33-34)
+  # -------------------------------------------------------------------------
+  - rule_id: EU-BRC-001
+    rule_type: breach_notification
+    severity: critical
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, direct_identifier_government, direct_identifier_financial, health]
+    citation: "EU GDPR Art. 33"
+    description: "Notify the competent supervisory authority of a personal data breach within 72 hours of becoming aware, unless the breach is unlikely to result in a risk to data subjects' rights and freedoms. Lead supervisory authority is the controller's main-establishment DPA under the one-stop-shop mechanism."
+    remediation: "Maintain a breach-response runbook with the 72h clock; route through breach_sla.yaml's authority/contact_point fields; document the risk assessment if not notifying."
+
+  - rule_id: EU-BRC-002
+    rule_type: breach_notification
+    severity: high
+    regulations: [EU_GDPR, GDPR]
+    applicable_categories: [direct_identifier_contact, health]
+    citation: "EU GDPR Art. 34"
+    description: "Where a breach is likely to result in a high risk to data subjects, communicate the breach to those affected without undue delay, in clear plain language. Exemptions: encryption-rendered-unintelligible, subsequent measures, disproportionate effort (then use public communication)."
+    remediation: "Trigger principal-notification workflow alongside the supervisory-authority notification; use multi-language notice rendering for affected member-state populations."
