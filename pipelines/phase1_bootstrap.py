@@ -585,7 +585,7 @@ if _repo_root not in _sys.path:
 # pack governing that principal.
 from governance_core.pack_loader import loaded_packs  # noqa: E402
 _packs = loaded_packs()
-print(f"Loaded {len(_packs)} regulation pack(s): {[p.code for p in _packs]}")
+print(f"Loaded {len(_packs)} regulation pack(s): {[f'{p.code}@v{p.version}' for p in _packs]}")
 
 # Primary-pack alias: used by the notices / consent-purpose / retention /
 # residency code paths below that haven't been refactored to multi-pack yet.

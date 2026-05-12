@@ -128,9 +128,18 @@ def _merge_templates(primary: Pack, secondaries: list[Pack]) -> DPIATemplate:
                     + secondary_desc.strip()
                 )
 
+    # Pack version stamp for the merged template — primary first, then
+    # secondaries in load order. Surfaces in dpia_prompt_version() so MLflow
+    # traces fork whenever any participating pack bumps its semver.
+    merged_pack_version = "+".join(
+        [f"{primary.code}@{primary.version}"]
+        + [f"{s.code}@{s.version}" for s in secondaries]
+    )
+
     return DPIATemplate(
         legal_framework_name=merged_framework,
         section_citation_style=primary_tpl.section_citation_style,
         system_prompt=augmented_prompt,
         section_descriptions=merged_section_descriptions,
+        pack_version=merged_pack_version,
     )

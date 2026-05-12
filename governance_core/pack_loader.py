@@ -100,6 +100,7 @@ class DPIATemplate:
     section_citation_style: str
     system_prompt: str
     section_descriptions: dict = field(default_factory=dict)
+    pack_version: str = "0.0.0"           # ADR-0001 Q2 — sourced from pack.yaml::version; feeds dpia_prompt_version() hash so MLflow segregates traces across pack bumps
 
 
 @dataclass
@@ -127,6 +128,11 @@ class Pack:
     @property
     def primary_locale(self) -> str:
         return self.metadata.get("primary_locale", "en-IN")
+
+    @property
+    def version(self) -> str:
+        """Pack semver, e.g. '1.0.0'. Defaults to '0.0.0' for packs predating ADR-0001 Q2."""
+        return str(self.metadata.get("version") or "0.0.0")
 
     def rules(self) -> list[dict]:
         """Return compliance rules as a list of dicts."""
@@ -231,6 +237,7 @@ class Pack:
                 section_citation_style=data["section_citation_style"],
                 system_prompt=data["system_prompt"],
                 section_descriptions=data.get("section_descriptions") or {},
+                pack_version=self.version,
             )
         return self._dpia_template
 

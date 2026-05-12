@@ -6,6 +6,7 @@
 
 name: "Digital Personal Data Protection Act, 2023"
 code: dpdp_2023
+version: "1.0.0"                                    # ADR-0001 Q2 — pack semver; bump when rules/rights/retention defaults change in a way downstream callers must observe (semver: MAJOR rule_id removal/rename, MINOR new rule/right, PATCH wording-only)
 jurisdiction: IN                                    # ISO 3166-1 alpha-2
 effective_date: "2023-08-11"                        # Royal assent date
 supervising_authority: "Data Protection Board of India (DPBI)"

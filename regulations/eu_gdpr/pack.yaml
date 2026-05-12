@@ -23,6 +23,7 @@
 
 name: "EU General Data Protection Regulation (Regulation (EU) 2016/679)"
 code: eu_gdpr
+version: "1.0.0"                                    # ADR-0001 Q2 — pack semver (see dpdp_2023/pack.yaml for the bump rules)
 jurisdiction: EU                                      # ISO 3166-1 alpha-2 union — matches derive_jurisdiction()'s EEA mapping
 effective_date: "2018-05-25"
 supervising_authority: "European Data Protection Board (EDPB) + national supervisory authorities"

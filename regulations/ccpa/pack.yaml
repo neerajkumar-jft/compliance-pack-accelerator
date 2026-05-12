@@ -34,6 +34,7 @@
 
 name: "California Consumer Privacy Act + California Privacy Rights Act (CCPA/CPRA)"
 code: ccpa
+version: "1.0.0"                                    # ADR-0001 Q2 — pack semver (see dpdp_2023/pack.yaml for the bump rules)
 jurisdiction: US                                      # ISO 3166-1 alpha-2 — matches derive_jurisdiction()'s US mapping
 effective_date: "2020-01-01"                          # CCPA in force; CPRA amendments effective 2023-01-01
 supervising_authority: "California Privacy Protection Agency (CPPA) + California Attorney General"

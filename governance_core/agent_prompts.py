@@ -87,8 +87,13 @@ def render_dpia_system(template: "DPIATemplate") -> str:
     """Build the DPIA system prompt from a regulation pack's template.
 
     The system prompt frames the model's role and citation expectations.
-    Sourced from ``regulations/<pack>/dpia_template.yaml::system_prompt``.
+    Sourced from ``regulations/<pack>/dpia_template.yaml::system_prompt``;
+    prepended with a pack-version stamp (ADR-0001 Q2) so the model — and
+    a reviewer reading the prompt — can see which authored version of the
+    pack is in force.
     """
+    if template.pack_version and template.pack_version != "0.0.0":
+        return f"[regulation pack v{template.pack_version}]\n\n{template.system_prompt}"
     return template.system_prompt
 
 
@@ -139,6 +144,7 @@ def dpia_prompt_version(template: "DPIATemplate") -> str:
         template.system_prompt,
         _DPIA_USER_TEMPLATE,
         json.dumps(template.section_descriptions, sort_keys=True),
+        template.pack_version,                 # ADR-0001 Q2 — flip the hash on pack bumps
     ]
     return _short_hash("|".join(parts))
 
