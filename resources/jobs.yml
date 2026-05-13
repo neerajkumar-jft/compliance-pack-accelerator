@@ -151,5 +151,54 @@ resources:
         on_failure:
           - ${var.notification_email}
 
+    # -------------------------------------------------------------------------
+    # pii_ai_scan
+    # -------------------------------------------------------------------------
+    # Weekly AI-based PII scan on free-text columns. Companion to the
+    # regex DLT classifier (which handles structured PII like Aadhaar,
+    # NHS, credit card). Iterates patterns where `is_ai_classifiable() ==
+    # True` (i.e., have `ai_labels` declared) and runs `ai_classify`
+    # against matching string columns, sampled to LIMIT sample_size for
+    # cost control.
+    #
+    # Cost model: ~$0.005/call × scan_plan_size × sample_size. Default
+    # 1000 rows × ~5 columns × weekly = ~$25/week, ~$100/month. The
+    # notebook prints a cost estimate before any LLM calls and supports
+    # a dry-run mode that exits without spending. If no AI patterns are
+    # declared, the notebook exits cleanly with no LLM calls.
+    #
+    # Output: appends to <catalog>.silver.pii_findings_ai (NOT the
+    # DLT-managed pii_findings — keeps the medallion's incremental
+    # refresh semantics undisturbed). Same schema as pii_findings, so a
+    # UNION view for downstream consumers (dashboard, DPIA, gaps) is the
+    # recommended next integration step.
+    #
+    # Schedule: weekly on Sunday 03:00 IST.
+    pii_ai_scan:
+      name: compliance_pack_pii_ai_scan
+      description: "Weekly AI-based PII scan (ai_classify) on free-text columns. Cost-bounded via sample cap. Appends to silver.pii_findings_ai."
+      max_concurrent_runs: 1
+
+      schedule:
+        quartz_cron_expression: "0 0 3 ? * SUN"
+        timezone_id: "Asia/Kolkata"
+        pause_status: "UNPAUSED"
+
+      tasks:
+        - task_key: ai_scan
+          notebook_task:
+            notebook_path: ../pipelines/pii_ai_scan.py
+            base_parameters:
+              catalog: ${var.catalog_name}
+              model_endpoint: "databricks-gpt-oss-120b"
+              sample_size: "1000"
+              mode: "apply"
+              # Optional comma-separated allowlist; empty = all silver tables.
+              table_filter: ""
+
+      email_notifications:
+        on_failure:
+          - ${var.notification_email}
+
 # sql_warehouse_id is declared at the top level of databricks.yml
 # (auto-resolves via warehouse-name lookup).
