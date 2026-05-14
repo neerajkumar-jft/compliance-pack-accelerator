@@ -11,9 +11,7 @@
         "    SUM(CASE WHEN sensitivity_tier = 'high' THEN 1 ELSE 0 END) AS high_pii,\n",
         "    SUM(CASE WHEN sensitivity_tier = 'medium' THEN 1 ELSE 0 END) AS medium_pii,\n",
         "    SUM(CASE WHEN sensitivity_tier = 'low' THEN 1 ELSE 0 END) AS low_pii\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "),\n",
+        "  FROM compliance_pack.silver.pii_findings_all),\n",
         "gap_metrics AS (\n",
         "  SELECT\n",
         "    COUNT(CASE WHEN severity = 'critical' THEN 1 END) AS critical_gaps,\n",
@@ -44,9 +42,7 @@
         "    COUNT(*) AS column_count,\n",
         "    COUNT(DISTINCT table_name) AS table_count,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  GROUP BY pii_category, sensitivity_tier\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  GROUP BY pii_category, sensitivity_tier\n",
         "  ORDER BY column_count DESC\n"
       ]
     },
@@ -97,7 +93,7 @@
         "    SUM(CASE WHEN sensitivity_tier = 'critical' THEN 1 ELSE 0 END) AS critical_count,\n",
         "    SUM(CASE WHEN sensitivity_tier = 'high' THEN 1 ELSE 0 END) AS high_count,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n",
         "  WHERE discovered_at >= DATE_SUB(CURRENT_DATE(), 30)\n",
         "  GROUP BY DATE(discovered_at)\n",
         "  ORDER BY discovery_date"
@@ -112,9 +108,7 @@
         "    pii_category,\n",
         "    COUNT(*) AS occurrences,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  GROUP BY pii_type, pii_category\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  GROUP BY pii_type, pii_category\n",
         "  ORDER BY occurrences DESC\n",
         "  LIMIT 15\n"
       ]
@@ -135,9 +129,7 @@
         "    classifier_source,\n",
         "    regulations,\n",
         "    discovered_at\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  ORDER BY\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  ORDER BY\n",
         "    CASE sensitivity_tier WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END,\n",
         "    table_name,\n",
         "    column_name"
@@ -152,7 +144,7 @@
         "  MAX(discovered_at) AS last_scan_time,\n",
         "  COUNT(DISTINCT scan_job_id) AS total_scans,\n",
         "  DATEDIFF(CURRENT_TIMESTAMP(), MAX(discovered_at)) AS days_since_last_scan\n",
-        "FROM compliance_pack.silver.pii_findings;"
+        "FROM compliance_pack.silver.pii_findings_all;"
       ]
     },
     {
@@ -187,9 +179,7 @@
         "    SUM(CASE WHEN sensitivity_tier = 'critical' THEN 1 ELSE 0 END) AS critical_pii,\n",
         "    SUM(CASE WHEN sensitivity_tier = 'high' THEN 1 ELSE 0 END) AS high_sensitivity_pii,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "),\n",
+        "  FROM compliance_pack.silver.pii_findings_all),\n",
         "gaps AS (\n",
         "  SELECT\n",
         "    COUNT(*) AS total_gaps,\n",
@@ -208,9 +198,7 @@
         "SELECT\n",
         "    sensitivity_tier,\n",
         "    COUNT(*) AS count\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  GROUP BY sensitivity_tier\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  GROUP BY sensitivity_tier\n",
         "  ORDER BY\n",
         "    CASE sensitivity_tier\n",
         "      WHEN 'critical' THEN 1\n",
@@ -238,9 +226,7 @@
         "    END) AS risk_score,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence,\n",
         "    ARRAY_JOIN(ARRAY_DISTINCT(COLLECT_LIST(pii_type)), ', ') AS pii_types\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  GROUP BY catalog_name, schema_name, table_name\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  GROUP BY catalog_name, schema_name, table_name\n",
         "  ORDER BY risk_score DESC"
       ]
     },
@@ -283,8 +269,7 @@
         "    COUNT(*) AS total_columns,\n",
         "    COUNT(DISTINCT pii_type) AS pii_types_found,\n",
         "    COUNT(DISTINCT pii_category) AS categories_found\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)"
+        "  FROM compliance_pack.silver.pii_findings_all"
       ]
     },
     {
@@ -297,9 +282,7 @@
         "    COUNT(*) AS pii_columns,\n",
         "    SUM(CASE WHEN sensitivity_tier IN ('critical', 'high') THEN 1 ELSE 0 END) AS high_risk_columns,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  GROUP BY schema_name\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  GROUP BY schema_name\n",
         "  ORDER BY pii_columns DESC"
       ]
     },
@@ -317,9 +300,7 @@
         "      WHEN sensitivity_tier = 'high' THEN 2\n",
         "      ELSE 1\n",
         "    END) AS risk_score\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  GROUP BY catalog_name, schema_name, table_name\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  GROUP BY catalog_name, schema_name, table_name\n",
         "  HAVING SUM(CASE WHEN sensitivity_tier IN ('critical', 'high') THEN 1 ELSE 0 END) > 0\n",
         "  ORDER BY risk_score DESC\n",
         "  LIMIT 20\n"
@@ -346,9 +327,7 @@
         "    END AS bucket_order,\n",
         "    COUNT(*) AS finding_count,\n",
         "    COUNT(DISTINCT pii_type) AS pii_types\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  GROUP BY 1, 2\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  GROUP BY 1, 2\n",
         "  ORDER BY bucket_order"
       ]
     },
@@ -362,9 +341,7 @@
         "    ROUND(AVG(confidence), 2) AS avg_confidence,\n",
         "    COUNT(DISTINCT pii_type) AS pii_types_detected,\n",
         "    COUNT(DISTINCT table_name) AS tables_scanned\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  GROUP BY classifier_source\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  GROUP BY classifier_source\n",
         "  ORDER BY finding_count DESC"
       ]
     },
@@ -378,12 +355,12 @@
         "    COUNT(DISTINCT p.column_name) AS pii_columns,\n",
         "    COUNT(DISTINCT g.gap_id) AS gap_count,\n",
         "    ROUND(COUNT(DISTINCT g.gap_id) * 1.0 / GREATEST(1, COUNT(DISTINCT p.column_name)), 1) AS gaps_per_column\n",
-        "  FROM compliance_pack.silver.pii_findings p\n",
+        "  FROM compliance_pack.silver.pii_findings_all p\n",
         "  LEFT JOIN compliance_pack.silver.compliance_gaps g\n",
         "    ON p.table_name = g.table_name\n",
         "    AND p.column_name = g.column_name\n",
         "    AND p.scan_job_id = g.scan_job_id\n",
-        "  WHERE p.scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
+        "  WHERE p.scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings_all)\n",
         "  GROUP BY p.pii_type, p.sensitivity_tier\n",
         "  ORDER BY gap_count DESC"
       ]
@@ -399,9 +376,7 @@
         "    ROUND(AVG(confidence), 2) AS avg_confidence,\n",
         "    ROUND(MIN(confidence), 2) AS min_confidence,\n",
         "    ROUND(MAX(confidence), 2) AS max_confidence\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  GROUP BY pii_type, pii_category\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  GROUP BY pii_type, pii_category\n",
         "  ORDER BY avg_confidence ASC"
       ]
     },
@@ -437,7 +412,7 @@
         "    SUM(CASE WHEN sensitivity_tier = 'high' THEN 1 ELSE 0 END) AS high_count,\n",
         "    COUNT(DISTINCT table_name) AS tables_scanned,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n",
         "  GROUP BY scan_job_id\n",
         "  ORDER BY scan_start DESC\n",
         "  LIMIT 10"
@@ -453,9 +428,7 @@
         "    COUNT(DISTINCT pii_type) AS pii_types,\n",
         "    SUM(CASE WHEN sensitivity_tier IN ('critical', 'high') THEN 1 ELSE 0 END) AS high_risk_count,\n",
         "    ROUND(AVG(confidence), 2) AS avg_confidence\n",
-        "  FROM compliance_pack.silver.pii_findings\n",
-        "  WHERE scan_job_id = (SELECT MAX(scan_job_id) FROM compliance_pack.silver.pii_findings)\n",
-        "  GROUP BY column_data_type\n",
+        "  FROM compliance_pack.silver.pii_findings_all\n  GROUP BY column_data_type\n",
         "  ORDER BY pii_count DESC"
       ]
     },

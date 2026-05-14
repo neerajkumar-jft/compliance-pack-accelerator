@@ -711,7 +711,7 @@ SELECT
     r.remediation,
     current_timestamp() AS detected_at,
     r.regulation_pack
-FROM {CATALOG}.silver.pii_findings f
+FROM {CATALOG}.silver.pii_findings_all f
 CROSS JOIN {CATALOG}.bronze.compliance_rules r
 WHERE r.is_active = true
   AND array_contains(r.applicable_categories, f.pii_category)

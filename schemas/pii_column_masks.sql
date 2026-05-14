@@ -119,6 +119,11 @@ ALTER TABLE compliance_pack.silver.patients_tagged
   ALTER COLUMN current_prescription      SET MASK compliance_pack.compliance.mask_full;
 ALTER TABLE compliance_pack.silver.patients_tagged
   ALTER COLUMN allergies                 SET MASK compliance_pack.compliance.mask_full;
+-- Free-text clinical notes — discovered by pii_ai_scan (CLINICAL_NOTES_PATTERN).
+-- DPDP §3(c) sensitive personal data + HIPAA PHI: critical sensitivity, full mask
+-- for non-admin personas. Same treatment as the other clinical free-text columns.
+ALTER TABLE compliance_pack.silver.patients_tagged
+  ALTER COLUMN notes                     SET MASK compliance_pack.compliance.mask_full;
 
 -- ---------------------------------------------------------------------------
 -- Lakeflow Connect (Salesforce) ingestion — silver tables populated by

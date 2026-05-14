@@ -43,6 +43,10 @@
 #   dpia_first_run  bundle run dpia_generator — seed a draft DPIA so the app has
 #                 something to render on day one. The quarterly cron (UNPAUSED
 #                 on deploy) takes over from the next Jan/Apr/Jul/Oct boundary.
+#   pii_ai_first_run  bundle run pii_ai_scan — Day-1 AI-PII findings so
+#                 personal_data_register / DPIA / dashboard reflect AI-
+#                 discovered free-text PII immediately. Daily 03:00 IST cron
+#                 takes over for ongoing scans + backfill.
 #
 # Prerequisites: Databricks CLI configured (`databricks current-user me`
 # must succeed), workspace_host already set in databricks.yml (run
@@ -311,6 +315,20 @@ do_dpia_first_run() {
   databricks bundle run dpia_generator --target dev
 }
 
+do_pii_ai_first_run() {
+  # Trigger one AI-PII scan right after deploy so personal_data_register
+  # already shows AI-discovered findings on day one. Without this step,
+  # only regex findings appear until the daily cron at 03:00 IST runs
+  # for the first time — which on a fresh demo workspace can be hours
+  # away. Mirrors the dpia_first_run pattern above.
+  #
+  # Idempotent: per-row state in compliance.pii_ai_scan_row_state means
+  # re-runs only classify NEW rows. Day-1 cost: up to N_patterns × 1000
+  # ai_classify calls (1000–2000 typical). On the free-tier workspace
+  # ai_classify is bundled into SQL warehouse compute, $0 separate cost.
+  databricks bundle run pii_ai_scan --target dev
+}
+
 # --- orchestration --------------------------------------------------------
 if [[ "$SMOKE_ONLY" == 1 ]]; then
   do_smoke
@@ -335,6 +353,11 @@ run_step smoke        do_smoke
 run_step personas     do_personas
 run_step app_deploy   do_app_deploy
 run_step app_perms    do_app_perms
+# pii_ai_first_run BEFORE dpia_first_run: the seed DPIA reads
+# personal_data_register (UNION view); running the AI scan first means
+# the Day-1 DPIA already cites AI-discovered findings instead of having
+# to wait for the next quarterly cron.
+run_step pii_ai_first_run do_pii_ai_first_run
 run_step dpia_first_run do_dpia_first_run
 
 echo ""

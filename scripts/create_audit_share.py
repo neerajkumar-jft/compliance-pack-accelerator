@@ -18,6 +18,11 @@ Share contents:
 Not included (intentionally):
     - consent_events_log — individual-level; share an aggregated view only
     - pii_findings — detection metadata includes redacted samples; keep internal
+    - pii_findings_ai / pii_findings_all / pii_ai_scan_row_state — same
+      reasoning: each row carries `sample_match_redacted` (truncated value)
+      + per-row classification labels. AI findings reach auditors through
+      the `personal_data_register` view (already shared), which exposes the
+      column-level inventory but not raw samples or per-row classifications.
     - system.access.audit — workspace-managed, share via CLEAN_ROOM if needed
 
 Usage:

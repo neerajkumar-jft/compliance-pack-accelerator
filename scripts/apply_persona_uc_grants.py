@@ -42,6 +42,14 @@ PERSONA_TABLES: dict[str, list[str]] = {
     "cco": [
         "compliance_pack.compliance.personal_data_register",
         "compliance_pack.silver.pii_findings",
+        # AI-PII surfaces (added when pii_ai_scan landed) — CCO needs full
+        # visibility into both regex and AI inventories. The UNION view
+        # `pii_findings_all` is the day-to-day query surface; the underlying
+        # `pii_findings_ai` and `pii_ai_scan_row_state` enable drill-down
+        # for audit (per-row classification history, model + run metadata).
+        "compliance_pack.silver.pii_findings_all",
+        "compliance_pack.silver.pii_findings_ai",
+        "compliance_pack.compliance.pii_ai_scan_row_state",
         "compliance_pack.silver.compliance_gaps",
         "compliance_pack.silver.discovered_tables",
         "compliance_pack.gold.consent_coverage_summary",

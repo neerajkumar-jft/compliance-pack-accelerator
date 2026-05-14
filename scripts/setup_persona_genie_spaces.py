@@ -42,6 +42,12 @@ PERSONA_DEFS = {
         "tables": [
             "compliance_pack.compliance.personal_data_register",
             "compliance_pack.silver.pii_findings",
+            # AI-PII surfaces (added when pii_ai_scan landed). The UNION view
+            # `pii_findings_all` is the day-to-day query surface for combined
+            # regex+AI inventory; underlying `pii_findings_ai` enables drill-
+            # down on AI-specific fields (model_endpoint, label distribution).
+            "compliance_pack.silver.pii_findings_all",
+            "compliance_pack.silver.pii_findings_ai",
             "compliance_pack.silver.compliance_gaps",
             "compliance_pack.silver.discovered_tables",
             "compliance_pack.gold.consent_coverage_summary",
