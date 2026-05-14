@@ -58,12 +58,17 @@ def main() -> int:
     p.add_argument("--verbose", action="store_true")
     args = p.parse_args()
 
+    # Read from pii_findings_all (UNION view over regex pii_findings + AI
+    # pii_findings_ai). Without this, AI-discovered free-text PII columns
+    # (e.g., patients_tagged.notes from the CLINICAL_NOTES_PATTERN) never
+    # get UC column tags applied — so any UC-tag-based query / governance
+    # check would silently miss them.
     state, rows, err = sql(
         f"SELECT table_name, column_name, pii_type, pii_category, sensitivity_tier "
-        f"FROM {CATALOG}.{SCHEMA}.pii_findings"
+        f"FROM {CATALOG}.{SCHEMA}.pii_findings_all"
     )
     if state != "OK":
-        print(f"error reading pii_findings: [{state}] {err}", file=sys.stderr)
+        print(f"error reading pii_findings_all: [{state}] {err}", file=sys.stderr)
         return 1
 
     print(f"apply_uc_tags: {len(rows)} findings → ALTER COLUMN SET TAGS")
