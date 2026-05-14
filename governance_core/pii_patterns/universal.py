@@ -38,6 +38,14 @@ from typing import Optional
 class PIIPattern:
     """A single PII detection pattern.
 
+    A pattern declares one or more detection mechanisms — column-name hints,
+    regex over values, AI classification (via Databricks ``ai_classify``),
+    or AI extraction (via Databricks ``ai_extract``). The production
+    classifier in ``pipelines/classification_dlt.py`` dispatches per pattern
+    based on which mechanism(s) are populated. Multiple mechanisms on one
+    pattern are fine — they layer (e.g., column hint + regex → ``hybrid``
+    classifier_source).
+
     matches_value() is a unit-testing helper; production classification uses
     Spark SQL `regexp_extract` per §4.5 of the spec, not per-value Python.
     """
@@ -45,11 +53,17 @@ class PIIPattern:
     pii_type: str
     category: str
     sensitivity: str              # critical | high | medium | low
-    regex_pattern: Optional[str]  # None for column-hint-only patterns
+    regex_pattern: Optional[str]  # None for column-hint-only or AI-only patterns
     column_hints: list[str]
     regulations: list[str]
     description: str
     priority: int = 50
+    # AI mechanisms (Databricks ai_classify / ai_extract). Optional — leaving
+    # both None preserves the regex+column-hint behavior. No runtime cost
+    # until a consumer (DLT scanner, weekly AI scan job, onboarding helper)
+    # actually reads these fields and dispatches an LLM call.
+    ai_labels: Optional[list[str]] = None         # for ai_classify(value, ARRAY[...])
+    ai_extract_fields: Optional[list[str]] = None  # for ai_extract(value, ARRAY[...])
 
     _compiled_regex: Optional[re.Pattern] = field(default=None, init=False, repr=False)
 
@@ -59,6 +73,14 @@ class PIIPattern:
                 self._compiled_regex = re.compile(self.regex_pattern)
             except re.error:
                 self._compiled_regex = None
+        # ai_classify needs at least 2 labels — its API rejects single-label
+        # arrays. Catch the misconfiguration here rather than at scan time.
+        if self.ai_labels is not None and len(self.ai_labels) < 2:
+            raise ValueError(
+                f"PIIPattern {self.pattern_id!r}: ai_labels must contain at least "
+                f"2 labels (got {len(self.ai_labels)}); ai_classify rejects "
+                f"single-label arrays."
+            )
 
     def matches_column_name(self, column_name: str) -> bool:
         col_lower = column_name.lower()
@@ -71,6 +93,14 @@ class PIIPattern:
             return bool(self._compiled_regex.search(str(value)[:10000]))
         except re.error:
             return False
+
+    def is_ai_classifiable(self) -> bool:
+        """True when this pattern declares ``ai_labels`` for ``ai_classify``."""
+        return self.ai_labels is not None
+
+    def is_ai_extractable(self) -> bool:
+        """True when this pattern declares ``ai_extract_fields`` for ``ai_extract``."""
+        return self.ai_extract_fields is not None
 
 
 # =============================================================================
