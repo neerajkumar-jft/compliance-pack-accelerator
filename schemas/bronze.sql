@@ -182,5 +182,6 @@ CREATE TABLE IF NOT EXISTS compliance_pack.bronze.data_sources (
     is_active           BOOLEAN   NOT NULL,
     created_at          TIMESTAMP NOT NULL,
     updated_at          TIMESTAMP NOT NULL,
-    silver_table_name   STRING    COMMENT 'Silver-layer table or view that mirrors this source. Classifier scans this column.'
+    silver_table_name   STRING    COMMENT 'Silver-layer table or view that mirrors this source. Classifier scans this column.',
+    primary_key_column  STRING    COMMENT 'Primary-key column on silver_table_name. Required for the AI scan (pipelines/pii_ai_scan.py) per-row state join; rows with NULL are skipped at AI-scan time.'
 ) USING DELTA;

@@ -65,30 +65,41 @@ CREATE TABLE IF NOT EXISTS {CATALOG}.bronze.data_sources (
     is_active           BOOLEAN   NOT NULL,
     created_at          TIMESTAMP NOT NULL,
     updated_at          TIMESTAMP NOT NULL,
-    silver_table_name   STRING    COMMENT 'Silver-layer table or view that mirrors this source. Classifier scans this column.'
+    silver_table_name   STRING    COMMENT 'Silver-layer table or view that mirrors this source. Classifier scans this column.',
+    primary_key_column  STRING    COMMENT 'Primary-key column on silver_table_name; required by the AI scan per-row state join.'
 ) USING DELTA
 """.strip()
 
-# Backwards-compat for workspaces deployed before silver_table_name existed.
-ALTER_ADD_COLUMN = (
-    f"ALTER TABLE {CATALOG}.bronze.data_sources "
-    f"ADD COLUMNS (silver_table_name STRING COMMENT "
-    f"'Silver table or view the classifier scans for this source.')"
-)
+# Backwards-compat for workspaces deployed before each column landed. Each
+# entry runs independently so a partial-migration workspace converges.
+ALTER_ADD_COLUMNS = [
+    (
+        "silver_table_name",
+        f"ALTER TABLE {CATALOG}.bronze.data_sources "
+        f"ADD COLUMNS (silver_table_name STRING COMMENT "
+        f"'Silver table or view the classifier scans for this source.')",
+    ),
+    (
+        "primary_key_column",
+        f"ALTER TABLE {CATALOG}.bronze.data_sources "
+        f"ADD COLUMNS (primary_key_column STRING COMMENT "
+        f"'Primary-key column on silver_table_name; required by the AI scan per-row state join.')",
+    ),
+]
 
 # 10 canonical sources — same set phase1_bootstrap §2.5 seeds.
 DATA_SOURCES_SEED = [
-    # (source_id, source_name, source_type, ingestion_pattern, schema_name, landing_path_or_None, silver_table_name)
-    ("src_employees",         "Employees (HR master)",      "hr_master",            "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/employees",     "employees_tagged"),
-    ("src_customers",         "Customers (CRM master)",     "crm",                  "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/customers",     "customers_tagged"),
-    ("src_patients",          "Patients (health records)",  "health",               "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/patients",      "patients_tagged"),
-    ("src_transactions",      "Transactions (ledger)",      "financial",            "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/transactions",  "transactions_tagged"),
-    ("src_users",             "Users (application)",        "application",          "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/users",         "users_tagged"),
-    ("src_sf_leads",          "Salesforce Leads",           "crm_external",         "direct_write",    "bronze",          None,                                               "sf_leads_tagged"),
-    ("src_sf_contacts",       "Salesforce Contacts",        "crm_external",         "direct_write",    "bronze",          None,                                               "sf_contacts_tagged"),
-    ("src_sf_accounts",       "Salesforce Accounts",        "crm_external",         "direct_write",    "bronze",          None,                                               "sf_accounts_tagged"),
-    ("src_lead_scoring",      "Lead Scoring (Postgres federation)",      "marketing_attribution", "federation_view", "federation_mock", None, "federation_lead_scoring_tagged"),
-    ("src_campaign_response", "Campaign Response (Postgres federation)", "marketing_attribution", "federation_view", "federation_mock", None, "federation_campaign_response_tagged"),
+    # (source_id, source_name, source_type, ingestion_pattern, schema_name, landing_path_or_None, silver_table_name, primary_key_column)
+    ("src_employees",         "Employees (HR master)",      "hr_master",            "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/employees",     "employees_tagged",                    "employee_id"),
+    ("src_customers",         "Customers (CRM master)",     "crm",                  "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/customers",     "customers_tagged",                    "customer_id"),
+    ("src_patients",          "Patients (health records)",  "health",               "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/patients",      "patients_tagged",                     "patient_id"),
+    ("src_transactions",      "Transactions (ledger)",      "financial",            "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/transactions",  "transactions_tagged",                 "transaction_id"),
+    ("src_users",             "Users (application)",        "application",          "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/users",         "users_tagged",                        "user_id"),
+    ("src_sf_leads",          "Salesforce Leads",           "crm_external",         "direct_write",    "bronze",          None,                                               "sf_leads_tagged",                     "lead_id"),
+    ("src_sf_contacts",       "Salesforce Contacts",        "crm_external",         "direct_write",    "bronze",          None,                                               "sf_contacts_tagged",                  "contact_id"),
+    ("src_sf_accounts",       "Salesforce Accounts",        "crm_external",         "direct_write",    "bronze",          None,                                               "sf_accounts_tagged",                  "account_id"),
+    ("src_lead_scoring",      "Lead Scoring (Postgres federation)",      "marketing_attribution", "federation_view", "federation_mock", None, "federation_lead_scoring_tagged",      "score_id"),
+    ("src_campaign_response", "Campaign Response (Postgres federation)", "marketing_attribution", "federation_view", "federation_mock", None, "federation_campaign_response_tagged", "response_id"),
 ]
 
 
@@ -137,24 +148,25 @@ def main() -> int:
             return 1
         print("  ✓ table ready")
 
-    # 2. Add silver_table_name on legacy workspaces (catch FIELDS_ALREADY_EXIST)
+    # 2. Add new columns on legacy workspaces (catch FIELDS_ALREADY_EXIST)
     if args.dry_run:
-        print("  ⟳ would: ALTER TABLE … ADD COLUMNS (silver_table_name) — fine if already present")
+        print(f"  ⟳ would: ALTER TABLE … ADD COLUMNS ({', '.join(c for c, _ in ALTER_ADD_COLUMNS)}) — fine if already present")
     else:
-        state, err = run_sql(ALTER_ADD_COLUMN)
-        if state == "OK":
-            print("  ✓ silver_table_name column added (legacy workspace)")
-        elif state == "FAILED" and ("already exists" in err.lower() or "fields_already_exist" in err.lower()):
-            print("  · silver_table_name column already present — no-op")
-        else:
-            print(f"  ✗ ALTER ADD COLUMNS: {state}\n      → {err}")
-            return 1
+        for col_name, alter_sql in ALTER_ADD_COLUMNS:
+            state, err = run_sql(alter_sql)
+            if state == "OK":
+                print(f"  ✓ {col_name} column added (legacy workspace)")
+            elif state == "FAILED" and ("already exists" in err.lower() or "fields_already_exist" in err.lower()):
+                print(f"  · {col_name} column already present — no-op")
+            else:
+                print(f"  ✗ ALTER ADD COLUMNS ({col_name}): {state}\n      → {err}")
+                return 1
 
     # 3. MERGE the 10 canonical rows
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     values = []
     for r in DATA_SOURCES_SEED:
-        sid, name, src_type, pattern, schema, landing, silver = r
+        sid, name, src_type, pattern, schema, landing, silver, pk = r
         values.append(
             "(" + ", ".join([
                 _sql_lit(sid),
@@ -169,6 +181,7 @@ def main() -> int:
                 _sql_lit(now, "TIMESTAMP"),
                 _sql_lit(now, "TIMESTAMP"),
                 _sql_lit(silver),
+                _sql_lit(pk),
             ]) + ")"
         )
     merge = (
@@ -176,14 +189,15 @@ def main() -> int:
         f"USING (SELECT * FROM VALUES " + ",\n  ".join(values) + " "
         f"AS s(source_id, source_name, source_type, ingestion_pattern, "
         f"catalog_name, schema_name, landing_volume_path, owner_email, "
-        f"is_active, created_at, updated_at, silver_table_name)) AS s "
+        f"is_active, created_at, updated_at, silver_table_name, primary_key_column)) AS s "
         f"ON t.source_id = s.source_id "
         f"WHEN MATCHED THEN UPDATE SET "
         f"  source_name = s.source_name, source_type = s.source_type, "
         f"  ingestion_pattern = s.ingestion_pattern, catalog_name = s.catalog_name, "
         f"  schema_name = s.schema_name, landing_volume_path = s.landing_volume_path, "
         f"  owner_email = s.owner_email, is_active = s.is_active, "
-        f"  updated_at = s.updated_at, silver_table_name = s.silver_table_name "
+        f"  updated_at = s.updated_at, silver_table_name = s.silver_table_name, "
+        f"  primary_key_column = s.primary_key_column "
         f"WHEN NOT MATCHED THEN INSERT *"
     )
     if args.dry_run:

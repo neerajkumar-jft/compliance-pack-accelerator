@@ -444,7 +444,8 @@ CREATE TABLE IF NOT EXISTS {CATALOG}.bronze.data_sources (
     is_active           BOOLEAN   NOT NULL,
     created_at          TIMESTAMP NOT NULL,
     updated_at          TIMESTAMP NOT NULL,
-    silver_table_name   STRING    COMMENT 'Silver-layer table or view that mirrors this source. Classifier scans this column.'
+    silver_table_name   STRING    COMMENT 'Silver-layer table or view that mirrors this source. Classifier scans this column.',
+    primary_key_column  STRING    COMMENT 'Primary-key column on silver_table_name. Drives AI-scan per-row state join (pipelines/pii_ai_scan.py); NULL = skip AI scan.'
 ) USING DELTA
 """)
 
@@ -465,36 +466,40 @@ print("✓ Delta tables ready")
 
 # COMMAND ----------
 
-# Make sure the new column exists on workspaces deployed before 2026-04-27.
+# Make sure the new columns exist on workspaces deployed before they landed.
 # Safe to re-run — UC errors with FIELDS_ALREADY_EXIST and we ignore that.
-try:
-    spark.sql(
-        f"ALTER TABLE {CATALOG}.bronze.data_sources "
-        f"ADD COLUMNS (silver_table_name STRING COMMENT "
-        f"'Silver table or view the classifier scans for this source.')"
-    )
-except Exception as exc:
-    if "already exists" not in str(exc).lower() and "fields_already_exist" not in str(exc).lower():
-        raise
-    # column already present from a prior run — fine
+# Same pattern repeated per column so a partial-migration workspace (one
+# column present, one missing) still converges.
+for _col_def in (
+    "silver_table_name STRING COMMENT 'Silver table or view the classifier scans for this source.'",
+    "primary_key_column STRING COMMENT 'Primary-key column on silver_table_name; required by the AI scan per-row state join.'",
+):
+    try:
+        spark.sql(
+            f"ALTER TABLE {CATALOG}.bronze.data_sources ADD COLUMNS ({_col_def})"
+        )
+    except Exception as exc:
+        if "already exists" not in str(exc).lower() and "fields_already_exist" not in str(exc).lower():
+            raise
+        # column already present from a prior run — fine
 
 # source_id naming follows the existing notebooks/01_add_data_source.py convention
 # (src_<entity>) so this MERGE updates the 5 base rows in place rather than
 # duplicating them on workspaces that already ran the new-source notebook.
 DATA_SOURCES_SEED = [
     # Auto Loader file-arrival landing zone (5 base sources)
-    ("src_employees",          "Employees (HR master)",      "hr_master",             "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/employees",     "employees_tagged"),
-    ("src_customers",          "Customers (CRM master)",     "crm",                   "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/customers",     "customers_tagged"),
-    ("src_patients",           "Patients (health records)",  "health",                "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/patients",      "patients_tagged"),
-    ("src_transactions",       "Transactions (ledger)",      "financial",             "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/transactions",  "transactions_tagged"),
-    ("src_users",              "Users (application)",        "application",           "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/users",         "users_tagged"),
+    ("src_employees",          "Employees (HR master)",      "hr_master",             "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/employees",     "employees_tagged",                    "employee_id"),
+    ("src_customers",          "Customers (CRM master)",     "crm",                   "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/customers",     "customers_tagged",                    "customer_id"),
+    ("src_patients",           "Patients (health records)",  "health",                "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/patients",      "patients_tagged",                     "patient_id"),
+    ("src_transactions",       "Transactions (ledger)",      "financial",             "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/transactions",  "transactions_tagged",                 "transaction_id"),
+    ("src_users",              "Users (application)",        "application",           "auto_loader",     "bronze",          f"/Volumes/{CATALOG}/bronze/landing/users",         "users_tagged",                        "user_id"),
     # Lakeflow Connect simulation (3 SF objects)
-    ("src_sf_leads",           "Salesforce Leads",           "crm_external",          "direct_write",    "bronze",          None,                                               "sf_leads_tagged"),
-    ("src_sf_contacts",        "Salesforce Contacts",        "crm_external",          "direct_write",    "bronze",          None,                                               "sf_contacts_tagged"),
-    ("src_sf_accounts",        "Salesforce Accounts",        "crm_external",          "direct_write",    "bronze",          None,                                               "sf_accounts_tagged"),
+    ("src_sf_leads",           "Salesforce Leads",           "crm_external",          "direct_write",    "bronze",          None,                                               "sf_leads_tagged",                     "lead_id"),
+    ("src_sf_contacts",        "Salesforce Contacts",        "crm_external",          "direct_write",    "bronze",          None,                                               "sf_contacts_tagged",                  "contact_id"),
+    ("src_sf_accounts",        "Salesforce Accounts",        "crm_external",          "direct_write",    "bronze",          None,                                               "sf_accounts_tagged",                  "account_id"),
     # Federation simulation (2 foreign-mock tables → silver views)
-    ("src_lead_scoring",       "Lead Scoring (Postgres federation)",      "marketing_attribution", "federation_view", "federation_mock", None, "federation_lead_scoring_tagged"),
-    ("src_campaign_response",  "Campaign Response (Postgres federation)", "marketing_attribution", "federation_view", "federation_mock", None, "federation_campaign_response_tagged"),
+    ("src_lead_scoring",       "Lead Scoring (Postgres federation)",      "marketing_attribution", "federation_view", "federation_mock", None, "federation_lead_scoring_tagged",      "score_id"),
+    ("src_campaign_response",  "Campaign Response (Postgres federation)", "marketing_attribution", "federation_view", "federation_mock", None, "federation_campaign_response_tagged", "response_id"),
 ]
 
 from pyspark.sql import Row
@@ -507,6 +512,7 @@ _seed_rows = [
         catalog_name=CATALOG, schema_name=r[4], landing_volume_path=r[5],
         owner_email="dpdp-poc-team@example.com", is_active=True,
         created_at=_now, updated_at=_now, silver_table_name=r[6],
+        primary_key_column=r[7],
     )
     for r in DATA_SOURCES_SEED
 ]
@@ -526,7 +532,8 @@ spark.sql(f"""
         owner_email         = s.owner_email,
         is_active           = s.is_active,
         updated_at          = s.updated_at,
-        silver_table_name   = s.silver_table_name
+        silver_table_name   = s.silver_table_name,
+        primary_key_column  = s.primary_key_column
     WHEN NOT MATCHED THEN INSERT *
 """)
 

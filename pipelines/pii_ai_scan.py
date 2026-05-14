@@ -59,21 +59,11 @@ DAILY_PATTERN_BUDGET  = int(dbutils.widgets.get("daily_pattern_budget"))
 MODE                  = dbutils.widgets.get("mode")
 TABLE_FILTER          = [t.strip() for t in dbutils.widgets.get("table_filter").split(",") if t.strip()]
 
-# Per-table primary key column. Required for the state-table join — a table
-# without a stable PK can't track per-row scan state. New silver tables added
-# by `notebooks/01_add_data_source.py` should be registered here too.
-TABLE_PK_MAP = {
-    "customers_tagged":                     "customer_id",
-    "employees_tagged":                     "employee_id",
-    "patients_tagged":                      "patient_id",
-    "transactions_tagged":                  "transaction_id",
-    "users_tagged":                         "user_id",
-    "sf_accounts_tagged":                   "account_id",
-    "sf_contacts_tagged":                   "contact_id",
-    "sf_leads_tagged":                      "lead_id",
-    "federation_lead_scoring_tagged":       "score_id",
-    "federation_campaign_response_tagged":  "response_id",
-}
+# Primary-key column for each silver table comes from bronze.data_sources
+# (column primary_key_column). Tables with NULL primary_key_column get
+# skipped at scan plan time with a clear warning — registering a new
+# silver table for AI scan is a one-row UPDATE on data_sources, not a
+# code edit here.
 
 print(f"Catalog:               {CATALOG}")
 print(f"Model endpoint:        {MODEL_ENDPOINT}")
@@ -153,13 +143,19 @@ if not AI_PATTERNS:
 silver_rows = (
     spark.table(f"{CATALOG}.bronze.data_sources")
     .filter("is_active = true AND silver_table_name IS NOT NULL")
-    .select("silver_table_name")
+    .select("silver_table_name", "primary_key_column")
     .collect()
 )
-silver_tables = [r[0] for r in silver_rows]
+# table_name -> primary_key_column (or None if data_sources hasn't recorded one).
+table_pk_map = {r["silver_table_name"]: r["primary_key_column"] for r in silver_rows}
+silver_tables = list(table_pk_map)
 if TABLE_FILTER:
     silver_tables = [t for t in silver_tables if t in TABLE_FILTER]
 print(f"Silver tables to scan: {len(silver_tables)} → {silver_tables}")
+_missing_pk = [t for t in silver_tables if not table_pk_map.get(t)]
+if _missing_pk:
+    print(f"  ⚠ skipping {len(_missing_pk)} silver tables without a primary_key_column in bronze.data_sources: {_missing_pk}")
+    print(f"    fix: UPDATE {CATALOG}.bronze.data_sources SET primary_key_column = '<col>' WHERE silver_table_name = '<table>'")
 
 # COMMAND ----------
 
@@ -283,11 +279,12 @@ print(f"✓ {CATALOG}.compliance.pii_ai_scan_row_state ready")
 # COMMAND ----------
 
 # Group scan tuples by pattern_id so we can divide budget across the columns
-# each pattern matches.
+# each pattern matches. Tables without a primary_key_column in data_sources
+# were already announced in the "skipping ..." print above — drop them here.
 pattern_to_tuples = {}  # pattern_id -> list of {table, column, dtype, pattern, pk}
 for table in silver_tables:
-    if table not in TABLE_PK_MAP:
-        print(f"  ⚠ no PK mapping for {table}, skipping")
+    pk = table_pk_map.get(table)
+    if not pk:
         continue
     fq = f"{CATALOG}.silver.{table}"
     try:
@@ -307,7 +304,7 @@ for table in silver_tables:
                     "column": field.name,
                     "dtype": str(field.dataType.simpleString()),
                     "pattern": pattern,
-                    "pk": TABLE_PK_MAP[table],
+                    "pk": pk,
                 })
 
 scan_plan_size = sum(len(t) for t in pattern_to_tuples.values())
