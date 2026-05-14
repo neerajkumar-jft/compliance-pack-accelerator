@@ -154,33 +154,45 @@ resources:
     # -------------------------------------------------------------------------
     # pii_ai_scan
     # -------------------------------------------------------------------------
-    # Weekly AI-based PII scan on free-text columns. Companion to the
+    # Daily AI-based PII scan on free-text columns. Companion to the
     # regex DLT classifier (which handles structured PII like Aadhaar,
     # NHS, credit card). Iterates patterns where `is_ai_classifiable() ==
     # True` (i.e., have `ai_labels` declared) and runs `ai_classify`
-    # against matching string columns, sampled to LIMIT sample_size for
-    # cost control.
+    # against matching string columns, with a per-row state table that
+    # ensures each row is classified at most once unless its
+    # `_ingested_at` advances (UPDATE detection).
     #
-    # Cost model: ~$0.005/call × scan_plan_size × sample_size. Default
-    # 1000 rows × ~5 columns × weekly = ~$25/week, ~$100/month. The
-    # notebook prints a cost estimate before any LLM calls and supports
-    # a dry-run mode that exits without spending. If no AI patterns are
-    # declared, the notebook exits cleanly with no LLM calls.
+    # Cost model: per-pattern budget × N patterns. With default 1000
+    # rows/pattern/day and 1 declared pattern (medical), the daily cap
+    # is ≤1000 ai_classify calls. Each pattern's budget gets divided
+    # equally across the columns the pattern matches. On the free-tier
+    # workspace ai_classify is bundled into SQL warehouse compute and
+    # doesn't bill separately. On a paid workspace, each call meters
+    # against the AI function allowance.
     #
-    # Output: appends to <catalog>.silver.pii_findings_ai (NOT the
-    # DLT-managed pii_findings — keeps the medallion's incremental
-    # refresh semantics undisturbed). Same schema as pii_findings, so a
-    # UNION view for downstream consumers (dashboard, DPIA, gaps) is the
-    # recommended next integration step.
+    # Backfill: on a fresh deploy, every row has NULL state. Each
+    # column's backlog drains at (1000 ÷ N_columns) rows/day until
+    # caught up, then the daily scan converges to ~0 LLM calls (no new
+    # rows, no updates). Order: NULL state first (backfill priority),
+    # then stale-vs-source rows, oldest _ingested_at within each.
     #
-    # Schedule: weekly on Sunday 03:00 IST.
+    # Output: writes per-row classifications to compliance.pii_ai_scan_row_state
+    # and aggregate column-level findings to silver.pii_findings_ai (one
+    # row per (table, column, pii_type), MERGE-overwritten each scan to
+    # reflect cumulative state). The pii_findings_all UNION view bridges
+    # AI findings into personal_data_register so DPIA + dashboard +
+    # gaps see them automatically — see PRs #2 and #3.
+    #
+    # Schedule: daily at 03:00 IST.
     pii_ai_scan:
       name: compliance_pack_pii_ai_scan
-      description: "Weekly AI-based PII scan (ai_classify) on free-text columns. Cost-bounded via sample cap. Appends to silver.pii_findings_ai."
+      description: "Daily AI-based PII scan (ai_classify) on free-text columns. Per-row state table caps work to N_patterns × daily_pattern_budget calls/day."
       max_concurrent_runs: 1
 
       schedule:
-        quartz_cron_expression: "0 0 3 ? * SUN"
+        # Daily at 03:00 IST (Quartz: sec min hour day-of-month month day-of-week).
+        # `?` in day-of-month means "no specific value" since day-of-week is "*".
+        quartz_cron_expression: "0 0 3 ? * *"
         timezone_id: "Asia/Kolkata"
         pause_status: "UNPAUSED"
 
@@ -191,7 +203,7 @@ resources:
             base_parameters:
               catalog: ${var.catalog_name}
               model_endpoint: "databricks-gpt-oss-120b"
-              sample_size: "1000"
+              daily_pattern_budget: "1000"
               mode: "apply"
               # Optional comma-separated allowlist; empty = all silver tables.
               table_filter: ""

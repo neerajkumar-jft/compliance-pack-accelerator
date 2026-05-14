@@ -275,8 +275,14 @@ MEDICAL_RECORD_PATTERN = PIIPattern(
     category=CATEGORY_HEALTH,
     sensitivity=SENSITIVITY_CRITICAL,
     regex_pattern=None,
+    # NOTE: `medical_record` was removed from column_hints — substring match
+    # caused false positives on `medical_record_number` (a numeric MRN ID,
+    # not free-text). The remaining hints catch the actually-free-text
+    # clinical columns. To detect free-text clinical observations on a
+    # column NOT named with these hints (e.g., `notes`), see
+    # CLINICAL_NOTES_PATTERN below.
     column_hints=[
-        "diagnosis", "medical_record", "prescription",
+        "diagnosis", "prescription",
         "treatment", "health_condition", "allergies",
     ],
     regulations=["DPDP", "HIPAA"],
@@ -287,6 +293,33 @@ MEDICAL_RECORD_PATTERN = PIIPattern(
     # label MUST be last (the pii_ai_scan job uses ai_labels[-1] as the
     # "not PII" sentinel when computing match_rate).
     ai_labels=["diagnosis", "prescription", "allergy_note", "non_medical"],
+)
+
+# Free-text clinical notes — observations, follow-ups, treatment plans,
+# patient communications. The `notes` column on patients_tagged is the
+# canonical example: values like "Patient reports improvement",
+# "Follow-up required in 2 weeks", "Lab results pending". Pure natural
+# language — regex cannot extract PII signal; ai_classify can categorize
+# whether the value is clinically meaningful.
+#
+# Column hint is intentionally just `notes` (currently only matches
+# patients_tagged.notes in the schema). If a future schema adds free-text
+# `notes` columns to non-clinical tables (e.g., support_tickets.notes),
+# this pattern would also fire on those — which is acceptable because the
+# `non_clinical` label catches them and the DELETE-on-below-threshold
+# logic in pii_ai_scan suppresses any false-positive finding.
+CLINICAL_NOTES_PATTERN = PIIPattern(
+    pattern_id="clinical_notes_freetext",
+    pii_type="clinical_notes",
+    category=CATEGORY_HEALTH,
+    sensitivity=SENSITIVITY_CRITICAL,
+    regex_pattern=None,
+    column_hints=["notes"],
+    regulations=["DPDP", "HIPAA"],
+    description="Free-text clinical notes (observations, follow-ups, treatment plans)",
+    priority=100,
+    ai_labels=["clinical_observation", "treatment_plan",
+               "patient_communication", "non_clinical"],
 )
 
 INSURANCE_ID_PATTERN = PIIPattern(
@@ -315,5 +348,6 @@ UNIVERSAL_PATTERNS: list[PIIPattern] = [
     DOB_PATTERN,
     IP_ADDRESS_PATTERN,
     MEDICAL_RECORD_PATTERN,
+    CLINICAL_NOTES_PATTERN,
     INSURANCE_ID_PATTERN,
 ]

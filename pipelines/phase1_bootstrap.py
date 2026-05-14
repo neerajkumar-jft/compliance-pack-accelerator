@@ -969,6 +969,28 @@ FROM {CATALOG}.silver.pii_findings_ai
 """)
 print(f"✓ {CATALOG}.silver.pii_findings_ai + pii_findings_all ready")
 
+# Per-row scan state — tracks which (table, column, pattern, source-row) tuples
+# have been classified by ai_classify. Drives the daily-scan budget logic in
+# pipelines/pii_ai_scan.py: each day picks rows where state.classified_at IS
+# NULL (never scanned) OR source_ingested_at < t._ingested_at (data updated
+# since last scan). The scanner's per-pattern daily budget (default 1000 rows
+# split across the columns the pattern matches) caps LLM-call volume to
+# N_patterns × 1000 calls/day regardless of source data size.
+spark.sql(f"""
+CREATE TABLE IF NOT EXISTS {CATALOG}.compliance.pii_ai_scan_row_state (
+    table_name           STRING NOT NULL,
+    column_name          STRING NOT NULL,
+    pattern_id           STRING NOT NULL,
+    row_pk               STRING NOT NULL,
+    classified_at        TIMESTAMP NOT NULL,
+    source_ingested_at   TIMESTAMP NOT NULL,
+    classified_label     STRING,
+    last_scan_job_id     STRING NOT NULL
+) USING DELTA
+COMMENT 'Per-source-row state for pii_ai_scan. One row per (table, column, pattern, source row) once classified. NULL absence means never scanned.'
+""")
+print(f"✓ {CATALOG}.compliance.pii_ai_scan_row_state ready")
+
 # personal_data_register view
 # NOTE: discovered_tables' schema was simplified in medallion.py — the columns
 # `scan_job_id` and `pii_column_count` were removed. We now compute the
