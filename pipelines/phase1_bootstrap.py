@@ -687,6 +687,65 @@ from datetime import datetime
 
 scan_job_id = f"gap_scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
+# Ensure pii_findings_ai table + pii_findings_all UNION view exist BEFORE
+# the gap-candidate CTE reads from pii_findings_all. PR #6 fix #1 changed
+# the gap query to source from the UNION view, but the view's CREATE
+# statement lives later in this same notebook (section 7). On a
+# fresh-workspace deploy the view doesn't exist yet → the query fails
+# with TABLE_OR_VIEW_NOT_FOUND. Re-runs masked the bug because the view
+# survived from prior deploys. Same DDL as section 7 — both are
+# CREATE TABLE IF NOT EXISTS / CREATE OR REPLACE VIEW so running twice
+# is a harmless no-op.
+spark.sql(f"""
+CREATE TABLE IF NOT EXISTS {CATALOG}.silver.pii_findings_ai (
+    finding_id              STRING      NOT NULL,
+    scan_job_id             STRING      NOT NULL,
+    catalog_name            STRING      NOT NULL,
+    schema_name             STRING      NOT NULL,
+    table_name              STRING      NOT NULL,
+    column_name             STRING      NOT NULL,
+    column_data_type        STRING      NOT NULL,
+    pii_category            STRING      NOT NULL,
+    pii_type                STRING      NOT NULL,
+    sensitivity_tier        STRING      NOT NULL,
+    confidence              DOUBLE      NOT NULL,
+    classifier_source       STRING      NOT NULL,
+    match_rate              DOUBLE,
+    regulations             ARRAY<STRING>   NOT NULL,
+    sample_match_redacted   STRING,
+    human_reviewed          BOOLEAN     NOT NULL,
+    review_status           STRING,
+    review_notes            STRING,
+    discovered_at           TIMESTAMP   NOT NULL,
+    reviewed_at             TIMESTAMP,
+    model_endpoint          STRING,
+    sample_rows_scanned     BIGINT,
+    ai_label_distribution   MAP<STRING, BIGINT>
+) USING DELTA
+""")
+spark.sql(f"""
+CREATE OR REPLACE VIEW {CATALOG}.silver.pii_findings_all AS
+SELECT
+    finding_id, scan_job_id, catalog_name, schema_name, table_name, column_name,
+    column_data_type, pii_category, pii_type, sensitivity_tier,
+    confidence, classifier_source, match_rate, regulations,
+    sample_match_redacted, human_reviewed, review_status, review_notes,
+    discovered_at, reviewed_at,
+    CAST(NULL AS STRING)              AS model_endpoint,
+    CAST(NULL AS BIGINT)              AS sample_rows_scanned,
+    CAST(NULL AS MAP<STRING, BIGINT>) AS ai_label_distribution
+FROM {CATALOG}.silver.pii_findings
+UNION ALL
+SELECT
+    finding_id, scan_job_id, catalog_name, schema_name, table_name, column_name,
+    column_data_type, pii_category, pii_type, sensitivity_tier,
+    confidence, classifier_source, match_rate, regulations,
+    sample_match_redacted, human_reviewed, review_status, review_notes,
+    discovered_at, reviewed_at,
+    model_endpoint, sample_rows_scanned, ai_label_distribution
+FROM {CATALOG}.silver.pii_findings_ai
+""")
+
 # ADR-0001 M2: gaps are now multi-pack. Each (finding × rule) pair where the
 # rule's applicable_categories includes the finding's pii_category produces
 # one gap row, tagged with the rule's source pack (regulation_pack column).
