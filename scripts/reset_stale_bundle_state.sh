@@ -54,7 +54,30 @@ fi
 if [[ -f "$SIDECAR" ]]; then
   PREVIOUS_HOST="$(cat "$SIDECAR")"
   if [[ "$PREVIOUS_HOST" == "$CURRENT_HOST" ]]; then
-    # Same workspace — incremental deploy is correct, keep cache
+    # Same workspace recorded — but ALSO probe the workspace to verify
+    # the bundle's deployed files actually exist there. This catches the
+    # case where someone wiped the workspace externally (manual catalog
+    # drop / `databricks workspace delete`) without running
+    # `databricks bundle destroy`. Host hasn't changed, so the host-only
+    # check above wouldn't fire — but the cache's sync-snapshots think
+    # files are already in sync, so the next `bundle deploy` skips file
+    # upload (silent failure). Then DLT/job runs hit NOTEBOOK_NOT_FOUND.
+    BUNDLE_NAME="dpdp-poc"   # matches `bundle.name` in databricks.yml
+    ME="$(databricks current-user me 2>/dev/null \
+          | python3 -c 'import json,sys; print(json.load(sys.stdin).get("userName",""))' 2>/dev/null)"
+    if [[ -n "$ME" ]]; then
+      EXPECTED_FILES_PATH="/Workspace/Users/${ME}/.bundle/${BUNDLE_NAME}/${TARGET}/files/pipelines"
+      if ! databricks workspace list "$EXPECTED_FILES_PATH" >/dev/null 2>&1; then
+        echo "  ▶ stale-state check: workspace bundle files missing at $EXPECTED_FILES_PATH"
+        echo "    (host unchanged but workspace was wiped externally)"
+        rm -rf "$STATE_DIR"
+        mkdir -p "$(dirname "$SIDECAR")"
+        echo "$CURRENT_HOST" > "$SIDECAR"
+        echo "  ✓ stale-state check: cleared $STATE_DIR/ — next deploy will re-upload all files"
+        exit 0
+      fi
+    fi
+    # Same workspace AND files still present — incremental deploy is correct, keep cache
     echo "  ✓ stale-state check: cache matches current workspace — keep"
     exit 0
   fi
