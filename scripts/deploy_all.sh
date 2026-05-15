@@ -47,6 +47,11 @@
 #                 personal_data_register / DPIA / dashboard reflect AI-
 #                 discovered free-text PII immediately. Daily 03:00 IST cron
 #                 takes over for ongoing scans + backfill.
+#   refresh_gaps  scripts/refresh_compliance_gaps.py — regenerates
+#                 silver.compliance_gaps from pii_findings_all AFTER the AI
+#                 scan completes. phase1_bootstrap generates gaps early in
+#                 the chain (when AI table is empty), so without this step
+#                 compliance_gaps under-reports until the next bootstrap run.
 #
 # Prerequisites: Databricks CLI configured (`databricks current-user me`
 # must succeed), workspace_host already set in databricks.yml (run
@@ -329,6 +334,24 @@ do_pii_ai_first_run() {
   databricks bundle run pii_ai_scan --target dev
 }
 
+do_refresh_gaps() {
+  # phase1_bootstrap (which generates compliance_gaps) runs MUCH
+  # earlier in the deploy chain (right after the medallion). At that
+  # point pii_findings_ai is empty — the AI scan hasn't run yet — so
+  # the gaps reflect ONLY regex findings.
+  #
+  # By the time we reach this point pii_ai_first_run has populated AI
+  # findings into pii_findings_all, but compliance_gaps is now stale
+  # (missing the per-AI-column × per-rule cross-product). The seed
+  # DPIA's gap-analysis section would under-report.
+  #
+  # This step regenerates compliance_gaps from the now-complete
+  # pii_findings_all WITHOUT re-running the heavy phase1_bootstrap
+  # (which would also re-seed consent events, rebuild gold views,
+  # etc.). ~30s on a warm warehouse, ~1-2 min cold-start.
+  python3 scripts/refresh_compliance_gaps.py
+}
+
 # --- orchestration --------------------------------------------------------
 if [[ "$SMOKE_ONLY" == 1 ]]; then
   do_smoke
@@ -358,7 +381,8 @@ run_step app_perms    do_app_perms
 # the Day-1 DPIA already cites AI-discovered findings instead of having
 # to wait for the next quarterly cron.
 run_step pii_ai_first_run do_pii_ai_first_run
-run_step dpia_first_run do_dpia_first_run
+run_step refresh_gaps     do_refresh_gaps
+run_step dpia_first_run   do_dpia_first_run
 
 echo ""
 echo "══════════════════════════════════════════════════════════════════════"
