@@ -71,7 +71,7 @@ def _eval_filter(current_user: str, purpose: str) -> bool:
     For admin case we call the actual UDF (admin is the real caller)."""
     # The CASE below mirrors the function body verbatim. If the function
     # body changes, update this mirror.
-    if "+dpdp-cmo@" in current_user:
+    if "+compliance-cmo@" in current_user:
         # CMO persona → only marketing purposes pass
         return purpose in MARKETING_PURPOSES
     # Non-CMO non-admin → pass all
@@ -114,7 +114,7 @@ def main() -> int:
     ))
 
     # Check 3 — simulated CMO user + marketing purpose → TRUE
-    cmo_marketing_pass = all(_eval_filter("you+dpdp-cmo@example.com", p)
+    cmo_marketing_pass = all(_eval_filter("you+compliance-cmo@example.com", p)
                              for p in MARKETING_PURPOSES)
     checks.append((
         f"Simulated CMO + marketing purpose ({sorted(MARKETING_PURPOSES)}) → TRUE",
@@ -124,7 +124,7 @@ def main() -> int:
 
     # Check 4 — simulated CMO user + non-marketing purpose → FALSE
     cmo_non_marketing_blocked = all(
-        not _eval_filter("you+dpdp-cmo@example.com", p)
+        not _eval_filter("you+compliance-cmo@example.com", p)
         for p in NON_MARKETING_PURPOSES
     )
     checks.append((
@@ -134,7 +134,7 @@ def main() -> int:
     ))
 
     # Check 5 — simulated non-CMO persona (CCO) → TRUE for all
-    cco_all_pass = all(_eval_filter("you+dpdp-cco@example.com", p) for p in purposes)
+    cco_all_pass = all(_eval_filter("you+compliance-cco@example.com", p) for p in purposes)
     checks.append((
         "Simulated non-CMO persona (e.g. CCO) → TRUE for every purpose",
         cco_all_pass,

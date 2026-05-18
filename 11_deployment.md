@@ -110,13 +110,13 @@ Mapping the command to the resources it creates:
 
 ```
 bundle deploy
-  ├── uploads pipelines/*.py to /Workspace/.../.bundle/dpdp-poc/dev/pipelines/
+  ├── uploads pipelines/*.py to /Workspace/.../.bundle/compliance-pack/dev/pipelines/
   ├── uploads apps/dsr_portal/ to the Databricks Apps workspace volume
   ├── creates catalog compliance_pack (resources/catalog_and_storage.yml)
   │   ├── schema bronze, silver, gold, compliance
   │   ├── volume bronze.landing, bronze.checkpoints, compliance.dsr_bundles
   │   └── grants to service principal
-  ├── creates Lakebase instance dpdp-poc-consent
+  ├── creates Lakebase instance compliance-pack-consent
   │   └── creates database compliance_pack_consent
   ├── creates DLT pipeline compliance_pack_medallion (resources/pipelines.yml)
   │   └── with libraries pointing at pipelines/medallion.py, pipelines/classification_dlt.py
@@ -131,7 +131,7 @@ bundle deploy
   │   └── e2e_verify
   ├── creates Databricks App dpdp-dsr-portal (resources/apps.yml)
   │   └── with resource grants (Lakebase, UC, job trigger)
-  └── creates AI/BI dashboard "DPDP Compliance POC" (resources/dashboards.yml)
+  └── creates AI/BI dashboard "Compliance Pack POC" (resources/dashboards.yml)
 ```
 
 Every one of these is declarative. Redeploying doesn't create duplicates — it converges the workspace to the declared state.
@@ -161,8 +161,8 @@ The bundle uses variables for values that vary per deployment:
 ```yaml
 variables:
   catalog_name: { default: compliance_pack }
-  lakebase_instance_name: { default: dpdp-poc-consent }
-  notification_email: { default: dpdp-poc-team@example.com }
+  lakebase_instance_name: { default: compliance-pack-consent }
+  notification_email: { default: compliance-pack-team@example.com }
   ...
 ```
 

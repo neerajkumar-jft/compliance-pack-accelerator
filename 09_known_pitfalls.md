@@ -250,7 +250,7 @@ The POC has no real secrets (synthetic data, integrated Lakebase auth), but deve
 - **Never** print Lakebase connection strings in logs
 - **Never** commit notebooks with widget values containing secrets
 
-If you find yourself needing a secret for Phase 1 work, add it to the `dpdp-poc` secret scope (§2.6) and access via `dbutils.secrets.get()`.
+If you find yourself needing a secret for Phase 1 work, add it to the `compliance-pack` secret scope (§2.6) and access via `dbutils.secrets.get()`.
 
 ## 9.11 · Data leakage in demos
 

@@ -9,7 +9,7 @@ Detection order:
                       host → CLI config profile
     warehouse id    : DPDP_WAREHOUSE_ID env → first RUNNING serverless
                       warehouse → fail with helpful error
-    catalog         : DPDP_CATALOG env → default "compliance_pack"
+    catalog         : COMPLIANCE_CATALOG env → default "compliance_pack"
 
 All three values are memoized — expensive CLI calls happen once per
 process.
@@ -167,7 +167,7 @@ def _warm_warehouse(warehouse_id: str) -> None:
 
 
 def get_catalog() -> str:
-    return os.environ.get("DPDP_CATALOG") or CATALOG_DEFAULT
+    return os.environ.get("COMPLIANCE_CATALOG") or CATALOG_DEFAULT
 
 
 # Foundation model endpoint for the persona agents and the DPIA /
@@ -182,7 +182,7 @@ MODEL_ENDPOINT_DEFAULT = "databricks-gpt-oss-120b"
 
 
 def get_model_endpoint() -> str:
-    return os.environ.get("DPDP_MODEL_ENDPOINT") or MODEL_ENDPOINT_DEFAULT
+    return os.environ.get("COMPLIANCE_MODEL_ENDPOINT") or MODEL_ENDPOINT_DEFAULT
 
 
 def print_detected() -> None:

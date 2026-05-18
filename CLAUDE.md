@@ -59,7 +59,7 @@ real values for the current deploy, ask Databricks at runtime:
 - **Catalog**: `compliance_pack` (stable across deploys).
 - **Schemas**: `bronze`, `silver`, `gold`, `compliance`, `federation_mock` (stable).
 - **SQL Warehouse ID**: discover via `scripts/persona_config.py:get_warehouse_id()` (looks up the warehouse named `Serverless Starter Warehouse` in the current workspace, falls back to a STARTING/STOPPED instance if needed).
-- **Notebooks**: deployed under `/Workspace/Users/${workspace.current_user.userName}/.bundle/dpdp-poc/dev/files/notebooks/` by the bundle.
+- **Notebooks**: deployed under `/Workspace/Users/${workspace.current_user.userName}/.bundle/compliance-pack/dev/files/notebooks/` by the bundle.
 - **Dashboard ID**: written into `dashboards/personas/.dashboard_ids.json` by `scripts/slice_dashboards.py --upload`; read it from there rather than hardcoding.
 
 ## Key Design Decisions
@@ -72,7 +72,7 @@ real values for the current deploy, ask Databricks at runtime:
 
 4. **Dashboard adapted from accelerator** — the 177K `dpdp_dashboard.lvdash.json` from the old accelerator was adapted with column name mappings: `job_id` → `scan_job_id`, `category` → `pii_category`, `sensitivity` → `sensitivity_tier`, `detection_method` → `classifier_source`.
 
-5. **Agent Bricks uses `databricks-gpt-oss-120b`** — the open-source model endpoint. Other foundation models (`gpt-5-4`, `gpt-5-4-mini`) are rate-limited to 0 on the free tier. The `ai_classify` and `ai_extract` SQL functions work fine. Endpoint name is centralized in `scripts/persona_config.py:get_model_endpoint()` (overridable via `DPDP_MODEL_ENDPOINT` env) and in the `model_endpoint` widget of `notebooks/03_agent_bricks.py` — change both together if you swap endpoints.
+5. **Agent Bricks uses `databricks-gpt-oss-120b`** — the open-source model endpoint. Other foundation models (`gpt-5-4`, `gpt-5-4-mini`) are rate-limited to 0 on the free tier. The `ai_classify` and `ai_extract` SQL functions work fine. Endpoint name is centralized in `scripts/persona_config.py:get_model_endpoint()` (overridable via `COMPLIANCE_MODEL_ENDPOINT` env) and in the `model_endpoint` widget of `notebooks/03_agent_bricks.py` — change both together if you swap endpoints.
 
 6. **Decimal serialization fix** — `toPandas()` returns `Decimal` objects from SQL numeric columns. The `convert_decimals()` helper in `03_agent_bricks.py` recursively converts them to `float` before `json.dumps`.
 
@@ -133,8 +133,8 @@ pushes every notebook to the bundle deploy root automatically. The demo
 notebooks land at:
 
 ```
-/Workspace/Users/${ME}/.bundle/dpdp-poc/dev/files/notebooks/03_agent_bricks
-/Workspace/Users/${ME}/.bundle/dpdp-poc/dev/files/notebooks/01_add_data_source
+/Workspace/Users/${ME}/.bundle/compliance-pack/dev/files/notebooks/03_agent_bricks
+/Workspace/Users/${ME}/.bundle/compliance-pack/dev/files/notebooks/01_add_data_source
 ```
 
 Reach for `databricks workspace import` only for one-off uploads to a

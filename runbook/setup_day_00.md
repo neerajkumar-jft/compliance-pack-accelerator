@@ -1,6 +1,6 @@
 # Day 0 · pre-sprint setup checklist
 
-> ⚠️ **Pre-build planning document.** This describes a 14-day sprint that has already concluded. The Lakebase provisioning and `dpdp-poc-builder` service-principal steps don't apply on the free-trial deploy path the POC ended up using. **For deploying the POC today, follow [`docs/persona_deploy.md`](../docs/persona_deploy.md) and [`README.md`](../README.md).**
+> ⚠️ **Pre-build planning document.** This describes a 14-day sprint that has already concluded. The Lakebase provisioning and `compliance-pack-builder` service-principal steps don't apply on the free-trial deploy path the POC ended up using. **For deploying the POC today, follow [`docs/persona_deploy.md`](../docs/persona_deploy.md) and [`README.md`](../README.md).**
 
 The 14-day timeline assumes certain things are already in place when Day 1 begins. If they are not, Day 1 gets consumed by setup work, the Day 7 checkpoint slips, and the whole sprint compresses. This checklist is what Day 0 looks like — the work that happens in the 2-3 weeks *before* Claude Code starts coding.
 
@@ -23,10 +23,10 @@ This file is primarily for the human collaborator coordinating the engagement, n
 ## One week before Day 1
 
 ### Authentication setup
-- [ ] Service principal `dpdp-poc-builder` created in the workspace
+- [ ] Service principal `compliance-pack-builder` created in the workspace
 - [ ] Service principal added to the workspace users group
 - [ ] OAuth token-based auth configured (not personal access tokens)
-- [ ] Secret scope `dpdp-poc` created
+- [ ] Secret scope `compliance-pack` created
 
 ### Unity Catalog scaffolding
 - [ ] Catalog `compliance_pack` created
@@ -37,7 +37,7 @@ This file is primarily for the human collaborator coordinating the engagement, n
 Run the verify_environment notebook from `tests/verify_environment.md` at the end of this step. All checks must pass.
 
 ### Lakebase provisioning
-- [ ] Lakebase instance `dpdp-poc-consent` provisioned (smallest tier)
+- [ ] Lakebase instance `compliance-pack-consent` provisioned (smallest tier)
 - [ ] Database `compliance_pack_consent` created
 - [ ] Native auth integration configured (no separate JDBC password)
 - [ ] Connection tested from the workspace

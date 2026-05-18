@@ -37,7 +37,7 @@ WORKSPACE_URL = get_workspace_url()
 
 PERSONA_DEFS = {
     "cco": {
-        "title": "DPDP — CCO Agent",
+        "title": "Compliance — CCO Agent",
         "description": "Chief Compliance Officer agent. Answers questions about PII inventory, compliance gaps, and remediation priorities across the DPDP data estate.",
         "tables": [
             "compliance_pack.compliance.personal_data_register",
@@ -92,7 +92,7 @@ PERSONA_DEFS = {
         ],
     },
     "gc": {
-        "title": "DPDP — GC Agent",
+        "title": "Compliance — GC Agent",
         "description": "General Counsel agent. Answers legal-exposure questions about DPDP obligations, consent withdrawals, notice-version history, and DPIA generation history.",
         "tables": [
             "compliance_pack.silver.compliance_gaps",
@@ -131,7 +131,7 @@ PERSONA_DEFS = {
         ],
     },
     "cmo": {
-        "title": "DPDP — CMO Agent",
+        "title": "Compliance — CMO Agent",
         "description": "Chief Marketing Officer agent. Answers questions about marketing-eligible audience, consent by purpose, and campaign-safe segmentation.",
         "tables": [
             "compliance_pack.gold.marketing_eligible_principals",
@@ -163,7 +163,7 @@ PERSONA_DEFS = {
         ],
     },
     "cfo": {
-        "title": "DPDP — CFO Agent",
+        "title": "Compliance — CFO Agent",
         "description": "Chief Financial Officer agent. Answers questions about DPDP penalty exposure, gap counts weighted by penalty ceilings, and remediation cost estimates.",
         "tables": [
             "compliance_pack.silver.compliance_gaps",

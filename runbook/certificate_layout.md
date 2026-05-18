@@ -62,7 +62,7 @@ Commitment line: "A final erasure certificate will be issued on or before the sc
 ### Verification block
 - QR code (bottom left) — encodes the URL of the `audit_trail.json` plus a cryptographic hash of the certificate contents
 - Signature block (bottom right):
-  - Signed by: `dpdp-poc-builder` (service principal)
+  - Signed by: `compliance-pack-builder` (service principal)
   - Signature timestamp: ISO 8601
   - Signature algorithm: SHA-256 digest of the page contents (POC stub — note as limitation)
 

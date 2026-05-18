@@ -35,7 +35,7 @@ resources:
     # No persona has direct UPDATE on dpia_runs — the only path to
     # flipping status is through this app's enforce-the-rules code.
     dpia_review_app:
-      name: dpdp-dpia-review
+      name: compliance-dpia-review
       description: "DPIA review + approval UI for CCO + GC + CFO. Renders structured DPIA sections, captures verified reviewer identity, exports to PDF."
       source_code_path: ../apps/dpia_review
 

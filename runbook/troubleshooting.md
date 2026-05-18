@@ -18,7 +18,7 @@ When you resolve a new failure mode not listed here, *add it to this file* befor
 
 **Fix**:
 ```sql
-GRANT APPLY TAG ON CATALOG compliance_pack TO `dpdp-poc-builder`;
+GRANT APPLY TAG ON CATALOG compliance_pack TO `compliance-pack-builder`;
 ```
 
 If the error persists after grant, tags may need up to 60 seconds to propagate. Wait one minute, retry.
@@ -35,7 +35,7 @@ If the error persists after grant, tags may need up to 60 seconds to propagate. 
 
 **Fix**:
 ```sql
-GRANT USE SCHEMA ON SCHEMA compliance_pack.bronze TO `dpdp-poc-builder`;
+GRANT USE SCHEMA ON SCHEMA compliance_pack.bronze TO `compliance-pack-builder`;
 -- Repeat for silver, gold, compliance
 ```
 
@@ -114,7 +114,7 @@ GRANT USE SCHEMA ON SCHEMA compliance_pack.bronze TO `dpdp-poc-builder`;
 **Fix**:
 1. Check Lakebase instance status in the Databricks UI; restart if stopped
 2. Ensure the cluster and Lakebase instance are in the same workspace
-3. Verify secret `dpdp-poc/lakebase-token` is valid if using token auth
+3. Verify secret `compliance-pack/lakebase-token` is valid if using token auth
 
 ### `duplicate key violates unique constraint "idx_notice_currently_live"`
 

@@ -1,4 +1,4 @@
-# Databricks Asset Bundle for the DPDP POC
+# Databricks Asset Bundle for the Compliance Pack POC
 # Deploy with:   databricks bundle deploy --target dev
 # Tear down:    databricks bundle destroy --target dev
 #
@@ -35,7 +35,7 @@
 # docs/persona_deploy.md for the full teammate deployment guide.
 
 bundle:
-  name: dpdp-poc
+  name: compliance-pack
   uuid: ${var.bundle_uuid}
 
 # ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ variables:
 
   lakebase_instance_name:
     description: Name of the Lakebase instance for consent OLTP
-    default: dpdp-poc-consent
+    default: compliance-pack-consent
 
   lakebase_database_name:
     description: Database name within the Lakebase instance
@@ -79,11 +79,11 @@ variables:
 
   service_principal_name:
     description: Service principal that runs all bundle resources
-    default: dpdp-poc-builder
+    default: compliance-pack-builder
 
   notification_email:
     description: Email for job failure notifications
-    default: "dpdp-poc-team@example.com"
+    default: "compliance-pack-team@example.com"
 
   run_as_user:
     description: User or service principal to run jobs as (varies by target)
@@ -150,7 +150,7 @@ targets:
     workspace:
       # ↓↓↓ Run `scripts/configure_workspace_host.sh https://dbc-<your-id>.cloud.databricks.com`
       #     once per clone — it rewrites the line below in place. ↓↓↓
-      host: https://dbc-REPLACE-ME.cloud.databricks.com
+      host: https://dbc-c1ee818f-c92b.cloud.databricks.com
     run_as:
       user_name: ${var.run_as_user}
 

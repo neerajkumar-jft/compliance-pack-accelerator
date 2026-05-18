@@ -1,4 +1,4 @@
-# Workflow jobs for the DPDP POC.
+# Workflow jobs for the Compliance Pack POC.
 #
 # Jobs that reference notebooks under pipelines/ or tests/ require those
 # notebooks to exist. Several jobs from the original spec (§2.8) declared

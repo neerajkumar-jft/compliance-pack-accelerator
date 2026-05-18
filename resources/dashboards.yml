@@ -18,7 +18,7 @@
 resources:
   dashboards:
     dpdp_compliance_dashboard:
-      display_name: "DPDP Compliance POC"
+      display_name: "Compliance Pack POC"
       warehouse_id: ${var.sql_warehouse_id}
       file_path: ../dashboards/dpdp_compliance.lvdash.json
 

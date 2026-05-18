@@ -1,7 +1,7 @@
 """Transfer persona dashboard + Genie space ownership to a service principal.
 
 Run this once an account admin has created a service principal
-(typically `dpdp-poc-builder`) and assigned it to the workspace. The
+(typically `compliance-pack-builder`) and assigned it to the workspace. The
 script:
 
   1. Changes the OWNER of each persona dashboard to the SP

@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Add Data Source — Databricks-Native Ingestion
 # MAGIC
-# MAGIC **DPDP Compliance Platform**
+# MAGIC **Compliance Pack Platform**
 # MAGIC
 # MAGIC Connect to external data sources using Databricks-native features only.
 # MAGIC No Python connectors, no pip installs, no driver-side collection.
@@ -333,7 +333,7 @@ if PATTERN == "unity_catalog" and SOURCE_NAME:
 # MAGIC 2. The scanner auto-discovers tables from each registered source
 # MAGIC 3. PII findings populate `silver.pii_findings` with UC tags
 # MAGIC 4. Compliance gaps populate `silver.compliance_gaps`
-# MAGIC 5. View results in the **DPDP Compliance Dashboard**
+# MAGIC 5. View results in the **Compliance Dashboard**
 # MAGIC
 # MAGIC ### Comparison with old approach
 # MAGIC

@@ -1,6 +1,6 @@
 # §2 · Runtime and environment
 
-> ⚠️ **Pre-build planning document.** Lakebase setup, `dpdp-poc-builder` service-principal grants, and the 7-job workflow list in §2.8 don't apply on the free-trial deploy path. **For deploying today, follow [`docs/persona_deploy.md`](docs/persona_deploy.md).**
+> ⚠️ **Pre-build planning document.** Lakebase setup, `compliance-pack-builder` service-principal grants, and the 7-job workflow list in §2.8 don't apply on the free-trial deploy path. **For deploying today, follow [`docs/persona_deploy.md`](docs/persona_deploy.md).**
 
 ## 2.0 · The canonical setup path — read this first
 
@@ -94,7 +94,7 @@ The `APPLY TAG` privilege is what lets the classification job call `ALTER TABLE 
 
 Create a Lakebase instance for the consent OLTP tier:
 
-- Instance name: `dpdp-poc-consent`
+- Instance name: `compliance-pack-consent`
 - Size: smallest available tier (trial workspace; this is a demo, not a load test)
 - Database name: `compliance_pack_consent`
 - Initial schema: `public`
@@ -124,7 +124,7 @@ Agent Bricks is **out of scope for this POC** (per §1.4); no DPIA drafting, no 
 
 Create a Databricks service principal for the POC:
 
-- Display name: `dpdp-poc-builder`
+- Display name: `compliance-pack-builder`
 - Use this identity for every notebook run, every workflow execution, every API call made by Claude Code
 - Never use a personal user token; the audit log must attribute every action to this service principal
 
@@ -132,7 +132,7 @@ Configure OAuth token-based auth rather than personal access tokens. The trial w
 
 ### Secret scope
 
-Create one secret scope named `dpdp-poc` for any secrets the build requires. The POC is designed to minimize secrets — we use synthetic data and Lakebase native auth — but the scope must exist for:
+Create one secret scope named `compliance-pack` for any secrets the build requires. The POC is designed to minimize secrets — we use synthetic data and Lakebase native auth — but the scope must exist for:
 
 - Any future source-system credentials (none expected in the POC)
 - The Lakebase connection string if we choose not to use integrated auth
@@ -157,7 +157,7 @@ Do **not** install: pyodbc, psycopg2, pymongo, kafka-python, snowflake-connector
 
 ## 2.8 · Workflow and job configuration
 
-Create a Databricks Workflow named `dpdp-poc-build` with these jobs (defined in detail in individual sections):
+Create a Databricks Workflow named `compliance-pack-build` with these jobs (defined in detail in individual sections):
 
 | Job name | Triggered by | Spec reference |
 |----------|--------------|----------------|
@@ -168,7 +168,7 @@ Create a Databricks Workflow named `dpdp-poc-build` with these jobs (defined in 
 | `sync_consent_to_delta` | 60-second schedule | §5.4 |
 | `process_dsr_request` | API-triggered (Day 11) | §7 |
 
-All jobs run as the service principal `dpdp-poc-builder`. All jobs log to Unity Catalog audit tables automatically. No job should have a retry count above 2 — the goal during POC is to surface failures, not hide them.
+All jobs run as the service principal `compliance-pack-builder`. All jobs log to Unity Catalog audit tables automatically. No job should have a retry count above 2 — the goal during POC is to surface failures, not hide them.
 
 ## 2.9 · Cluster configuration
 

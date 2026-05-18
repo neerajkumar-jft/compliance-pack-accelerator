@@ -1,4 +1,4 @@
--- Compliance rules and gaps tables for DPDP POC
+-- Compliance rules and gaps tables for Compliance Pack POC
 -- Ported from accelerator, adapted to DPDP 9-category taxonomy
 
 -- ============================================================================

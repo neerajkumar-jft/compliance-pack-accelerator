@@ -304,7 +304,7 @@ Timestamped action sequence:
     "events": [
         { "at": "2026-04-27T10:30:00", "action": "request_received", "actor": "api_gateway" },
         { "at": "2026-04-27T10:30:05", "action": "identity_verified", "actor": "stub_idv", "method": "email_match" },
-        { "at": "2026-04-27T10:32:00", "action": "discovery_started", "actor": "dpdp-poc-builder" },
+        { "at": "2026-04-27T10:32:00", "action": "discovery_started", "actor": "compliance-pack-builder" },
         { "at": "2026-04-27T10:32:15", "action": "discovery_complete", "assets_found": 4 },
         { "at": "2026-04-27T14:12:00", "action": "erasure_executed", "target": "compliance_pack.silver.customers_tagged", "rows_deleted": 1 },
         { "at": "2026-04-27T14:12:30", "action": "erasure_executed", "target": "compliance_pack.silver.users_tagged", "rows_deleted": 1 },

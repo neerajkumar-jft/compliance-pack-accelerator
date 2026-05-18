@@ -31,7 +31,7 @@
 #   agents        setup_agent_bricks.py (verifies serving endpoint + MLflow experiment + prompts module)
 #   smoke         run tests/test_post_deploy_smoke.py
 #   personas      setup_all_personas.py (4 sliced dashboards, 4 Genie spaces, 4 users, UC grants, ACLs)
-#   app_deploy    databricks apps deploy dpdp-dpia-review — the bundle deploy
+#   app_deploy    databricks apps deploy compliance-dpia-review — the bundle deploy
 #                 registers the app shell + uploads source, but does NOT start
 #                 the app. Without this step Streamlit never boots and visitors
 #                 see "App Not Available". Source path is the bundle sync target.
@@ -265,21 +265,21 @@ do_app_deploy() {
   # "RUNNING state" but that's prose — the API enum is ACTIVE.
   # Observed states: STOPPED, STARTING, ACTIVE, STOPPING, ERROR.
   local state
-  state="$(_app_compute_state dpdp-dpia-review)"
+  state="$(_app_compute_state compliance-dpia-review)"
 
   if [[ "$state" != "ACTIVE" ]]; then
     echo "  ▶ app compute is $state — starting (cold-start ~1-2 min)"
-    databricks apps start dpdp-dpia-review >/dev/null 2>&1 || true
+    databricks apps start compliance-dpia-review >/dev/null 2>&1 || true
 
     local i
     for i in $(seq 1 60); do
       sleep 5
-      state="$(_app_compute_state dpdp-dpia-review)"
+      state="$(_app_compute_state compliance-dpia-review)"
       echo "    … app compute state=$state (poll $i)"
       [[ "$state" == "ACTIVE" ]] && break
       if [[ "$state" == "ERROR" ]]; then
         echo "  ✗ app compute reached ERROR — aborting" >&2
-        databricks apps get dpdp-dpia-review >&2
+        databricks apps get compliance-dpia-review >&2
         return 1
       fi
     done
@@ -293,8 +293,8 @@ do_app_deploy() {
     echo "  ✓ app compute already ACTIVE — skip start"
   fi
 
-  databricks apps deploy dpdp-dpia-review \
-    --source-code-path "/Workspace/Users/${me}/.bundle/dpdp-poc/dev/files/apps/dpia_review"
+  databricks apps deploy compliance-dpia-review \
+    --source-code-path "/Workspace/Users/${me}/.bundle/compliance-pack/dev/files/apps/dpia_review"
 }
 
 do_app_perms() {

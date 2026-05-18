@@ -18,7 +18,7 @@
 #   catalogs:
 #     compliance_pack_catalog:
 #       name: ${var.catalog_name}
-#       comment: "DPDP Compliance POC. Covers Modules 01 (PII inventory) and 02 (consent)."
+#       comment: "Compliance Pack POC. Covers Modules 01 (PII inventory) and 02 (consent)."
 #       storage_root: ${var.catalog_storage_root}
 #       properties:
 #         dpdp_scope: "modules_01_02"

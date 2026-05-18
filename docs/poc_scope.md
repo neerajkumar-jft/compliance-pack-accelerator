@@ -70,7 +70,7 @@ Status: **PARTIAL**
 - `silver.compliance_gaps` — 51 multi-pack rules across 4 regulation packs (DPDP / UK GDPR / EU GDPR / CCPA) drive 818 gaps with severity tiers, each tagged by source pack
 - `compliance_rules.sql` is regulation-pack-driven (ADR-0001 M2 live) — every pack in `regulations/` MERGEs its rules at phase1_bootstrap time
 - Penalty-weighted exposure rendered via the CFO Genie agent (₹250cr/150cr/50cr/5cr ceilings)
-- **DPIA generator** — productionised in Phase 4: structured pydantic output, quarterly cron (`dpia_generator` job, UNPAUSED on deploy), `compliance.dpia_runs` table with status workflow (draft → approved), `compliance.dpia_artifacts` volume for the JSON+PDF artefacts, and a Databricks Review App (`dpdp-dpia-review`) where CCO/GC approve and CFO views read-only
+- **DPIA generator** — productionised in Phase 4: structured pydantic output, quarterly cron (`dpia_generator` job, UNPAUSED on deploy), `compliance.dpia_runs` table with status workflow (draft → approved), `compliance.dpia_artifacts` volume for the JSON+PDF artefacts, and a Databricks Review App (`compliance-dpia-review`) where CCO/GC approve and CFO views read-only
 - **Not in scope**: real-time scoring engine
 
 ### Module 06 — Retention (demo-grade slice)

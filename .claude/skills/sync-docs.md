@@ -3,7 +3,7 @@ name: sync-docs
 description: Audit every DPDP-POC doc that might reference a just-landed change and update the stale ones in a single pass. Run this after any commit that changes behavior, tests, or the deploy path.
 ---
 
-# sync-docs — keep the DPDP POC docs consistent after a change
+# sync-docs — keep the Compliance Pack POC docs consistent after a change
 
 This skill is the antidote to "I updated the code but forgot to update the
 deploy guide / how-to-test / changelog." Run it as a single action after

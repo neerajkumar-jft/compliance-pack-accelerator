@@ -33,14 +33,14 @@
 #     in the workspace admin console.
 #   - The S3 external location / storage credential / external volume
 #     (jft_s3, jft_databricks_storage, etc.) — pre-existing, not POC-owned.
-#   - Any catalog other than $DPDP_CATALOG.
+#   - Any catalog other than $COMPLIANCE_CATALOG.
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-CATALOG="${DPDP_CATALOG:-compliance_pack}"
+CATALOG="${COMPLIANCE_CATALOG:-compliance_pack}"
 TARGET="${DPDP_TARGET:-dev}"
 
 LOCAL=1

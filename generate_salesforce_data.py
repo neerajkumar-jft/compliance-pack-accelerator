@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""DPDP POC — synthetic Salesforce-shaped data generator.
+"""Compliance Pack POC — synthetic Salesforce-shaped data generator.
 
 Represents what Lakeflow Connect Salesforce ingestion would deliver to
 Bronze in production. Self-contained: this script writes nothing — it

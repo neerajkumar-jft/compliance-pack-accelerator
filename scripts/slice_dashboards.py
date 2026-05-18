@@ -425,7 +425,7 @@ def upload_dashboard(persona: str, path: Path, existing_id: str | None = None) -
     return its id. Idempotent: if existing_id is provided and the
     dashboard is still ACTIVE, PATCHes in place; otherwise creates
     a new one."""
-    title = f"DPDP — {persona.upper()} View"
+    title = f"Compliance — {persona.upper()} View"
     serialized = path.read_text()
 
     if existing_id and dashboard_exists(existing_id):

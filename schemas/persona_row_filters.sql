@@ -11,10 +11,10 @@
 --
 -- Policy on compliance_pack.compliance.consent_events_log:
 --   admin (is_member('admins'))            → every row (~1000)
---   CCO persona (you+dpdp-cco@...)         → every row (compliance oversight)
---   GC  persona (you+dpdp-gc@...)          → every row (legal review)
---   CFO persona (you+dpdp-cfo@...)         → every row (financial audit)
---   CMO persona (you+dpdp-cmo@...)         → only marketing-relevant
+--   CCO persona (you+compliance-cco@...)         → every row (compliance oversight)
+--   GC  persona (you+compliance-gc@...)          → every row (legal review)
+--   CFO persona (you+compliance-cfo@...)         → every row (financial audit)
+--   CMO persona (you+compliance-cmo@...)         → only marketing-relevant
 --                                            purposes (~500): marketing_email,
 --                                            marketing_sms,
 --                                            product_personalization
@@ -34,7 +34,7 @@
 -- Migration path to account-level groups:
 --   When the workspace switches from plus-addressed emails to account
 --   groups (e.g. `dpdp-cmo`), replace
---     current_user() LIKE '%+dpdp-cmo@%'
+--     current_user() LIKE '%+compliance-cmo@%'
 --   with
 --     is_account_group_member('dpdp-cmo')
 --   on both matches below. Everything else stays the same.
@@ -43,7 +43,7 @@ CREATE OR REPLACE FUNCTION compliance_pack.compliance.persona_purpose_scope(purp
 RETURNS BOOLEAN
 RETURN
   is_member('admins')
-  OR current_user() NOT LIKE '%+dpdp-cmo@%'
+  OR current_user() NOT LIKE '%+compliance-cmo@%'
   OR purpose IN ('marketing_email', 'marketing_sms', 'product_personalization');
 
 -- Apply the filter.

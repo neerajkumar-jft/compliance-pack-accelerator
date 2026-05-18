@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DPDP POC synthetic data generator.
+Compliance Pack POC synthetic data generator.
 
 Generates deterministic synthetic Indian personal data for five source tables
 plus consent events. All output is seeded for reproducibility.
@@ -951,7 +951,7 @@ def generate_all(output_dir: str, seed: int = SEED) -> dict:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="DPDP POC synthetic data generator")
+    parser = argparse.ArgumentParser(description="Compliance Pack POC synthetic data generator")
     parser.add_argument(
         "--output-dir",
         default="/tmp/dpdp_landing",

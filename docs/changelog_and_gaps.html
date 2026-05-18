@@ -253,7 +253,7 @@
   <ul style="margin: 8px 0 8px 24px; font-size: 12.5px;">
     <li>A <strong>sliced Lakeview dashboard</strong> (PATCH-updated from the master, never duplicated) showing only the pages relevant to that role</li>
     <li>A <strong>Genie space</strong> scoped to that persona's allowed tables via <code>data_sources</code></li>
-    <li>A <strong>plus-addressed demo user</strong> (<code>&lt;deployer&gt;+dpdp-&lt;persona&gt;@&lt;domain&gt;</code>) — all login tokens route to the deployer's inbox, no real mailboxes needed</li>
+    <li>A <strong>plus-addressed demo user</strong> (<code>&lt;deployer&gt;+compliance-&lt;persona&gt;@&lt;domain&gt;</code>) — all login tokens route to the deployer's inbox, no real mailboxes needed</li>
     <li><strong>UC grants</strong> layered into two tiers: Layer 1 (agent boundary — Genie space allowlist, narrow) and Layer 2 (UI-render boundary — add <code>pii_findings</code> + <code>compliance_gaps</code> for Executive Overview aggregates)</li>
     <li><strong>Workspace ACLs</strong>: dashboard CAN_READ (only that persona) with <code>embed_credentials=false</code> so queries run as the viewer; Genie CAN_RUN (only that persona); warehouse CAN_USE</li>
     <li>A <strong>&quot;Ask the X Agent&quot; banner tile</strong> injected at the top of the Executive Overview page, linking directly to the persona's Genie space</li>
@@ -305,7 +305,7 @@
   <ul style="margin: 8px 0 8px 24px; font-size: 12.5px;">
     <li><strong>W1.1 Prod target guard</strong> — <code>targets.prod</code> commented out in <code>databricks.yml</code>; <code>bundle --target prod</code> fails fast with "no such target" instead of obscure auth error</li>
     <li><strong>W1.2 DPDP §18 audit-log demo</strong> — new Test 9 in <code>how_to_test.html</code> (T9.1–T9.3) with copy-paste SQL against <code>system.access.audit</code> surfacing who queried PII tables in the last 7 days</li>
-    <li><strong>W1.3 Model endpoint in config</strong> — <code>persona_config.py:get_model_endpoint()</code> with <code>DPDP_MODEL_ENDPOINT</code> env override; <code>03_agent_bricks.py</code> now reads from a widget. One-line change when Databricks deprecates <code>gpt-oss-120b</code></li>
+    <li><strong>W1.3 Model endpoint in config</strong> — <code>persona_config.py:get_model_endpoint()</code> with <code>COMPLIANCE_MODEL_ENDPOINT</code> env override; <code>03_agent_bricks.py</code> now reads from a widget. One-line change when Databricks deprecates <code>gpt-oss-120b</code></li>
   </ul>
 </div>
 
@@ -329,7 +329,7 @@
 <div class="change-card landed">
   <h3><span class="c-badge c-landed">LANDED</span> Wave 4 — SP migration script + Genie idempotency</h3>
   <ul style="margin: 8px 0 8px 24px; font-size: 12.5px;">
-    <li><strong>W4.1 SP ownership migration</strong> — <code>scripts/transfer_ownership_to_sp.py</code> ready to run once an account admin creates <code>dpdp-poc-builder</code>. Transfers CAN_MANAGE on all 4 persona dashboards + 4 Genie spaces to the SP; deployer keeps CAN_EDIT. <code>--dry-run</code> tested</li>
+    <li><strong>W4.1 SP ownership migration</strong> — <code>scripts/transfer_ownership_to_sp.py</code> ready to run once an account admin creates <code>compliance-pack-builder</code>. Transfers CAN_MANAGE on all 4 persona dashboards + 4 Genie spaces to the SP; deployer keeps CAN_EDIT. <code>--dry-run</code> tested</li>
     <li><strong>W4.2 Genie instructions in code (investigated, not implementable)</strong> — 28 field probes against <code>databricks.datarooms.export.Instructions</code> proto all returned "Cannot find field". Schema is locked down for public API. Manual UI paste stays documented in <code>docs/persona_genie_instructions.md</code>. Revisit when Databricks publishes a Genie Terraform provider</li>
     <li><strong>Byproduct: Genie setup idempotency fix</strong> — probe runs revealed each orchestrator re-run was creating duplicate Genie spaces (accumulated 12 "DPDP — X Agent (1)/(2)/(3)" duplicates). Added <code>space_exists_and_is_active()</code> + <code>update_space()</code> path. Orchestrator re-runs now PATCH in place; 12 duplicates trashed</li>
   </ul>
@@ -528,7 +528,7 @@ how-to-fix, effort</strong>. The top 5 are the most likely sign-off blockers.</p
 
 <div class="gap-card gap-critical">
   <h3><span class="sev-badge" style="background:#ef6c00;color:white;">SCRIPT READY (W4.1) — ENV-BLOCKED</span> No SP ownership</h3>
-  <p><strong>Script ready, awaiting account admin:</strong> <code>scripts/transfer_ownership_to_sp.py --sp-id &lt;uuid&gt;</code> (with <code>--dry-run</code>) transfers CAN_MANAGE on the 4 dashboards + 4 Genie spaces to a service principal; deployer keeps CAN_EDIT. Blocked until an account admin creates <code>dpdp-poc-builder</code> at <code>accounts.cloud.databricks.com</code> (same blocker as the account-level groups story for UC grantees).</p>
+  <p><strong>Script ready, awaiting account admin:</strong> <code>scripts/transfer_ownership_to_sp.py --sp-id &lt;uuid&gt;</code> (with <code>--dry-run</code>) transfers CAN_MANAGE on the 4 dashboards + 4 Genie spaces to a service principal; deployer keeps CAN_EDIT. Blocked until an account admin creates <code>compliance-pack-builder</code> at <code>accounts.cloud.databricks.com</code> (same blocker as the account-level groups story for UC grantees).</p>
 </div>
 
 <div class="gap-card gap-critical">
@@ -566,7 +566,7 @@ how-to-fix, effort</strong>. The top 5 are the most likely sign-off blockers.</p
 
 <div class="gap-card gap-important">
   <h3><span class="sev-badge" style="background:#2e7d32;color:white;">LANDED (W1.3)</span> Model endpoint in config</h3>
-  <p><strong>Addressed:</strong> <code>persona_config.py:get_model_endpoint()</code> with <code>DPDP_MODEL_ENDPOINT</code> env override. <code>notebooks/03_agent_bricks.py</code> reads from a <code>model_endpoint</code> widget with the same default. <code>CLAUDE.md</code> note updated. When Databricks deprecates <code>gpt-oss-120b</code>, one-line change.</p>
+  <p><strong>Addressed:</strong> <code>persona_config.py:get_model_endpoint()</code> with <code>COMPLIANCE_MODEL_ENDPOINT</code> env override. <code>notebooks/03_agent_bricks.py</code> reads from a <code>model_endpoint</code> widget with the same default. <code>CLAUDE.md</code> note updated. When Databricks deprecates <code>gpt-oss-120b</code>, one-line change.</p>
 </div>
 
 <h3>3.3 Nice to have — SA will note but not block</h3>
@@ -658,7 +658,7 @@ how-to-fix, effort</strong>. The top 5 are the most likely sign-off blockers.</p
     <li><code>Only serverless compute is supported in the workspace</code> (jobs) →
     removed the classic <code>job_clusters:</code> blocks from
     <code>resources/jobs.yml</code> (retention_enforcement + phase1_bootstrap)</li>
-    <li><code>Principal: ServicePrincipalName(dpdp-poc-builder) does not exist</code> →
+    <li><code>Principal: ServicePrincipalName(compliance-pack-builder) does not exist</code> →
     commented out the SP-based <code>CAN_MANAGE</code> grant in catalog_and_storage.yml;
     deployer retains CAN_MANAGE via databricks.yml's top-level permissions block</li>
   </ul>
@@ -903,7 +903,7 @@ prep.</p>
     <tr><td>W1.1</td><td><code>targets.prod</code> guard</td><td>✓ LANDED</td><td>Fails fast with readable message</td></tr>
     <tr class="hl"><td>W2.3</td><td>Aggregate overview view</td><td>⚠ PARTIAL</td><td>Definition landed in phase1_bootstrap.py; <code>CREATE VIEW</code> quota-blocked on current workspace</td></tr>
     <tr><td>W3.1</td><td>Persona-boundary integration test</td><td>✓ LANDED</td><td>tests/persona_boundary_test.py — 4/4 pass</td></tr>
-    <tr class="hl"><td>W4.1</td><td>SP ownership migration script</td><td>⚠ READY</td><td>Awaiting account admin to create <code>dpdp-poc-builder</code></td></tr>
+    <tr class="hl"><td>W4.1</td><td>SP ownership migration script</td><td>⚠ READY</td><td>Awaiting account admin to create <code>compliance-pack-builder</code></td></tr>
     <tr><td>W1.3</td><td>Model endpoint in config</td><td>✓ LANDED</td><td>persona_config.get_model_endpoint()</td></tr>
     <tr class="hl"><td>W3.2</td><td>GitHub Actions validate workflow</td><td>✓ LANDED</td><td>4 jobs: py-syntax, html-tags, bundle-validate, boundary-test</td></tr>
     <tr><td>W4.2</td><td>Genie custom instructions in code</td><td>✗ BLOCKED</td><td>Instructions proto schema locked down; manual UI paste stays</td></tr>
@@ -942,7 +942,7 @@ prep.</p>
   <p style="margin-bottom: 8px;"><strong>§5.2 Blocked on account admin:</strong></p>
   <ul style="margin: 0 0 0 24px;">
     <li>Account-level group creation + identity federation → swap plus-addressed emails for <code>dpdp-cco</code>/<code>gc</code>/<code>cmo</code>/<code>cfo</code> account groups</li>
-    <li>SP-ownership migration via <code>scripts/transfer_ownership_to_sp.py</code> — needs <code>dpdp-poc-builder</code> SP created at <code>accounts.cloud.databricks.com</code></li>
+    <li>SP-ownership migration via <code>scripts/transfer_ownership_to_sp.py</code> — needs <code>compliance-pack-builder</code> SP created at <code>accounts.cloud.databricks.com</code></li>
   </ul>
 </div>
 

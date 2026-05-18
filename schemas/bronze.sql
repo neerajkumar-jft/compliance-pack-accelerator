@@ -1,4 +1,4 @@
--- Bronze layer DDL for DPDP POC
+-- Bronze layer DDL for Compliance Pack POC
 -- All columns kept as STRING to tolerate CSV quirks; typing happens in Silver
 -- Column names match the synthetic data generator output exactly
 
