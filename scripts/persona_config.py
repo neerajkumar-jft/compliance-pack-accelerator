@@ -7,7 +7,7 @@ own workspace without editing any source file.
 Detection order:
     workspace URL   : DATABRICKS_HOST env → `current-user me` response
                       host → CLI config profile
-    warehouse id    : DPDP_WAREHOUSE_ID env → first RUNNING serverless
+    warehouse id    : COMPLIANCE_WAREHOUSE_ID env → first RUNNING serverless
                       warehouse → fail with helpful error
     catalog         : COMPLIANCE_CATALOG env → default "compliance_pack"
 
@@ -97,7 +97,7 @@ def get_warehouse_id() -> str:
     """Return a serverless SQL warehouse id, warming it if stopped.
 
     Picking order:
-      1. DPDP_WAREHOUSE_ID env var (no warmup — caller's responsibility)
+      1. COMPLIANCE_WAREHOUSE_ID env var (no warmup — caller's responsibility)
       2. RUNNING serverless warehouse
       3. RUNNING classic warehouse
       4. STOPPED serverless warehouse  (warmed via SELECT 1 before return)
@@ -115,7 +115,7 @@ def get_warehouse_id() -> str:
 
     Raises only when there is no warehouse at all in the workspace.
     """
-    if env := os.environ.get("DPDP_WAREHOUSE_ID"):
+    if env := os.environ.get("COMPLIANCE_WAREHOUSE_ID"):
         return env
 
     out = _run("databricks", "warehouses", "list", "-o", "json")
@@ -123,7 +123,7 @@ def get_warehouse_id() -> str:
     if not warehouses:
         raise RuntimeError(
             "no SQL warehouses found in this workspace. Create one (UI: "
-            "Compute → SQL Warehouses → Create) or set DPDP_WAREHOUSE_ID."
+            "Compute → SQL Warehouses → Create) or set COMPLIANCE_WAREHOUSE_ID."
         )
 
     running_serverless = [w for w in warehouses

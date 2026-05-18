@@ -33,10 +33,10 @@
 --
 -- Migration path to account-level groups:
 --   When the workspace switches from plus-addressed emails to account
---   groups (e.g. `dpdp-cmo`), replace
+--   groups (e.g. `compliance-cmo`), replace
 --     current_user() LIKE '%+compliance-cmo@%'
 --   with
---     is_account_group_member('dpdp-cmo')
+--     is_account_group_member('compliance-cmo')
 --   on both matches below. Everything else stays the same.
 
 CREATE OR REPLACE FUNCTION compliance_pack.compliance.persona_purpose_scope(purpose STRING)

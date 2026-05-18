@@ -155,7 +155,7 @@ def _client() -> WorkspaceClient:
 def _warehouse_id() -> str:
     """Read warehouse id from env (set in app.yaml) or pick the first
     serverless warehouse the app's SP can see."""
-    if env := os.environ.get("DPDP_WAREHOUSE_ID"):
+    if env := os.environ.get("COMPLIANCE_WAREHOUSE_ID"):
         return env
     w = _client()
     for wh in w.warehouses.list():

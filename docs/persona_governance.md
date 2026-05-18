@@ -210,7 +210,7 @@ Verify the bronze fence:
 
 ```sql
 SHOW GRANTS ON SCHEMA compliance_pack.bronze;
--- Expected: zero rows for any dpdp-*@ persona email. Only the catalog
+-- Expected: zero rows for any compliance-*@ persona email. Only the catalog
 -- owner (deployer / admin group / bundle service principal) should
 -- have access.
 ```
@@ -320,11 +320,11 @@ without needing the persona user's password:
 ```sql
 -- What CCO CAN see (should return rows)
 SELECT COUNT(*) FROM compliance_pack.compliance.personal_data_register;
--- Grantee: dpdp-cco@... → OK (in grants)
+-- Grantee: compliance-cco@... → OK (in grants)
 
 -- What CMO CAN'T see (should fail)
 SELECT COUNT(*) FROM compliance_pack.compliance.personal_data_register;
--- Grantee: dpdp-cmo@... → PERMISSION_DENIED (not in grants)
+-- Grantee: compliance-cmo@... → PERMISSION_DENIED (not in grants)
 ```
 
 To actually run the queries as the persona user, use:
@@ -388,12 +388,12 @@ deploy doesn't reset the grants (UC remembers).
 ## Migrating to account-level groups later
 
 When the Databricks account admin creates account-level groups
-(`dpdp-cco`, `dpdp-gc`, `dpdp-cmo`, `dpdp-cfo`) and assigns them to
+(`compliance-cco`, `compliance-gc`, `compliance-cmo`, `compliance-cfo`) and assigns them to
 this workspace:
 
 1. Edit `scripts/apply_persona_uc_grants.py` — replace the
    `persona_emails[persona]` grantee with the group name (backticks
-   around hyphens: `` `dpdp-cco` ``).
+   around hyphens: `` `compliance-cco` ``).
 2. Re-run the script. UC grants will re-apply to the groups. The old
    email grants will remain until explicitly `REVOKE`d.
 3. Similarly update warehouse / dashboard / Genie ACLs to use

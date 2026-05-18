@@ -580,7 +580,7 @@ how-to-fix, effort</strong>. The top 5 are the most likely sign-off blockers.</p
 <div class="gap-card gap-nice">
   <h3><span class="sev-badge sev-nice">NICE</span> Warehouse detection picks first RUNNING</h3>
   <p>If a teammate has multiple serverless warehouses, they get whichever is alphabetically
-  first. <code>DPDP_WAREHOUSE_ID</code> env override is documented.</p>
+  first. <code>COMPLIANCE_WAREHOUSE_ID</code> env override is documented.</p>
 </div>
 
 <div class="gap-card gap-nice">
@@ -830,7 +830,7 @@ how-to-fix, effort</strong>. The top 5 are the most likely sign-off blockers.</p
   <code>compliance.persona_purpose_scope(purpose)</code>; gates on
   <code>current_user()</code> LIKE matching the persona's plus-addressed email
   suffix. When the workspace moves to account groups, swap the LIKE for
-  <code>is_account_group_member('dpdp-cmo')</code>.</p>
+  <code>is_account_group_member('compliance-cmo')</code>.</p>
   <p><strong>Files:</strong> <code>schemas/persona_row_filters.sql</code>,
   <code>scripts/apply_persona_row_filters.py</code> (idempotent),
   <code>tests/test_persona_row_filters.py</code> (5 checks, wired into CI
@@ -941,7 +941,7 @@ prep.</p>
 <div class="info">
   <p style="margin-bottom: 8px;"><strong>§5.2 Blocked on account admin:</strong></p>
   <ul style="margin: 0 0 0 24px;">
-    <li>Account-level group creation + identity federation → swap plus-addressed emails for <code>dpdp-cco</code>/<code>gc</code>/<code>cmo</code>/<code>cfo</code> account groups</li>
+    <li>Account-level group creation + identity federation → swap plus-addressed emails for <code>compliance-cco</code>/<code>gc</code>/<code>cmo</code>/<code>cfo</code> account groups</li>
     <li>SP-ownership migration via <code>scripts/transfer_ownership_to_sp.py</code> — needs <code>compliance-pack-builder</code> SP created at <code>accounts.cloud.databricks.com</code></li>
   </ul>
 </div>

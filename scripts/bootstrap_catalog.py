@@ -23,7 +23,7 @@ Wired in as the ``bootstrap`` step at the head of ``scripts/deploy_all.sh``.
 Usage:
     python3 scripts/bootstrap_catalog.py
     python3 scripts/bootstrap_catalog.py --dry-run
-    DPDP_WAREHOUSE_ID=<id> python3 scripts/bootstrap_catalog.py
+    COMPLIANCE_WAREHOUSE_ID=<id> python3 scripts/bootstrap_catalog.py
 """
 
 from __future__ import annotations
@@ -84,7 +84,7 @@ def discover_warehouse() -> str:
     the first SQL statement hits them. Wait_timeout on the first query
     has to be generous enough to ride out the cold-start (~30-60s).
     """
-    if env := os.environ.get("DPDP_WAREHOUSE_ID"):
+    if env := os.environ.get("COMPLIANCE_WAREHOUSE_ID"):
         return env
     out = _databricks("warehouses", "list", "-o", "json")
     warehouses = json.loads(out)

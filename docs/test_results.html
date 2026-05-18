@@ -1236,7 +1236,7 @@ python3 tests/persona_boundary_test.py --verbose
   CLI. Each returns non-zero on failure, so CI and local terminals both get a clear
   pass/fail signal.</p>
   <pre><span class="comment"># Prereq: serverless warehouse started, CLI authenticated
-# (DPDP_WAREHOUSE_ID env var overrides auto-detection)</span>
+# (COMPLIANCE_WAREHOUSE_ID env var overrides auto-detection)</span>
 
 python3 tests/test_register_completeness.py   <span class="comment"># INT-01</span>
 python3 tests/test_consent_append_only.py     <span class="comment"># INT-05</span>

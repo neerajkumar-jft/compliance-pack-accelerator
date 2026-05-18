@@ -69,7 +69,7 @@ def _databricks(*args: str) -> str:
 def discover_warehouse() -> str:
     """Same logic as bootstrap_catalog.py — accepts STOPPED warehouses
     since serverless auto-starts on the first query."""
-    if env := os.environ.get("DPDP_WAREHOUSE_ID"):
+    if env := os.environ.get("COMPLIANCE_WAREHOUSE_ID"):
         return env
     out = _databricks("warehouses", "list", "-o", "json")
     warehouses = json.loads(out)

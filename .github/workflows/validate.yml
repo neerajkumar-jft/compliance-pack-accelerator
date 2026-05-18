@@ -152,7 +152,7 @@ jobs:
         env:
           DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST  }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-          DPDP_WAREHOUSE_ID: ${{ secrets.DPDP_WAREHOUSE_ID }}
+          COMPLIANCE_WAREHOUSE_ID: ${{ secrets.COMPLIANCE_WAREHOUSE_ID || secrets.DPDP_WAREHOUSE_ID }}
         run: |
           if [ -z "$DATABRICKS_HOST" ] || [ -z "$DATABRICKS_TOKEN" ]; then
             echo "::warning::DATABRICKS_HOST / DATABRICKS_TOKEN secrets not set; skipping integration tests"

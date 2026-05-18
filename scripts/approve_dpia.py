@@ -35,7 +35,7 @@ removes the trust assumption.
 Discovery + auth
 ----------------
 Same patterns as ``scripts/bootstrap_catalog.py``:
-- Warehouse picked via ``DPDP_WAREHOUSE_ID`` env or ``databricks warehouses
+- Warehouse picked via ``COMPLIANCE_WAREHOUSE_ID`` env or ``databricks warehouses
   list``. Stopped serverless warehouses are accepted (they auto-start).
 - Catalog read from ``COMPLIANCE_CATALOG`` (default ``compliance_pack``).
 - Auth via the active Databricks CLI profile.
@@ -74,7 +74,7 @@ def discover_warehouse() -> str:
     SQL statement hits them; a generous ``wait_timeout`` rides out the
     cold-start.
     """
-    if env := os.environ.get("DPDP_WAREHOUSE_ID"):
+    if env := os.environ.get("COMPLIANCE_WAREHOUSE_ID"):
         return env
     out = _databricks("warehouses", "list", "-o", "json")
     warehouses = json.loads(out)
