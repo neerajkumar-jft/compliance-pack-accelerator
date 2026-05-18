@@ -1,4 +1,4 @@
-# DPDP Compliance Platform POC — Specification
+# Compliance Pack Platform POC — Specification
 
 > ⚠️ **Pre-build planning document.** This spec describes what was planned before the POC was built. Some details (full Lakebase/DSR-portal app, Module 04 Lakewatch, 14-day sprint timeline) were deferred or dropped because they're unavailable on free-trial workspaces. **For deploying the POC today, follow [`docs/persona_deploy.md`](docs/persona_deploy.md) and [`README.md`](README.md) — not this file.**
 >

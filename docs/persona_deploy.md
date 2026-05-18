@@ -105,7 +105,7 @@ default; setting `REGULATION_PACK` is optional.
    If not, use `--override-email someone_else@domain` when running the
    user-setup script.
 
-4. **The underlying DPDP POC is deployed.** The persona layer is an
+4. **The underlying Compliance Pack POC is deployed.** The persona layer is an
    addition on top of an already-working POC. Full first-deploy sequence
    is in the `Phase 1 — base POC deploy` section below; follow it in
    order before running the persona orchestrator.
@@ -338,9 +338,9 @@ persist.
 
 **In-app role gate** — the Approve button is shown only when the
 logged-in user's email matches a workspace user with a plus-addressed
-DPDP persona email (`<base>+dpdp-cco@<domain>` or `+dpdp-gc@`). The app
+DPDP persona email (`<base>+compliance-cco@<domain>` or `+compliance-gc@`). The app
 discovers these at runtime via SCIM (listing workspace users matching
-the `+dpdp-` pattern), so re-running `scripts/setup_persona_users.py`
+the `+compliance-` pattern), so re-running `scripts/setup_persona_users.py`
 auto-updates the role gate on the next app request — no app restart
 needed. CFO can open the app but sees view-only mode (Approve button
 hidden); CMO can't open the app at all.
@@ -348,7 +348,7 @@ hidden); CMO can't open the app at all.
 **Verifying end-to-end** after `deploy_all.sh` finishes:
 1. Trigger a generator run — see "Quarterly DPIA workflow" below.
 2. Open the app URL (from the `databricks bundle deploy` output, or
-   `databricks apps get dpdp-dpia-review -o json | jq .url`).
+   `databricks apps get compliance-dpia-review -o json | jq .url`).
 3. Sign in as the CCO or GC persona — you should see the run with
    status='draft', open the detail view, click Approve. Audit row
    flips to status='approved' with `reviewed_by` set to the verified
@@ -414,7 +414,7 @@ After script 4 creates the users, you need to:
 
 1. **Toggle entitlements** in the admin UI (not yet scripted):
    - Open `https://<your-workspace>.cloud.databricks.com/settings/workspace/identity-and-access/users`
-   - For each of the 4 new users (e.g. `you+dpdp-cco@...`):
+   - For each of the 4 new users (e.g. `you+compliance-cco@...`):
      - **Consumer access → On** (required for dashboards + Genie spaces)
      - **Workspace access → Off** (optional; cleaner persona semantics)
      - Leave Admin access **Off** and Databricks SQL access **On**
@@ -422,7 +422,7 @@ After script 4 creates the users, you need to:
 2. **Set a password** via the Forgot-password flow (admin-settable
    passwords are disabled on most modern workspaces):
    - Open the workspace login URL in an incognito window
-   - Enter the persona email (e.g. `you+dpdp-cco@...`)
+   - Enter the persona email (e.g. `you+compliance-cco@...`)
    - Click "Forgot password"
    - Check your real inbox — plus-addressing delivers the reset link
    - Click the link, set a password, log in → you're now the persona user
@@ -498,7 +498,7 @@ python3 -c "
 import json, subprocess
 out = subprocess.run(['databricks','users','list','-o','json'], capture_output=True, text=True).stdout
 for u in json.loads(out):
-    if '+dpdp-' in u.get('userName',''):
+    if '+compliance-' in u.get('userName',''):
         subprocess.run(['databricks','users','delete', u['id']])
         print('deleted', u['userName'])
 "

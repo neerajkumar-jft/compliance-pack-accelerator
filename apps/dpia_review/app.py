@@ -55,7 +55,7 @@ import streamlit as st
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.sql import StatementState
 
-CATALOG = os.environ.get("DPDP_CATALOG", "compliance_pack")
+CATALOG = os.environ.get("COMPLIANCE_CATALOG", "compliance_pack")
 TABLE = f"{CATALOG}.compliance.dpia_runs"
 PERSONA_EMAILS_PATH = Path("dashboards/personas/.persona_emails.json")
 
@@ -91,9 +91,9 @@ def load_approver_emails() -> dict[str, str]:
     1. **SCIM lookup against the workspace user directory** (production
        path). The deployed Apps container can read users via the SDK,
        and persona emails follow a stable plus-address pattern set by
-       scripts/setup_persona_users.py: ``<base>+dpdp-cco@<domain>`` and
-       ``<base>+dpdp-gc@<domain>``. We list users whose userName contains
-       ``+dpdp-`` and pick out the cco/gc entries. This is the canonical
+       scripts/setup_persona_users.py: ``<base>+compliance-cco@<domain>`` and
+       ``<base>+compliance-gc@<domain>``. We list users whose userName contains
+       ``+compliance-`` and pick out the cco/gc entries. This is the canonical
        runtime path because:
          a. Apps containers don't ship the repo's ``dashboards/personas/``
             directory on a stable relative path
@@ -113,11 +113,11 @@ def load_approver_emails() -> dict[str, str]:
     try:
         client = _client()
         approvers: dict[str, str] = {}
-        for user in client.users.list(filter='userName co "+dpdp-"'):
+        for user in client.users.list(filter='userName co "+compliance-"'):
             email = (user.user_name or "").lower()
-            if "+dpdp-cco@" in email:
+            if "+compliance-cco@" in email:
                 approvers["cco"] = user.user_name
-            elif "+dpdp-gc@" in email:
+            elif "+compliance-gc@" in email:
                 approvers["gc"] = user.user_name
         if approvers:
             return approvers

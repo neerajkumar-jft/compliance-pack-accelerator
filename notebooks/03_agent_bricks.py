@@ -18,7 +18,7 @@ dbutils.library.restartPython()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Agent Bricks — DPDP Compliance Agents
+# MAGIC # Agent Bricks — Compliance Pack Agents
 # MAGIC
 # MAGIC **Three AI agents powered by Databricks foundation models:**
 # MAGIC

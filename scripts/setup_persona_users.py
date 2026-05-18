@@ -5,10 +5,10 @@ own email (whoever is running this script, as returned by `databricks
 current-user me`). For example, if the deployer is
 `joe.smith@acme.com`, the persona users become:
 
-    joe.smith+dpdp-cco@acme.com
-    joe.smith+dpdp-gc@acme.com
-    joe.smith+dpdp-cmo@acme.com
-    joe.smith+dpdp-cfo@acme.com
+    joe.smith+compliance-cco@acme.com
+    joe.smith+compliance-gc@acme.com
+    joe.smith+compliance-cmo@acme.com
+    joe.smith+compliance-cfo@acme.com
 
 All four password-reset emails then route to `joe.smith@acme.com`,
 letting one person control all four persona logins without needing
@@ -55,7 +55,7 @@ PERSONAS = {
 
 def persona_email(base_email: str, persona: str) -> str:
     local, domain = base_email.split("@", 1)
-    return f"{local}+dpdp-{persona}@{domain}"
+    return f"{local}+compliance-{persona}@{domain}"
 
 
 def list_existing_users() -> dict[str, dict]:
@@ -78,7 +78,7 @@ def create_user(email: str, short: str, title: str) -> str:
     """
     payload = {
         "userName": email,
-        "displayName": f"DPDP POC — {short} Persona ({title})",
+        "displayName": f"Compliance Pack POC — {short} Persona ({title})",
         "emails": [{"value": email, "primary": True, "type": "work"}],
         "active": True,
     }

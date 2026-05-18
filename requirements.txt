@@ -1,4 +1,4 @@
-# Local-machine dependencies for the DPDP POC.
+# Local-machine dependencies for the Compliance Pack POC.
 #
 # This file targets the deployer's machine — anything that runs OUTSIDE
 # the Databricks workspace (scripts/, tests/, headless infra checks,

@@ -115,7 +115,7 @@ If the manifest says `customer_04217` should have 14 transactions but your gener
 |---------------|-------------------|-----|
 | `Permission denied: 'APPLY TAG' on catalog 'compliance_pack'` | Service principal missing `APPLY TAG` | `GRANT APPLY TAG ON CATALOG compliance_pack TO '<sp>'` |
 | `Table or view not found: compliance_pack.silver.pii_findings` | Silver DDL not applied | Run `schemas/silver.sql` |
-| `Cannot find Lakebase instance 'dpdp-poc-consent'` | Instance not provisioned | Create per §2.4 |
+| `Cannot find Lakebase instance 'compliance-pack-consent'` | Instance not provisioned | Create per §2.4 |
 | `ai_classify is not available in this workspace` | Feature not enabled or wrong region | Check workspace settings; region must support AI functions |
 | `Auto Loader: file already processed` | Stale checkpoint | Delete checkpoint dir and retry (per §10.2) |
 | `Delta VACUUM: retention too short` | Safety check enabled | Disable per §9.5.1 temporarily |

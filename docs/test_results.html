@@ -190,9 +190,9 @@
     <tr><td><strong>Workspace URL</strong></td><td>Your workspace (auto-detected by <code>databricks current-user me</code>)</td></tr>
     <tr><td><strong>SQL Warehouse</strong></td><td>Serverless Starter Warehouse (auto-starts on query)</td></tr>
     <tr><td><strong>Catalog</strong></td><td><code>compliance_pack</code></td></tr>
-    <tr><td><strong>Master dashboard</strong></td><td>DPDP Compliance Platform (full-estate visibility, admin-only)</td></tr>
-    <tr><td><strong>Persona dashboards</strong></td><td>DPDP — CCO View · DPDP — GC View · DPDP — CMO View · DPDP — CFO View</td></tr>
-    <tr><td><strong>Persona Genie spaces</strong></td><td>DPDP — CCO Agent · GC · CMO · CFO Agent (scoped per persona)</td></tr>
+    <tr><td><strong>Master dashboard</strong></td><td>Compliance Pack Platform (full-estate visibility, admin-only)</td></tr>
+    <tr><td><strong>Persona dashboards</strong></td><td>Compliance — CCO View · Compliance — GC View · Compliance — CMO View · Compliance — CFO View</td></tr>
+    <tr><td><strong>Persona Genie spaces</strong></td><td>Compliance — CCO Agent · GC · CMO · CFO Agent (scoped per persona)</td></tr>
     <tr><td><strong>Notebooks</strong></td><td><code>/Workspace/Users/.../compliance_pack/</code></td></tr>
   </table>
   <p style="margin-top: 12px; margin-bottom: 0;">All tests below can be run in the <strong>SQL Editor</strong> (Cmd+Enter to execute) or in a <strong>notebook</strong>. No cluster setup needed — the serverless warehouse handles everything. Test 8 (persona governance boundary) is run partly in the SQL editor and partly by logging in as a persona user via incognito window.</p>
@@ -204,7 +204,7 @@
 
 <div class="info">
   <p style="margin-bottom: 8px;"><strong>Deploying the persona layer in your own workspace?</strong></p>
-  <p style="margin-bottom: 0;">Run <code>python3 scripts/setup_all_personas.py</code> once, then toggle <strong>Consumer access: On</strong> on each of the 4 auto-created <code>&lt;you&gt;+dpdp-*@domain</code> users in the workspace admin UI. See <code>docs/persona_deploy.md</code> for the full sequence (incl. Terraform PGP workaround).</p>
+  <p style="margin-bottom: 0;">Run <code>python3 scripts/setup_all_personas.py</code> once, then toggle <strong>Consumer access: On</strong> on each of the 4 auto-created <code>&lt;you&gt;+compliance-*@domain</code> users in the workspace admin UI. See <code>docs/persona_deploy.md</code> for the full sequence (incl. Terraform PGP workaround).</p>
 </div>
 
 <!-- ================================================================== -->
@@ -859,7 +859,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
   </div>
   <div class="step">
     <span class="step-num">2</span>
-    <div class="step-content">Open <strong>DPDP Compliance Platform</strong></div>
+    <div class="step-content">Open <strong>Compliance Pack Platform</strong></div>
   </div>
   <div class="step">
     <span class="step-num">3</span>
@@ -883,7 +883,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
   <div class="info"><strong>Note:</strong> Access Patterns is a 30-day snapshot table — its <code>analyzed_at</code> column shows when phase1_bootstrap last refreshed it. The DPIA page reads <code>compliance.dpia_runs</code>, which is appended to by the <code>dpia_generator</code> job (UNPAUSED quarterly cron). Re-run <code>databricks bundle run phase1_bootstrap</code> for Access Patterns; <code>databricks bundle run dpia_generator</code> for a fresh DPIA draft.</div>
   <div class="evidence">
     <h4>Evidence</h4>
-    <p>Per-page captures of the master <strong>DPDP Compliance Platform</strong> dashboard
+    <p>Per-page captures of the master <strong>Compliance Pack Platform</strong> dashboard
     (10 pages total — Global Filters is filter chrome and is not visualised separately).
     Captured 2026-05-06 against the deployed workspace.</p>
     <img src="test_screenshots/T-6.1.1.png" alt="T6.1 evidence — Executive Overview">
@@ -1001,7 +1001,7 @@ python3 scripts/generate_multilang_notices.py --dry-run
 <p>Verify that the 4-persona enforcement model actually blocks cross-persona access at the <strong>UC query layer</strong>, not just the UI. This is the section an SA reviewer cares about most.</p>
 
 <div class="info">
-  <strong>Context:</strong> Four demo users (<code>&lt;deployer&gt;+dpdp-{cco,gc,cmo,cfo}@&lt;domain&gt;</code>) are created by
+  <strong>Context:</strong> Four demo users (<code>&lt;deployer&gt;+compliance-{cco,gc,cmo,cfo}@&lt;domain&gt;</code>) are created by
   <code>scripts/setup_persona_users.py</code>. Each persona's UC grants are listed in
   <code>scripts/apply_persona_uc_grants.py</code> (two layers: agent-boundary Genie allowlist + UI-render overview
   tables). This test verifies grants are correctly applied and cross-boundary access is denied.
@@ -1016,13 +1016,13 @@ personas = ['cco', 'gc', 'cmo', 'cfo']
 found = {p: None for p in personas}
 for u in json.load(sys.stdin):
     for p in personas:
-        if f'+dpdp-{p}@' in u.get('userName', ''):
+        if f'+compliance-{p}@' in u.get('userName', ''):
             found[p] = u['userName']
 for p, email in found.items():
     print(f'{p}: {email or \"MISSING\"}')
 "</span>
 
-<span class="comment">-- Expected: 4 emails, all in the form &lt;deployer&gt;+dpdp-&lt;persona&gt;@&lt;domain&gt;</span></pre>
+<span class="comment">-- Expected: 4 emails, all in the form &lt;deployer&gt;+compliance-&lt;persona&gt;@&lt;domain&gt;</span></pre>
   <div class="success"><strong>Pass criteria:</strong> All 4 users exist with plus-addressed emails routing to the deployer's inbox.</div>
   <div class="evidence">
     <h4>Evidence</h4>
@@ -1043,9 +1043,9 @@ for p, email in found.items():
 <span class="keyword">SHOW GRANTS ON TABLE</span> compliance_pack.compliance.dsr_requests;
 
 <span class="comment">-- Expected:
---   personal_data_register    → ONLY &lt;deployer&gt;+dpdp-cco@...
---   marketing_eligible_p...    → ONLY &lt;deployer&gt;+dpdp-cmo@...
---   dsr_requests               → ONLY &lt;deployer&gt;+dpdp-gc@...</span></pre>
+--   personal_data_register    → ONLY &lt;deployer&gt;+compliance-cco@...
+--   marketing_eligible_p...    → ONLY &lt;deployer&gt;+compliance-cmo@...
+--   dsr_requests               → ONLY &lt;deployer&gt;+compliance-gc@...</span></pre>
   <div class="success"><strong>Pass criteria:</strong> Each domain-scoped table has exactly one persona user as grantee (plus any admins/owners). No cross-persona leakage.</div>
   <div class="evidence">
     <h4>Evidence</h4>
@@ -1109,7 +1109,7 @@ databricks api post /api/2.0/sql/statements --json <span class="string">"{
   <p>In an <strong>incognito window</strong>:</p>
   <div class="step">
     <span class="step-num">1</span>
-    <div class="step-content">Open the workspace login URL, enter <code>&lt;deployer&gt;+dpdp-cco@&lt;domain&gt;</code></div>
+    <div class="step-content">Open the workspace login URL, enter <code>&lt;deployer&gt;+compliance-cco@&lt;domain&gt;</code></div>
   </div>
   <div class="step">
     <span class="step-num">2</span>
@@ -1121,7 +1121,7 @@ databricks api post /api/2.0/sql/statements --json <span class="string">"{
   </div>
   <div class="step">
     <span class="step-num">4</span>
-    <div class="step-content">Open <strong>DPDP — CCO View</strong>. Every tile should render.</div>
+    <div class="step-content">Open <strong>Compliance — CCO View</strong>. Every tile should render.</div>
   </div>
   <div class="step">
     <span class="step-num">5</span>
@@ -1444,7 +1444,7 @@ question with user + timestamp. This test surfaces that evidence directly.</p>
 <span class="keyword">FROM</span> system.access.audit
 <span class="keyword">WHERE</span> event_date &gt;= current_date() - <span class="keyword">INTERVAL</span> <span class="number">7</span> <span class="keyword">DAYS</span>
   <span class="keyword">AND</span> service_name = <span class="string">'databrickssql'</span>
-  <span class="keyword">AND</span> user_identity.email <span class="keyword">LIKE</span> <span class="string">'%+dpdp-%@%'</span>
+  <span class="keyword">AND</span> user_identity.email <span class="keyword">LIKE</span> <span class="string">'%+compliance-%@%'</span>
 <span class="keyword">GROUP BY</span> user_identity.email
 <span class="keyword">ORDER BY</span> query_count <span class="keyword">DESC</span>;
 
@@ -1728,7 +1728,7 @@ otherwise noted; they all verify that UC blocks the hostile path regardless of U
 <div class="test-card">
   <h3><span class="test-id tid-orange">T12.1</span> Mask-bypass attempt — cast, concat, regex</h3>
   <pre><span class="comment">-- Run as the CCO persona in SQL editor (sign in as
--- &lt;deployer&gt;+dpdp-cco@&lt;domain&gt;). CCO has SELECT on sf_leads_tagged,
+-- &lt;deployer&gt;+compliance-cco@&lt;domain&gt;). CCO has SELECT on sf_leads_tagged,
 -- which carries the same mask_email / mask_phone / mask_id_last4
 -- bindings as customers_tagged. Other personas (GC / CMO / CFO) do
 -- not have SELECT on any masked-PII silver table, so this card is
@@ -1858,9 +1858,9 @@ otherwise noted; they all verify that UC blocks the hostile path regardless of U
   <pre><span class="comment">-- As a persona — none of these should succeed:</span>
 
 <span class="comment">-- Substitute &lt;deployer&gt; and &lt;domain&gt; with the values from your workspace
--- (same pattern used in T8.1 / T8.5 — e.g., 'jane.doe+dpdp-cmo@example.com'):</span>
+-- (same pattern used in T8.1 / T8.5 — e.g., 'jane.doe+compliance-cmo@example.com'):</span>
 <span class="keyword">GRANT SELECT ON TABLE</span> compliance_pack.compliance.personal_data_register
-  <span class="keyword">TO</span> `&lt;deployer&gt;+dpdp-cmo@&lt;domain&gt;`;
+  <span class="keyword">TO</span> `&lt;deployer&gt;+compliance-cmo@&lt;domain&gt;`;
 <span class="keyword">-- Expected: PERMISSION_DENIED — personas don't have MANAGE on objects</span>
 
 <span class="keyword">ALTER TABLE</span> compliance_pack.silver.customers_tagged
@@ -2324,10 +2324,10 @@ objects that succeeded. This is a platform constraint, not a bug.</div>
 <table>
   <thead><tr><th>Persona</th><th>Dashboard title</th><th>Genie space title</th><th>Demo user email pattern</th></tr></thead>
   <tbody>
-    <tr style="background: #fff3e0;"><td><strong>CCO</strong></td><td>DPDP — CCO View</td><td>DPDP — CCO Agent</td><td><code>&lt;deployer&gt;+dpdp-cco@&lt;domain&gt;</code></td></tr>
-    <tr style="background: #fff3e0;"><td><strong>GC</strong></td><td>DPDP — GC View</td><td>DPDP — GC Agent</td><td><code>&lt;deployer&gt;+dpdp-gc@&lt;domain&gt;</code></td></tr>
-    <tr style="background: #fff3e0;"><td><strong>CMO</strong></td><td>DPDP — CMO View</td><td>DPDP — CMO Agent</td><td><code>&lt;deployer&gt;+dpdp-cmo@&lt;domain&gt;</code></td></tr>
-    <tr style="background: #fff3e0;"><td><strong>CFO</strong></td><td>DPDP — CFO View</td><td>DPDP — CFO Agent</td><td><code>&lt;deployer&gt;+dpdp-cfo@&lt;domain&gt;</code></td></tr>
+    <tr style="background: #fff3e0;"><td><strong>CCO</strong></td><td>Compliance — CCO View</td><td>Compliance — CCO Agent</td><td><code>&lt;deployer&gt;+compliance-cco@&lt;domain&gt;</code></td></tr>
+    <tr style="background: #fff3e0;"><td><strong>GC</strong></td><td>Compliance — GC View</td><td>Compliance — GC Agent</td><td><code>&lt;deployer&gt;+compliance-gc@&lt;domain&gt;</code></td></tr>
+    <tr style="background: #fff3e0;"><td><strong>CMO</strong></td><td>Compliance — CMO View</td><td>Compliance — CMO Agent</td><td><code>&lt;deployer&gt;+compliance-cmo@&lt;domain&gt;</code></td></tr>
+    <tr style="background: #fff3e0;"><td><strong>CFO</strong></td><td>Compliance — CFO View</td><td>Compliance — CFO Agent</td><td><code>&lt;deployer&gt;+compliance-cfo@&lt;domain&gt;</code></td></tr>
   </tbody>
 </table>
 <div class="info"><strong>How to get actual IDs for this deployment:</strong> <code>cat dashboards/personas/.dashboard_ids.json dashboards/personas/.genie_space_ids.json dashboards/personas/.persona_emails.json</code> — all three files are generated by <code>scripts/setup_all_personas.py</code>.</div>

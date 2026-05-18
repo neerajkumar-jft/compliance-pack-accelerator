@@ -62,7 +62,7 @@ if [[ -f "$SIDECAR" ]]; then
     # check above wouldn't fire — but the cache's sync-snapshots think
     # files are already in sync, so the next `bundle deploy` skips file
     # upload (silent failure). Then DLT/job runs hit NOTEBOOK_NOT_FOUND.
-    BUNDLE_NAME="dpdp-poc"   # matches `bundle.name` in databricks.yml
+    BUNDLE_NAME="compliance-pack"   # matches `bundle.name` in databricks.yml
     ME="$(databricks current-user me 2>/dev/null \
           | python3 -c 'import json,sys; print(json.load(sys.stdin).get("userName",""))' 2>/dev/null)"
     if [[ -n "$ME" ]]; then

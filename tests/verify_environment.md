@@ -123,8 +123,8 @@ try:
     # Uses the Databricks SQL Connector or similar; exact call depends on setup
     from databricks.sql import connect as lakebase_connect  # placeholder
     with lakebase_connect(server_hostname="<lakebase-host>",
-                          http_path="/databricks/lakebase/dpdp-poc-consent",
-                          access_token=dbutils.secrets.get("dpdp-poc", "lakebase-token")) as conn:
+                          http_path="/databricks/lakebase/compliance-pack-consent",
+                          access_token=dbutils.secrets.get("compliance-pack", "lakebase-token")) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT 1")
         result = cursor.fetchone()

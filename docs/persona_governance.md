@@ -51,10 +51,10 @@ group in `scripts/apply_persona_uc_grants.py`.
 
 | Persona | Demo user email (pattern) | Display name |
 |---|---|---|
-| CCO | `<deployer-local>+dpdp-cco@<deployer-domain>` | DPDP POC — CCO Persona (Chief Compliance Officer) |
-| GC | `<deployer-local>+dpdp-gc@<deployer-domain>` | DPDP POC — GC Persona |
-| CMO | `<deployer-local>+dpdp-cmo@<deployer-domain>` | DPDP POC — CMO Persona |
-| CFO | `<deployer-local>+dpdp-cfo@<deployer-domain>` | DPDP POC — CFO Persona |
+| CCO | `<deployer-local>+compliance-cco@<deployer-domain>` | Compliance Pack POC — CCO Persona (Chief Compliance Officer) |
+| GC | `<deployer-local>+compliance-gc@<deployer-domain>` | Compliance Pack POC — GC Persona |
+| CMO | `<deployer-local>+compliance-cmo@<deployer-domain>` | Compliance Pack POC — CMO Persona |
+| CFO | `<deployer-local>+compliance-cfo@<deployer-domain>` | Compliance Pack POC — CFO Persona |
 
 The `<deployer-*>` placeholders come from `databricks current-user me`
 (auto-detected by `scripts/setup_persona_users.py`). The actual four
@@ -221,7 +221,7 @@ UC-governed resource. No `USE_SCHEMA` on bronze → no visibility, no
 query access. A future colleague added to the workspace inherits
 nothing on bronze by default; explicit grant required.
 
-**Production hardening (Phase 2):** when the `dpdp-poc-builder`
+**Production hardening (Phase 2):** when the `compliance-pack-builder`
 service principal takes over pipeline ownership (see
 `scripts/transfer_ownership_to_sp.py`), the SP becomes the sole
 principal with `USE_SCHEMA` + `MODIFY` on bronze. Admin access

@@ -156,7 +156,7 @@ def test_withdrawal_propagation():
             gen_random_uuid(), '<uuid>', now(), 'withdrawn',
             '<notice_uuid>', 'en-IN', 'web', 'marketing_email',
             'declined', 'toggle',
-            now(), 0, 'dpdp-poc-builder'
+            now(), 0, 'compliance-pack-builder'
         )
     """)
 

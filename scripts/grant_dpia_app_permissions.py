@@ -7,7 +7,7 @@ one command end-to-end.
 
 What it does:
   1. Resolves the dpia_review_app's runtime SP via
-     ``databricks apps get dpdp-dpia-review`` — the SP is provisioned by
+     ``databricks apps get compliance-dpia-review`` — the SP is provisioned by
      Databricks at app create time, so this script only runs after the
      bundle deploy.
   2. Reads .persona_emails.json (written by setup_persona_users.py) to
@@ -50,8 +50,8 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-CATALOG = os.environ.get("DPDP_CATALOG", "compliance_pack")
-APP_NAME = "dpdp-dpia-review"
+CATALOG = os.environ.get("COMPLIANCE_CATALOG", "compliance_pack")
+APP_NAME = "compliance-dpia-review"
 APPROVER_PERSONAS = ("cco", "gc")  # can click the Approve button
 VIEWER_PERSONAS   = ("cfo",)        # CAN_USE on app, but Approve hidden in UI
 ALLOWED_PERSONAS  = APPROVER_PERSONAS + VIEWER_PERSONAS

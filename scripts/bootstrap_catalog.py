@@ -35,13 +35,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-CATALOG = os.environ.get("DPDP_CATALOG", "compliance_pack")
+CATALOG = os.environ.get("COMPLIANCE_CATALOG", "compliance_pack")
 
 # Order matters: catalog → schemas → volumes.
 STATEMENTS: list[tuple[str, str]] = [
     ("catalog",
      f"CREATE CATALOG IF NOT EXISTS {CATALOG} "
-     f"COMMENT 'DPDP Compliance POC. Covers Modules 01 (PII inventory) and 02 (consent).'"),
+     f"COMMENT 'Compliance Pack POC. Covers Modules 01 (PII inventory) and 02 (consent).'"),
     ("schema bronze",
      f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.bronze "
      f"COMMENT 'Raw ingested layer — Auto Loader sources + ingestion-source registry'"),

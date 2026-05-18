@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Medallion DLT Pipeline
 # MAGIC
-# MAGIC Declarative Bronze + Silver layer for the DPDP POC. Replaces the manual
+# MAGIC Declarative Bronze + Silver layer for the Compliance Pack POC. Replaces the manual
 # MAGIC Auto Loader + Spark SQL approach from §3.4 with a Lakeflow Declarative
 # MAGIC Pipeline. Benefits:
 # MAGIC

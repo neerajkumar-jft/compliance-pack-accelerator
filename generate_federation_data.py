@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""DPDP POC — synthetic Postgres-marketing-DB-shaped data generator.
+"""Compliance Pack POC — synthetic Postgres-marketing-DB-shaped data generator.
 
 Represents what Lakehouse Federation would expose if a marketing
 analytics Postgres were registered as a foreign catalog. Self-contained:
@@ -64,7 +64,7 @@ COMPANIES = [
 ]
 SCORE_BANDS = ["cold", "warm", "hot", "qualified"]
 CAMPAIGNS = [
-    ("CMP-2026-Q1-WEBINAR",   "DPDP Compliance Webinar Q1",      "email"),
+    ("CMP-2026-Q1-WEBINAR",   "Compliance Pack Webinar Q1",      "email"),
     ("CMP-2026-Q1-WHITEPAPER","Privacy Architecture Whitepaper", "email"),
     ("CMP-2026-Q2-EVENT",     "India Data Privacy Summit",        "paid_event"),
     ("CMP-2026-Q1-LINKEDIN",  "LinkedIn Sponsored — Compliance", "social"),

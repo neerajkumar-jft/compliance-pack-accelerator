@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # DPDP POC — Phase 1 Bootstrap
+# MAGIC # Compliance Pack POC — Phase 1 Bootstrap
 # MAGIC
 # MAGIC Single notebook that populates all compliance-layer tables and views on a
 # MAGIC fresh workspace. Runs idempotently; safe to re-execute.
@@ -510,7 +510,7 @@ _seed_rows = [
     Row(
         source_id=r[0], source_name=r[1], source_type=r[2], ingestion_pattern=r[3],
         catalog_name=CATALOG, schema_name=r[4], landing_volume_path=r[5],
-        owner_email="dpdp-poc-team@example.com", is_active=True,
+        owner_email="compliance-pack-team@example.com", is_active=True,
         created_at=_now, updated_at=_now, silver_table_name=r[6],
         primary_key_column=r[7],
     )
